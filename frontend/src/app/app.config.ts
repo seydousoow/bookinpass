@@ -3,7 +3,7 @@ import { provideRouter, withComponentInputBinding, withInMemoryScrolling } from 
 import { provideClientHydration, withEventReplay } from '@angular/platform-browser';
 import { provideHttpClient } from '@angular/common/http';
 import { provideTransloco, TranslocoConfig } from '@jsverse/transloco';
-import { provideTranslocoLocale, TranslocoLocaleConfig } from '@jsverse/transloco-locale';
+import { provideTranslocoLocale } from '@jsverse/transloco-locale';
 import { cookiesStorage, GetLangParams, provideTranslocoPersistLang } from '@jsverse/transloco-persist-lang';
 import { routes } from './app.routes';
 import { APP_CONFIG } from '@core/config/app-config.token';
@@ -17,7 +17,6 @@ registerLocaleData(localeFr);
 registerLocaleData(localeEN);
 
 const availableAppLangs: readonly string[] = ['fr', 'en'];
-const langToLocaleMapping: Record<string, string> = { fr: 'fr-SN', en: 'en-US' };
 
 const translocoConfig = (): Partial<TranslocoConfig> => ({
   availableLangs: [...availableAppLangs],
@@ -27,21 +26,6 @@ const translocoConfig = (): Partial<TranslocoConfig> => ({
   prodMode: environment.production,
   flatten: { aot: environment.production },
 });
-
-const localeConfig: TranslocoLocaleConfig = {
-  defaultCurrency: 'XOF',
-  defaultLocale: 'fr-SN',
-  // `localeToCurrencyMapping` l'emporte sur `defaultCurrency` (le service lit
-  // `mapping[locale] || defaultCurrency`). Or la table livrée par la librairie
-  // associe 'fr-SN' à EUR — d'où des prix en euros sans cette correction.
-  // Book In Pass vend en francs CFA quelle que soit la langue d'affichage.
-  localeToCurrencyMapping: { 'fr-SN': 'XOF', 'en-US': 'XOF' },
-  localeConfig: {
-    global: { date: { dateStyle: 'long', timeStyle: 'long' }, currency: { minimumFractionDigits: 0, maximumFractionDigits: 2 } },
-    localeBased: { 'fr-SN': { currency: { minimumFractionDigits: 0, maximumFractionDigits: 0 } } },
-  },
-  langToLocaleMapping,
-};
 
 const getLangFn = ({ cachedLang, browserLang, defaultLang }: GetLangParams): string => {
   if (cachedLang) {
@@ -61,7 +45,9 @@ export const appConfig: ApplicationConfig = {
     provideHttpClient(),
     provideTransloco({ config: translocoConfig(), loader: HttpTranslocoLoader }),
     provideTranslocoPersistLang({ getLangFn, storage: { useValue: cookiesStorage(720 * 3 /* 3 months storage in hours */) } }),
-    provideTranslocoLocale(localeConfig),
+    provideTranslocoLocale({
+      localeConfig: { global: { date: { dateStyle: 'long', timeStyle: 'long' } } }, langToLocaleMapping: { fr: 'fr-FR', en: 'en-US' }
+    }),
     { provide: APP_CONFIG, useValue: environment },
   ],
 };
