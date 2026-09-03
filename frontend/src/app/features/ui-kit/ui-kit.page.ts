@@ -1,10 +1,11 @@
 import { Component, inject, signal } from '@angular/core';
-import { DatePipe, JsonPipe } from '@angular/common';
+import { JsonPipe } from '@angular/common';
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { AirportStore } from '@core/places/airport.store';
 import { appError } from '@shared/models/app-error';
 import { CurrencyStore } from '@core/money/currency.store';
 import { PricePipe } from '@core/money/price.pipe';
+import { TranslocoCurrencyPipe, TranslocoDatePipe } from '@jsverse/transloco-locale';
 import { formatXof } from '@core/money/money';
 import { SystemStatus } from '@shared/models/system-state';
 import { SelectOption } from '@shared/models/select.model';
@@ -31,7 +32,6 @@ import {
   Textarea,
   TextInput,
 } from '@shared/ui';
-import { TranslocoCurrencyPipe } from '@jsverse/transloco-locale';
 
 /**
  * Planche de validation du socle. Chaque composant partagé y figure dans TOUS
@@ -42,8 +42,9 @@ import { TranslocoCurrencyPipe } from '@jsverse/transloco-locale';
   selector: 'bip-ui-kit-page',
   imports: [
     JsonPipe,
-    DatePipe,
     PricePipe,
+    TranslocoCurrencyPipe,
+    TranslocoDatePipe,
     FormsModule,
     ReactiveFormsModule,
     Badge,
@@ -61,7 +62,6 @@ import { TranslocoCurrencyPipe } from '@jsverse/transloco-locale';
     Spinner,
     SystemState,
     Textarea,
-    TranslocoCurrencyPipe,
   ],
   templateUrl: './ui-kit.page.html',
 })

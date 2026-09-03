@@ -43,8 +43,8 @@
           <strong class="text-ink">{{ 185000 | bipPrice: 'XOF' }}</strong>
           · affiché en {{ currency.selected() }} :
           <strong class="text-ink">{{ 185000 | bipPrice }}</strong>
-          @if (!currency.isContractCurrency()) {
-            <span class="text-label">(taux du {{ currency.updatedAt() | date: 'shortDate' }} — le XOF fait foi)</span>
+          @if (!currency.isContractCurrency() && currency.updatedAt(); as rateDate) {
+            <span class="text-label">(taux du {{ rateDate | translocoDate: { dateStyle: 'medium' } }} — le XOF fait foi)</span>
           }
         </p>
       </div>
@@ -307,8 +307,8 @@
 
     <bip-modal #modal subtitle="AC05 — la saisie est conservée" title="Confirmer le changement de prix">
       <p class="text-small text-muted">
-        Le prix est passé de <strong>{{ oldPrice | translocoCurrency: 'code' : {currency: 'XOF'} }}</strong> à
-        <strong>{{ newPrice | translocoCurrency : 'code' : {} : '' : 'fr-SN' }}</strong>. Vos voyageurs, options et coordonnées sont conservés.
+        Le prix est passé de <strong>{{ oldPrice | translocoCurrency }}</strong> à
+        <strong>{{ newPrice | translocoCurrency }}</strong>. Vos voyageurs, options et coordonnées sont conservés.
       </p>
       <div class="flex gap-2" modalFooter>
         <button (click)="modal.close()" bipButton type="button" variant="outline">Refuser</button>
