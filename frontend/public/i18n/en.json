@@ -1,0 +1,40 @@
+{
+  "nav": {
+    "main": "Main navigation",
+    "menu": "Menu",
+    "cart": "Cart",
+    "home": "Home",
+    "flights": "Flights",
+    "tourism": "Tourism",
+    "sport": "Sport",
+    "stays": "Stays",
+    "uiKit": "Design system"
+  },
+  "footer": {
+    "tagline": "Book your flights, stays and activities in Senegal and beyond.",
+    "legal": "All rights reserved.",
+    "company": "Company",
+    "help": "Help",
+    "legalTitle": "Legal",
+    "about": "About",
+    "contact": "Contact",
+    "faq": "FAQ",
+    "cgv": "Terms and conditions",
+    "privacy": "Privacy"
+  },
+  "search": {
+    "from": "From",
+    "to": "To",
+    "depart": "Departure",
+    "return": "Return",
+    "travelers": "Travellers",
+    "cabin": "Cabin",
+    "submit": "Search",
+    "oneWay": "One way",
+    "roundTrip": "Round trip"
+  },
+  "home": {
+    "title": "One pass for every journey",
+    "subtitle": "Flights, stays, activities and local transport — paid in CFA francs, by card, Wave or Orange Money."
+  }
+}

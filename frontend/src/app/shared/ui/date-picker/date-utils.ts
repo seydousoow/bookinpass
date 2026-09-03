@@ -1,0 +1,81 @@
+/**
+ * Utilitaires de date volontairement sans dépendance externe et sans fuseau :
+ * une date de voyage est un jour civil, pas un instant. Le format d'échange est
+ * `YYYY-MM-DD`, directement plaçable dans l'URL (plan §5.2).
+ */
+export type IsoDate = string;
+
+export function toIso(date: Date): IsoDate {
+  const y = date.getFullYear();
+  const m = `${date.getMonth() + 1}`.padStart(2, '0');
+  const d = `${date.getDate()}`.padStart(2, '0');
+  return `${y}-${m}-${d}`;
+}
+
+export function fromIso(iso: IsoDate): Date {
+  const [y, m, d] = iso.split('-').map(Number);
+  return new Date(y, m - 1, d);
+}
+
+export function todayIso(): IsoDate {
+  return toIso(new Date());
+}
+
+export function addMonths(date: Date, count: number): Date {
+  return new Date(date.getFullYear(), date.getMonth() + count, 1);
+}
+
+export function isSameDay(a: IsoDate | null, b: IsoDate | null): boolean {
+  return !!a && !!b && a === b;
+}
+
+export function isBetween(day: IsoDate, start: IsoDate | null, end: IsoDate | null): boolean {
+  return !!start && !!end && day > start && day < end;
+}
+
+export interface DayCell {
+  readonly iso: IsoDate;
+  readonly dayNumber: number;
+  readonly inMonth: boolean;
+}
+
+/** Grille de 6 semaines commençant le lundi, mois débordants inclus. */
+export function monthGrid(anchor: Date): DayCell[] {
+  const first = new Date(anchor.getFullYear(), anchor.getMonth(), 1);
+  const offset = (first.getDay() + 6) % 7; // lundi = 0
+  const start = new Date(first.getFullYear(), first.getMonth(), 1 - offset);
+
+  const cells: DayCell[] = [];
+  for (let i = 0; i < 42; i++) {
+    const day = new Date(start.getFullYear(), start.getMonth(), start.getDate() + i);
+    cells.push({
+      iso: toIso(day),
+      dayNumber: day.getDate(),
+      inMonth: day.getMonth() === anchor.getMonth(),
+    });
+  }
+  return cells;
+}
+
+export function monthLabel(anchor: Date, locale: string): string {
+  return new Intl.DateTimeFormat(locale, { month: 'long', year: 'numeric' }).format(anchor);
+}
+
+export function weekdayLabels(locale: string): string[] {
+  const formatter = new Intl.DateTimeFormat(locale, { weekday: 'short' });
+  // 2024-01-01 est un lundi.
+  return Array.from({ length: 7 }, (_, i) =>
+    formatter.format(new Date(2024, 0, 1 + i)).replace('.', ''),
+  );
+}
+
+export function formatDisplay(iso: IsoDate | null, locale: string): string {
+  if (!iso) {
+    return '';
+  }
+  return new Intl.DateTimeFormat(locale, {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+  }).format(fromIso(iso));
+}

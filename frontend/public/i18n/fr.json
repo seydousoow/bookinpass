@@ -1,0 +1,40 @@
+{
+  "nav": {
+    "main": "Navigation principale",
+    "menu": "Menu",
+    "cart": "Panier",
+    "home": "Accueil",
+    "flights": "Vols",
+    "tourism": "Tourisme",
+    "sport": "Sport",
+    "stays": "Hébergement",
+    "uiKit": "Design system"
+  },
+  "footer": {
+    "tagline": "Réservez vos vols, séjours et activités au Sénégal et au-delà.",
+    "legal": "Tous droits réservés.",
+    "company": "Société",
+    "help": "Aide",
+    "legalTitle": "Informations légales",
+    "about": "À propos",
+    "contact": "Contact",
+    "faq": "Questions fréquentes",
+    "cgv": "Conditions générales",
+    "privacy": "Confidentialité"
+  },
+  "search": {
+    "from": "Départ",
+    "to": "Destination",
+    "depart": "Aller",
+    "return": "Retour",
+    "travelers": "Voyageurs",
+    "cabin": "Classe",
+    "submit": "Rechercher",
+    "oneWay": "Aller simple",
+    "roundTrip": "Aller-retour"
+  },
+  "home": {
+    "title": "Un seul passe pour tous vos voyages",
+    "subtitle": "Vols, séjours, activités et transport local — payés en francs CFA, par carte, Wave ou Orange Money."
+  }
+}

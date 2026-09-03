@@ -1,0 +1,26 @@
+@import 'tailwindcss';
+@import './theme.css';
+
+/* Réglages de base — tout le reste passe par des classes utilitaires. */
+html {
+  color-scheme: light;
+}
+
+body {
+  @apply bg-surface-page text-body font-sans text-ink antialiased;
+}
+
+/* Anneau de focus unique pour toute l'application (parcours clavier, AC). */
+.bip-focusable {
+  @apply focus-visible:ring-brand-primary focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
