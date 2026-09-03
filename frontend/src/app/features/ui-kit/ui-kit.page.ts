@@ -1,9 +1,11 @@
 import { Component, inject, signal } from '@angular/core';
-import { JsonPipe } from '@angular/common';
+import { DatePipe, JsonPipe } from '@angular/common';
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { AirportStore } from '@core/places/airport.store';
 import { appError } from '@shared/models/app-error';
-import { formatXof } from '@core/money/xof';
+import { CurrencyStore } from '@core/money/currency.store';
+import { PricePipe } from '@core/money/price.pipe';
+import { formatXof } from '@core/money/money';
 import { SystemStatus } from '@shared/models/system-state';
 import { SelectOption } from '@shared/models/select.model';
 import { PlaceSelection } from '@shared/models/place.model';
@@ -40,6 +42,8 @@ import { TranslocoCurrencyPipe } from '@jsverse/transloco-locale';
   selector: 'bip-ui-kit-page',
   imports: [
     JsonPipe,
+    DatePipe,
+    PricePipe,
     FormsModule,
     ReactiveFormsModule,
     Badge,
@@ -63,6 +67,7 @@ import { TranslocoCurrencyPipe } from '@jsverse/transloco-locale';
 })
 export class UiKitPage {
   protected readonly airports = inject(AirportStore);
+  protected readonly currency = inject(CurrencyStore);
 
   protected readonly price = 185_000;
   protected readonly oldPrice = 185_000;

@@ -8,7 +8,9 @@
     "tourism": "Tourism",
     "sport": "Sport",
     "stays": "Stays",
-    "uiKit": "Design system"
+    "uiKit": "Design system",
+    "currency": "Currency",
+    "language": "Language"
   },
   "footer": {
     "tagline": "Book your flights, stays and activities in Senegal and beyond.",

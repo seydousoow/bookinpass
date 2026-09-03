@@ -39,7 +39,13 @@
           </div>
         }
         <p class="text-small text-muted ml-auto">
-          Montant type : <strong class="text-muted">{{ price | translocoCurrency : 'name' : {currency: 'XOF'} }}</strong> (XOF, zéro décimale)
+          Montant contractuel :
+          <strong class="text-ink">{{ 185000 | bipPrice: 'XOF' }}</strong>
+          · affiché en {{ currency.selected() }} :
+          <strong class="text-ink">{{ 185000 | bipPrice }}</strong>
+          @if (!currency.isContractCurrency()) {
+            <span class="text-label">(taux du {{ currency.updatedAt() | date: 'shortDate' }} — le XOF fait foi)</span>
+          }
         </p>
       </div>
     </bip-card>

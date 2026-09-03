@@ -8,7 +8,9 @@
     "tourism": "Tourisme",
     "sport": "Sport",
     "stays": "Hébergement",
-    "uiKit": "Design system"
+    "uiKit": "Design system",
+    "currency": "Devise",
+    "language": "Langue"
   },
   "footer": {
     "tagline": "Réservez vos vols, séjours et activités au Sénégal et au-delà.",

@@ -42,6 +42,14 @@
         }
       </div>
 
+      @if (currencies().length) {
+        <bip-currency-selector
+          [currencies]="currencies()"
+          [label]="t('nav.currency')"
+          [(selected)]="currentCurrency"
+          class="hidden sm:block" />
+      }
+
       <a class="bip-focusable rounded-button relative flex min-h-11 items-center gap-2 px-3" routerLink="/cart">
         <svg aria-hidden="true" class="text-ink h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
           <path
@@ -92,6 +100,36 @@
           </a>
         }
       }
+
+      <div class="border-border-subtle mt-2 flex items-center justify-between gap-3 border-t pt-3 sm:hidden">
+        <div class="flex items-center gap-2">
+          <span class="text-label text-muted font-semibold">{{ t('nav.language') }}</span>
+          <div class="border-border-subtle rounded-pill flex items-center border p-0.5">
+            @for (lang of languages; track lang) {
+              @let activeLang = lang === currentLang();
+              <button
+                (click)="currentLang.set(lang)"
+                [attr.aria-pressed]="activeLang"
+                [class]="activeLang ? 'bg-brand-primary text-onbrand' : 'text-muted cursor-pointer'"
+                class="bip-focusable rounded-pill text-label min-h-8 px-2.5 font-semibold uppercase"
+                type="button">
+                {{ lang }}
+              </button>
+            }
+          </div>
+        </div>
+
+        @if (currencies().length) {
+          <div class="flex items-center gap-2">
+            <span class="text-label text-muted font-semibold">{{ t('nav.currency') }}</span>
+            <bip-currency-selector
+              inputId="currency-selector-mobile"
+              [currencies]="currencies()"
+              [label]="t('nav.currency')"
+              [(selected)]="currentCurrency" />
+          </div>
+        }
+      </div>
     </nav>
   }
 </header>

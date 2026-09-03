@@ -1,4 +1,5 @@
 import { Component, effect, inject, signal } from '@angular/core';
+import { CurrencyStore } from '@core/money/currency.store';
 import { RouterOutlet } from '@angular/router';
 import { TranslocoService } from '@jsverse/transloco';
 import { Footer, FooterColumn, Header, NavEntry } from '@shared/ui';
@@ -8,7 +9,12 @@ import { Footer, FooterColumn, Header, NavEntry } from '@shared/ui';
   imports: [RouterOutlet, Header, Footer],
   template: `
     <div class="flex min-h-screen flex-col">
-      <bip-header [(currentLang)]="currentLang" [cartCount]="0" [entries]="navEntries" />
+      <bip-header
+        [(currentLang)]="currentLang"
+        [(currentCurrency)]="currency.selected"
+        [currencies]="currency.currencies()"
+        [cartCount]="0"
+        [entries]="navEntries" />
       <main class="flex-1">
         <router-outlet />
       </main>
@@ -42,6 +48,9 @@ export class App {
       ],
     },
   ];
+
+  /** La devise d'affichage est indépendante de la langue (cadrage §11). */
+  protected readonly currency = inject(CurrencyStore);
 
   private readonly transloco = inject(TranslocoService);
   protected currentLang = signal(this.transloco.getActiveLang());
