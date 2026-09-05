@@ -1,4 +1,12 @@
 {
+  "common": {
+    "no-element": "Aucun élément",
+    "select": "Sélectionner",
+    "radio": {
+      "no-option": "Aucune option spécifiée pour le groupe radio.",
+      "min-option": "Au moins deux options sont requises pour le groupe de boutons radio."
+    }
+  },
   "nav": {
     "main": "Navigation principale",
     "menu": "Menu",

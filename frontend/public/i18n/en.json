@@ -1,4 +1,12 @@
 {
+  "common": {
+    "no-element": "No element",
+    "select": "Select an item",
+    "radio": {
+      "no-option": "No options specified for radio group",
+      "min-option": "At least two options required for radio button group."
+    }
+  },
   "nav": {
     "main": "Main navigation",
     "menu": "Menu",

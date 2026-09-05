@@ -1,47 +1,46 @@
-import { Component, input } from '@angular/core';
+import { booleanAttribute, Component, input } from '@angular/core';
+import { ValidationError, WithOptionalFieldTree } from '@angular/forms/signals';
+import { NgIcon, provideIcons } from '@ng-icons/core';
+import { heroExclamationCircleSolid } from '@ng-icons/heroicons/solid';
 
-/**
- * Habillage commun à tous les champs : libellé, obligatoire, aide, erreur.
- * Un message d'erreur n'est jamais porté par la couleur seule (cahier §11) —
- * il est toujours accompagné d'un texte et rattaché au champ par aria-describedby.
- */
 @Component({
   selector: 'bip-field',
   host: { class: 'flex flex-col gap-1.5' },
+  providers: [provideIcons({ heroExclamationCircleSolid })],
   template: `
     @if (label() && !hideLabel()) {
-      <label [attr.for]="for()" class="text-small text-ink flex items-center gap-1 font-semibold">
+      <label [attr.for]="inputId()" class="text-small text-ink flex items-center gap-1 font-semibold">
         {{ label() }}
         @if (required()) {
-          <span class="text-state-error" aria-hidden="true">*</span>
+          <span aria-hidden="true" class="text-state-error">*</span>
         }
       </label>
     } @else if (label()) {
-      <label [attr.for]="for()" class="sr-only">{{ label() }}</label>
+      <label [attr.for]="inputId()" class="sr-only">{{ label() }}</label>
     }
 
     <ng-content />
 
-    @if (error()) {
-      <p [id]="for() + '-error'" class="text-label text-state-error flex items-start gap-1">
-        <svg class="mt-px h-3.5 w-3.5 shrink-0" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-          <path
-            fill-rule="evenodd"
-            d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm0-13a.75.75 0 0 1 .75.75v4.5a.75.75 0 0 1-1.5 0v-4.5A.75.75 0 0 1 10 5Zm0 9.5a1 1 0 1 0 0-2 1 1 0 0 0 0 2Z"
-            clip-rule="evenodd" />
-        </svg>
-        <span>{{ error() }}</span>
-      </p>
+    @if (showErrors()) {
+      @for (error of errors(); track error) {
+        <p class="text-label text-state-error flex items-center gap-1">
+          <ng-icon color="red" name="heroExclamationCircleSolid" />
+          <span>{{ error.message }}</span>
+        </p>
+      }
     } @else if (hint()) {
-      <p [id]="for() + '-hint'" class="text-label text-muted">{{ hint() }}</p>
+      <p [id]="inputId() + '-hint'" class="text-label text-muted">{{ hint() }}</p>
     }
   `,
+  imports: [NgIcon],
 })
 export class Field {
-  readonly label = input<string>();
-  readonly for = input<string>('');
+  readonly label = input.required<string>();
+  readonly inputId = input.required<string>();
   readonly hint = input<string>();
-  readonly error = input<string>();
-  readonly required = input(false);
-  readonly hideLabel = input(false);
+  readonly errors = input<readonly WithOptionalFieldTree<ValidationError>[]>([]);
+  readonly showErrors = input(false);
+
+  readonly required = input(false, { transform: booleanAttribute });
+  readonly hideLabel = input(false, { transform: booleanAttribute });
 }

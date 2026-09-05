@@ -1,93 +1,44 @@
-import {
-  Component,
-  computed,
-  forwardRef,
-  input,
-  model,
-} from '@angular/core';
-import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
+import { Component, computed, input, model, output } from '@angular/core';
+import { FormCheckboxControl, ValidationError, WithOptionalFieldTree } from '@angular/forms/signals';
+import { NgIcon, provideIcons } from '@ng-icons/core';
+import { heroExclamationCircleSolid } from '@ng-icons/heroicons/solid';
 
 @Component({
   selector: 'bip-checkbox',
-  host: { class: 'block' },
-  providers: [
-    { provide: NG_VALUE_ACCESSOR, useExisting: forwardRef(() => Checkbox), multi: true },
-  ],
-  template: `
-    <div class="flex min-h-11 items-start gap-2.5 py-2">
-      <input
-        type="checkbox"
-        [id]="inputId()"
-        [name]="name() || inputId()"
-        [class]="controlClass()"
-        [checked]="checked()"
-        [disabled]="disabled()"
-        [attr.aria-describedby]="hint() ? inputId() + '-hint' : null"
-        [attr.aria-invalid]="!!error()"
-        (change)="onChange($event)"
-        (blur)="onBlur()" />
-      <div class="min-w-0 flex-1">
-        <label
-          [for]="inputId()"
-          class="text-small text-muted block cursor-pointer font-medium select-none">
-          {{ label() }}
-        </label>
-        @if (error()) {
-          <p class="text-label text-state-error mt-0.5">{{ error() }}</p>
-        } @else if (hint()) {
-          <p [id]="inputId() + '-hint'" class="text-label text-muted mt-0.5">{{ hint() }}</p>
-        }
-      </div>
-    </div>
-  `,
+  host: { class: 'block space-y-1' },
+  templateUrl: './checkbox.html',
+  imports: [NgIcon],
+  providers: [provideIcons({ heroExclamationCircleSolid })],
 })
-export class Checkbox implements ControlValueAccessor {
-  readonly inputId = input.required<string>();
+export class Checkbox implements FormCheckboxControl {
+  readonly inputId = input<string>();
   readonly label = input.required<string>();
-  readonly name = input<string>();
   readonly hint = input<string>();
-  readonly error = input<string>();
-  readonly disabled = model(false);
+
+  readonly name = input('');
+  readonly touched = input(false);
+  readonly invalid = input(false);
+  readonly dirty = input(false);
+  readonly required = input(false);
+  readonly disabled = input(false);
+
+  readonly errors = input<readonly WithOptionalFieldTree<ValidationError>[]>([]);
+  readonly showError = computed(() => (this.touched() || this.dirty()) && this.errors().length > 0);
+
   readonly checked = model(false);
 
-  protected readonly controlClass = computed(() => {
+  readonly touch = output<void>();
+
+  readonly controlClass = computed(() => {
     const base = [
-      'mt-0.5 h-5 w-5 shrink-0 cursor-pointer rounded border-2 bip-focusable',
-      'accent-brand-primary',
-      this.error() ? 'border-state-error' : 'border-border-strong',
+      'h-4 w-4 shrink-0 rounded-lg border-2 bip-focusable accent-brand-primary',
+      this.showError() ? 'border-state-error' : 'border-border-strong',
     ];
     if (this.disabled()) {
-      base.push('cursor-not-allowed opacity-50');
+      base.push('cursor-not-allowed pointer-events-none opacity-50');
+    } else {
+      base.push('cursor-pointer');
     }
     return base.join(' ');
   });
-
-  private onChangeFn: (value: boolean) => void = () => undefined;
-  private onTouchedFn: () => void = () => undefined;
-
-  protected onChange(event: Event): void {
-    const next = (event.target as HTMLInputElement).checked;
-    this.checked.set(next);
-    this.onChangeFn(next);
-  }
-
-  protected onBlur(): void {
-    this.onTouchedFn();
-  }
-
-  writeValue(value: boolean): void {
-    this.checked.set(!!value);
-  }
-
-  registerOnChange(fn: (value: boolean) => void): void {
-    this.onChangeFn = fn;
-  }
-
-  registerOnTouched(fn: () => void): void {
-    this.onTouchedFn = fn;
-  }
-
-  setDisabledState(isDisabled: boolean): void {
-    this.disabled.set(isDisabled);
-  }
 }

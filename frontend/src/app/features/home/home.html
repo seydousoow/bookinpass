@@ -1,0 +1,67 @@
+<ng-container *transloco="let t">
+  <section class="from-brand-dark to-brand-primary bg-linear-to-br">
+    <div class="mx-auto max-w-7xl px-4 py-10 sm:py-16">
+      <h1 class="text-display text-onbrand max-w-3xl">{{ t('home.title') }}</h1>
+      <p class="text-body text-brand-soft mt-3 max-w-2xl">{{ t('home.subtitle') }}</p>
+
+      <bip-card class="mt-8" padding="md">
+        <bip-radio-group
+          [(value)]="tripType"
+          [options]="tripTypes"
+          appearance="segmented"
+          groupName="trip-type"/>
+
+        <div class="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+          <bip-location-field
+            [(selection)]="origin"
+            [airports]="airports.airports()"
+            [label]="t('search.from')"
+            [loading]="airports.loading()"
+            inputId="from"/>
+
+          <bip-location-field
+            [(selection)]="destination"
+            [airports]="airports.airports()"
+            [error]="sameCityError()"
+            [label]="t('search.to')"
+            [loading]="airports.loading()"
+            inputId="to"/>
+
+          <bip-date-picker
+            [(value)]="dates"
+            [label]="tripType() === 'round' ? t('search.depart') + ' — ' + t('search.return') : t('search.depart')"
+            [mode]="tripType() === 'round' ? 'range' : 'single'"
+            [visibleMonths]="2"/>
+
+          <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-1 xl:gap-3">
+            <bip-people-selector [(value)]="passengers" [label]="t('search.travelers')"/>
+          </div>
+        </div>
+
+        <div class="flex flex-wrap items-end gap-3">
+          <bip-select
+            [(value)]="cabin"
+            [label]="t('search.cabin')"
+            [options]="cabins"
+            class="w-full sm:w-56"
+            inputId="cabin"/>
+          <button
+            (click)="submit()"
+            [disabled]="!canSearch()"
+            bipButton
+            class="ml-auto w-full sm:w-auto"
+            size="lg"
+            type="button"
+            variant="accent">
+            {{ t('search.submit') }}
+          </button>
+        </div>
+      </bip-card>
+
+      @if (lastQuery(); as query) {
+        <pre
+          class="text-label text-brand-soft bg-ink/30 rounded-card mt-4 overflow-x-auto p-3">{{ query }}</pre>
+      }
+    </div>
+  </section>
+</ng-container>

@@ -1,13 +1,6 @@
 import { Component, computed, input } from '@angular/core';
 
-export type BadgeTone =
-  | 'neutral'
-  | 'brand'
-  | 'accent'
-  | 'success'
-  | 'warning'
-  | 'error'
-  | 'info';
+export type BadgeTone = 'neutral' | 'brand' | 'accent' | 'success' | 'warning' | 'error' | 'info';
 
 @Component({
   selector: 'bip-badge',
@@ -28,10 +21,7 @@ export class Badge {
       error: 'bg-state-error-soft text-state-error border-state-error/30',
       info: 'bg-state-info-soft text-state-info border-state-info/30',
     } as const;
-    const sizes = {
-      sm: 'px-2 py-0.5 text-label',
-      md: 'px-2.5 py-1 text-label',
-    } as const;
+    const sizes = { sm: 'px-2 py-0.5 text-label', md: 'px-2.5 py-1 text-label', } as const;
     return `inline-flex items-center gap-1 rounded-pill border font-semibold ${tones[this.tone()]} ${sizes[this.size()]}`;
   });
 }

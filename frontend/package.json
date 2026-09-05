@@ -27,6 +27,8 @@
     "@jsverse/transloco": "^9.0.0-alpha.1",
     "@jsverse/transloco-locale": "^9.0.0-alpha.1",
     "@jsverse/transloco-persist-lang": "^9.0.0-alpha.1",
+    "@ng-icons/core": "^36.0.0",
+    "@ng-icons/heroicons": "^36.0.0",
     "express": "^5.1.0",
     "fuse.js": "^7.5.0",
     "rxjs": "~7.8.0",
