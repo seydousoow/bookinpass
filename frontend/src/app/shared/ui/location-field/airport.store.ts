@@ -1,6 +1,8 @@
+// noinspection ES6PreferShortImport
+
 import { afterNextRender, inject, Injectable, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Airport } from '@shared/models/place.model';
+import { Airport } from '../../models/place.model';
 
 /**
  * Référentiel des points de départ / d'arrivée.
@@ -14,10 +16,9 @@ import { Airport } from '@shared/models/place.model';
  */
 @Injectable({ providedIn: 'root' })
 export class AirportStore {
-  private readonly http = inject(HttpClient);
-
   readonly airports = signal<readonly Airport[]>([]);
   readonly loading = signal(false);
+  private readonly http = inject(HttpClient);
 
   constructor() {
     afterNextRender(() => this.load());

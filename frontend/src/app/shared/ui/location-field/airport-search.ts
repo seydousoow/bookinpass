@@ -1,3 +1,5 @@
+// noinspection NonAsciiCharacters
+
 import Fuse, { IFuseOptions } from 'fuse.js';
 import { Airport } from '@shared/models/place.model';
 
@@ -8,14 +10,34 @@ import { Airport } from '@shared/models/place.model';
  * couvrir « Malmö », « Ørsta » ou « Łódź » dès maintenant.
  */
 const LIGATURES: Record<string, string> = {
-  œ: 'oe', æ: 'ae', ø: 'o', ß: 'ss', đ: 'd', ð: 'd', þ: 'th',
-  ł: 'l', ħ: 'h', ı: 'i', ŋ: 'n', ſ: 's', ŧ: 't', ƶ: 'z',
+  œ: 'oe',
+  æ: 'ae',
+  ø: 'o',
+  ß: 'ss',
+  đ: 'd',
+  ð: 'd',
+  þ: 'th',
+  ł: 'l',
+  ħ: 'h',
+  ı: 'i',
+  ŋ: 'n',
+  ſ: 's',
+  ŧ: 't',
+  ƶ: 'z',
 };
 
 /** Apostrophes et tirets typographiques : « Côte d’Ivoire » doit se trouver en tapant « Cote d'Ivoire ». */
 const PUNCTUATION: Record<string, string> = {
-  'ʼ': "'", '‘': "'", '’': "'", '‚': "'", '‛': "'",
-  '“': '"', '”': '"', '–': '-', '—': '-', '‑': '-',
+  ʼ: "'",
+  '‘': "'",
+  '’': "'",
+  '‚': "'",
+  '‛': "'",
+  '“': '"',
+  '”': '"',
+  '–': '-',
+  '—': '-',
+  '‑': '-',
 };
 
 /**
@@ -100,53 +122,34 @@ export function createAirportIndex(airports: readonly Airport[]): Fuse<IndexedAi
 }
 
 /**
- * Poids du rang de hub dans le classement final.
- *
- * Le score Fuse va de 0 (parfait) à `threshold` (0,3). La pénalité de rang vaut
- * au plus 3 × 0,02 = 0,06, soit un cinquième de l'échelle : elle départage des
- * résultats de pertinence voisine — « Côte d'Ivoire », où tous les aéroports du
- * pays obtiennent le même score — sans jamais faire remonter un grand aéroport
- * devant une correspondance textuelle franchement meilleure.
- */
-export const HUB_RANK_WEIGHT = 0.02;
-
-/**
- * Fuse tronque AVANT son propre tri : on récupère un vivier plus large, on
- * reclasse, puis on coupe. Sinon un hub légèrement moins bien noté serait
- * écarté avant d'avoir pu remonter.
+ * Fuse tronque AVANT de rendre la main : on récupère un vivier plus large que
+ * la limite demandée, puis on coupe après avoir remonté la correspondance
+ * exacte. Sinon un code exact un peu moins bien noté que des correspondances
+ * floues serait écarté avant d'avoir pu être hissé en tête.
  */
 const CANDIDATE_FACTOR = 4;
 const MAX_CANDIDATES = 240;
 
 /**
- * Une correspondance exacte de code IATA ou de code ville doit toujours arriver
- * en tête : c'est la saisie la plus intentionnelle qu'un utilisateur puisse
- * faire, et aucun rang de hub ne doit la déclasser.
+ * L'ordre est celui de Fuse — pertinence textuelle seule. Une correspondance
+ * exacte de code IATA ou de code ville passe devant : c'est la saisie la plus
+ * intentionnelle qu'un utilisateur puisse faire.
+ *
+ * À pertinence égale — « Côte d'Ivoire », où tous les aéroports du pays
+ * obtiennent le même score — l'ordre est celui du référentiel. Départager ces
+ * cas demande un signal de popularité que le front n'a pas : il viendra du
+ * backend, avec le référentiel.
  */
-export function searchAirports(
-  index: Fuse<IndexedAirport>,
-  query: string,
-  limit: number,
-): readonly Airport[] {
+export function searchAirports(index: Fuse<IndexedAirport>, query: string, limit: number): readonly Airport[] {
   const normalized = normalizeForSearch(query);
   if (!normalized) {
     return [];
   }
 
   const candidates = Math.min(MAX_CANDIDATES, Math.max(limit, limit * CANDIDATE_FACTOR));
-  const ranked = index
-    .search(normalized, { limit: candidates })
-    .map((hit) => ({
-      airport: hit.item.airport,
-      rank: (hit.score ?? 0) + (hit.item.airport.hubRank - 1) * HUB_RANK_WEIGHT,
-    }))
-    .sort((a, b) => a.rank - b.rank)
-    .map((r) => r.airport);
+  const ranked = index.search(normalized, { limit: candidates }).map((hit) => hit.item.airport);
 
-  const exactAt = ranked.findIndex(
-    (a) =>
-      normalizeForSearch(a.iata) === normalized || normalizeForSearch(a.cityCode) === normalized,
-  );
+  const exactAt = ranked.findIndex((a) => normalizeForSearch(a.iata) === normalized || normalizeForSearch(a.cityCode) === normalized);
   if (exactAt > 0) {
     const [exact] = ranked.splice(exactAt, 1);
     ranked.unshift(exact);
