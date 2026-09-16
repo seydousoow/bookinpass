@@ -1,0 +1,598 @@
+{
+  "created_at": "2026-09-11T12:30:45.367952Z",
+  "updated_at": "2026-09-11T12:30:45.367952Z",
+  "id": "off_0000BAIcXjuyn82sRilLko",
+  "live_mode": false,
+  "expires_at": "2026-09-11T13:00:45.367953Z",
+  "supported_loyalty_programmes": ["AA", "AS", "CX", "MH", "BA", "AY", "UL", "QF", "IB", "JM", "QR", "UM", "RJ", "AT"],
+  "base_amount": "530.51",
+  "intended_base_amount": "530.51",
+  "base_currency": "EUR",
+  "tax_amount": "95.49",
+  "tax_currency": "EUR",
+  "total_amount": "626.00",
+  "intended_total_amount": "626.00",
+  "total_currency": "EUR",
+  "total_emissions_kg": "660",
+  "passenger_identity_documents_required": false,
+  "supported_passenger_identity_document_types": ["passport", "known_traveler_number", "passenger_redress_number"],
+  "partial": false,
+  "private_fares": [],
+  "conditions": {
+    "change_before_departure": {
+      "allowed": true,
+      "penalty_amount": "110.00",
+      "penalty_currency": "EUR"
+    },
+    "refund_before_departure": {
+      "allowed": false,
+      "penalty_amount": null,
+      "penalty_currency": null
+    }
+  },
+  "owner": {
+    "conditions_of_carriage_url": "https://www.britishairways.com/en-gb/information/legal/british-airways/general-conditions-of-carriage",
+    "iata_code": "BA",
+    "id": "arl_00009VME7DBKeMags5CliQ",
+    "logo_lockup_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-lockup/BA.svg",
+    "logo_symbol_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/BA.svg",
+    "name": "British Airways"
+  },
+  "slices": [
+    {
+      "id": "sli_0000BAIcXjuyn82sRilLki",
+      "duration": "PT6H12M",
+      "destination_type": "airport",
+      "origin_type": "airport",
+      "fare_brand_name": "Basic",
+      "ngs_shelf": 1,
+      "conditions": {
+        "change_before_departure": {
+          "allowed": true,
+          "penalty_amount": "110.00",
+          "penalty_currency": "EUR"
+        },
+        "advance_seat_selection": null,
+        "priority_boarding": null,
+        "priority_check_in": null
+      },
+      "comparison_key": "BZL7Mg==",
+      "origin": {
+        "iata_code": "DSS",
+        "iata_country_code": "SN",
+        "id": "arp_dss_sn",
+        "name": "Blaise Diagne International Airport",
+        "latitude": 14.670284,
+        "longitude": -17.071337,
+        "icao_code": "GOBD",
+        "time_zone": "Africa/Dakar",
+        "city_name": "Dakar",
+        "iata_city_code": "DKR",
+        "type": "airport",
+        "city": {
+          "iata_code": "DKR",
+          "iata_country_code": "SN",
+          "id": "cit_dkr_sn",
+          "name": "Dakar",
+          "latitude": null,
+          "longitude": null,
+          "icao_code": null,
+          "time_zone": null,
+          "city_name": null,
+          "iata_city_code": "DKR",
+          "type": "city"
+        }
+      },
+      "destination": {
+        "iata_code": "CDG",
+        "iata_country_code": "FR",
+        "id": "arp_cdg_fr",
+        "name": "Paris Charles de Gaulle Airport",
+        "latitude": 49.011244,
+        "longitude": 2.548962,
+        "icao_code": "LFPG",
+        "time_zone": "Europe/Paris",
+        "city_name": "Paris",
+        "iata_city_code": "PAR",
+        "type": "airport",
+        "city": {
+          "iata_code": "PAR",
+          "iata_country_code": "FR",
+          "id": "cit_par_fr",
+          "name": "Paris",
+          "latitude": null,
+          "longitude": null,
+          "icao_code": null,
+          "time_zone": null,
+          "city_name": null,
+          "iata_city_code": "PAR",
+          "type": "city"
+        }
+      },
+      "segments": [
+        {
+          "id": "seg_0000BAIcXjuyn82sRilLkh",
+          "arriving_at": "2026-10-21T23:41:00",
+          "departing_at": "2026-10-21T15:29:00",
+          "destination_terminal": "1",
+          "distance": "4216.683148217764",
+          "duration": "PT6H12M",
+          "marketing_carrier_flight_number": "0109",
+          "operating_carrier_flight_number": "0109",
+          "origin_terminal": "2",
+          "media": [],
+          "passengers": [
+            {
+              "passenger_id": "pas_0000BAIcXjh9cWzDkqIJDH",
+              "cabin_class": "economy",
+              "cabin_class_marketing_name": "Economy",
+              "fare_basis_code": "Y20LGTN2",
+              "baggages": [
+                {
+                  "type": "checked",
+                  "quantity": 1
+                },
+                {
+                  "type": "carry_on",
+                  "quantity": 1
+                }
+              ],
+              "cabin": {
+                "marketing_name": "Economy",
+                "name": "economy",
+                "amenities": {
+                  "wifi": {
+                    "available": true,
+                    "cost": "paid"
+                  },
+                  "seat": {
+                    "type": null,
+                    "legroom": "n/a",
+                    "pitch": "30"
+                  },
+                  "power": {
+                    "available": true
+                  }
+                }
+              }
+            },
+            {
+              "passenger_id": "pas_0000BAIcXjh9cWzDkqIJDM",
+              "cabin_class": "economy",
+              "cabin_class_marketing_name": "Economy",
+              "fare_basis_code": "Y20LGTN2",
+              "baggages": [
+                {
+                  "type": "checked",
+                  "quantity": 1
+                },
+                {
+                  "type": "carry_on",
+                  "quantity": 1
+                }
+              ],
+              "cabin": {
+                "marketing_name": "Economy",
+                "name": "economy",
+                "amenities": {
+                  "wifi": {
+                    "available": true,
+                    "cost": "paid"
+                  },
+                  "seat": {
+                    "type": null,
+                    "legroom": "n/a",
+                    "pitch": "30"
+                  },
+                  "power": {
+                    "available": true
+                  }
+                }
+              }
+            },
+            {
+              "passenger_id": "pas_0000BAIcXjh9cWzDkqIJDR",
+              "cabin_class": "economy",
+              "cabin_class_marketing_name": "Economy",
+              "fare_basis_code": "Y20LGTN2",
+              "baggages": [
+                {
+                  "type": "checked",
+                  "quantity": 1
+                },
+                {
+                  "type": "carry_on",
+                  "quantity": 1
+                }
+              ],
+              "cabin": {
+                "marketing_name": "Economy",
+                "name": "economy",
+                "amenities": {
+                  "wifi": {
+                    "available": true,
+                    "cost": "paid"
+                  },
+                  "seat": {
+                    "type": null,
+                    "legroom": "n/a",
+                    "pitch": "30"
+                  },
+                  "power": {
+                    "available": true
+                  }
+                }
+              }
+            }
+          ],
+          "stops": [],
+          "aircraft": null,
+          "marketing_carrier": {
+            "conditions_of_carriage_url": "https://www.britishairways.com/en-gb/information/legal/british-airways/general-conditions-of-carriage",
+            "iata_code": "BA",
+            "id": "arl_00009VME7DBKeMags5CliQ",
+            "logo_lockup_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-lockup/BA.svg",
+            "logo_symbol_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/BA.svg",
+            "name": "British Airways"
+          },
+          "operating_carrier": {
+            "conditions_of_carriage_url": "https://www.britishairways.com/en-gb/information/legal/british-airways/general-conditions-of-carriage",
+            "iata_code": "BA",
+            "id": "arl_00009VME7DBKeMags5CliQ",
+            "logo_lockup_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-lockup/BA.svg",
+            "logo_symbol_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/BA.svg",
+            "name": "British Airways"
+          },
+          "origin": {
+            "iata_code": "DSS",
+            "iata_country_code": "SN",
+            "id": "arp_dss_sn",
+            "name": "Blaise Diagne International Airport",
+            "latitude": 14.670284,
+            "longitude": -17.071337,
+            "icao_code": "GOBD",
+            "time_zone": "Africa/Dakar",
+            "city_name": "Dakar",
+            "iata_city_code": "DKR",
+            "type": "airport",
+            "city": {
+              "iata_code": "DKR",
+              "iata_country_code": "SN",
+              "id": "cit_dkr_sn",
+              "name": "Dakar",
+              "latitude": null,
+              "longitude": null,
+              "icao_code": null,
+              "time_zone": null,
+              "city_name": null,
+              "iata_city_code": "DKR",
+              "type": "city"
+            }
+          },
+          "destination": {
+            "iata_code": "CDG",
+            "iata_country_code": "FR",
+            "id": "arp_cdg_fr",
+            "name": "Paris Charles de Gaulle Airport",
+            "latitude": 49.011244,
+            "longitude": 2.548962,
+            "icao_code": "LFPG",
+            "time_zone": "Europe/Paris",
+            "city_name": "Paris",
+            "iata_city_code": "PAR",
+            "type": "airport",
+            "city": {
+              "iata_code": "PAR",
+              "iata_country_code": "FR",
+              "id": "cit_par_fr",
+              "name": "Paris",
+              "latitude": null,
+              "longitude": null,
+              "icao_code": null,
+              "time_zone": null,
+              "city_name": null,
+              "iata_city_code": "PAR",
+              "type": "city"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "sli_0000BAIcXjuyn82sRilLkl",
+      "duration": "PT6H12M",
+      "destination_type": "airport",
+      "origin_type": "airport",
+      "fare_brand_name": "Basic",
+      "ngs_shelf": 1,
+      "conditions": {
+        "change_before_departure": {
+          "allowed": true,
+          "penalty_amount": "110.00",
+          "penalty_currency": "EUR"
+        },
+        "advance_seat_selection": null,
+        "priority_boarding": null,
+        "priority_check_in": null
+      },
+      "comparison_key": "BRqCtQ==",
+      "origin": {
+        "iata_code": "CDG",
+        "iata_country_code": "FR",
+        "id": "arp_cdg_fr",
+        "name": "Paris Charles de Gaulle Airport",
+        "latitude": 49.011244,
+        "longitude": 2.548962,
+        "icao_code": "LFPG",
+        "time_zone": "Europe/Paris",
+        "city_name": "Paris",
+        "iata_city_code": "PAR",
+        "type": "airport",
+        "city": {
+          "iata_code": "PAR",
+          "iata_country_code": "FR",
+          "id": "cit_par_fr",
+          "name": "Paris",
+          "latitude": null,
+          "longitude": null,
+          "icao_code": null,
+          "time_zone": null,
+          "city_name": null,
+          "iata_city_code": "PAR",
+          "type": "city"
+        }
+      },
+      "destination": {
+        "iata_code": "DSS",
+        "iata_country_code": "SN",
+        "id": "arp_dss_sn",
+        "name": "Blaise Diagne International Airport",
+        "latitude": 14.670284,
+        "longitude": -17.071337,
+        "icao_code": "GOBD",
+        "time_zone": "Africa/Dakar",
+        "city_name": "Dakar",
+        "iata_city_code": "DKR",
+        "type": "airport",
+        "city": {
+          "iata_code": "DKR",
+          "iata_country_code": "SN",
+          "id": "cit_dkr_sn",
+          "name": "Dakar",
+          "latitude": null,
+          "longitude": null,
+          "icao_code": null,
+          "time_zone": null,
+          "city_name": null,
+          "iata_city_code": "DKR",
+          "type": "city"
+        }
+      },
+      "segments": [
+        {
+          "id": "seg_0000BAIcXjuyn82sRilLkk",
+          "arriving_at": "2026-11-21T20:41:00",
+          "departing_at": "2026-11-21T15:29:00",
+          "destination_terminal": "1",
+          "distance": "4216.683148217764",
+          "duration": "PT6H12M",
+          "marketing_carrier_flight_number": "0109",
+          "operating_carrier_flight_number": "0109",
+          "origin_terminal": "2",
+          "media": [],
+          "passengers": [
+            {
+              "passenger_id": "pas_0000BAIcXjh9cWzDkqIJDH",
+              "cabin_class": "economy",
+              "cabin_class_marketing_name": "Economy",
+              "fare_basis_code": "Y20LGTN2",
+              "baggages": [
+                {
+                  "type": "checked",
+                  "quantity": 1
+                },
+                {
+                  "type": "carry_on",
+                  "quantity": 1
+                }
+              ],
+              "cabin": {
+                "marketing_name": "Economy",
+                "name": "economy",
+                "amenities": {
+                  "wifi": {
+                    "available": true,
+                    "cost": "paid"
+                  },
+                  "seat": {
+                    "type": null,
+                    "legroom": "n/a",
+                    "pitch": "30"
+                  },
+                  "power": {
+                    "available": true
+                  }
+                }
+              }
+            },
+            {
+              "passenger_id": "pas_0000BAIcXjh9cWzDkqIJDM",
+              "cabin_class": "economy",
+              "cabin_class_marketing_name": "Economy",
+              "fare_basis_code": "Y20LGTN2",
+              "baggages": [
+                {
+                  "type": "checked",
+                  "quantity": 1
+                },
+                {
+                  "type": "carry_on",
+                  "quantity": 1
+                }
+              ],
+              "cabin": {
+                "marketing_name": "Economy",
+                "name": "economy",
+                "amenities": {
+                  "wifi": {
+                    "available": true,
+                    "cost": "paid"
+                  },
+                  "seat": {
+                    "type": null,
+                    "legroom": "n/a",
+                    "pitch": "30"
+                  },
+                  "power": {
+                    "available": true
+                  }
+                }
+              }
+            },
+            {
+              "passenger_id": "pas_0000BAIcXjh9cWzDkqIJDR",
+              "cabin_class": "economy",
+              "cabin_class_marketing_name": "Economy",
+              "fare_basis_code": "Y20LGTN2",
+              "baggages": [
+                {
+                  "type": "checked",
+                  "quantity": 1
+                },
+                {
+                  "type": "carry_on",
+                  "quantity": 1
+                }
+              ],
+              "cabin": {
+                "marketing_name": "Economy",
+                "name": "economy",
+                "amenities": {
+                  "wifi": {
+                    "available": true,
+                    "cost": "paid"
+                  },
+                  "seat": {
+                    "type": null,
+                    "legroom": "n/a",
+                    "pitch": "30"
+                  },
+                  "power": {
+                    "available": true
+                  }
+                }
+              }
+            }
+          ],
+          "stops": [],
+          "aircraft": null,
+          "marketing_carrier": {
+            "conditions_of_carriage_url": "https://www.britishairways.com/en-gb/information/legal/british-airways/general-conditions-of-carriage",
+            "iata_code": "BA",
+            "id": "arl_00009VME7DBKeMags5CliQ",
+            "logo_lockup_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-lockup/BA.svg",
+            "logo_symbol_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/BA.svg",
+            "name": "British Airways"
+          },
+          "operating_carrier": {
+            "conditions_of_carriage_url": "https://www.britishairways.com/en-gb/information/legal/british-airways/general-conditions-of-carriage",
+            "iata_code": "BA",
+            "id": "arl_00009VME7DBKeMags5CliQ",
+            "logo_lockup_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-lockup/BA.svg",
+            "logo_symbol_url": "https://assets.duffel.com/img/airlines/for-light-background/full-color-logo/BA.svg",
+            "name": "British Airways"
+          },
+          "origin": {
+            "iata_code": "CDG",
+            "iata_country_code": "FR",
+            "id": "arp_cdg_fr",
+            "name": "Paris Charles de Gaulle Airport",
+            "latitude": 49.011244,
+            "longitude": 2.548962,
+            "icao_code": "LFPG",
+            "time_zone": "Europe/Paris",
+            "city_name": "Paris",
+            "iata_city_code": "PAR",
+            "type": "airport",
+            "city": {
+              "iata_code": "PAR",
+              "iata_country_code": "FR",
+              "id": "cit_par_fr",
+              "name": "Paris",
+              "latitude": null,
+              "longitude": null,
+              "icao_code": null,
+              "time_zone": null,
+              "city_name": null,
+              "iata_city_code": "PAR",
+              "type": "city"
+            }
+          },
+          "destination": {
+            "iata_code": "DSS",
+            "iata_country_code": "SN",
+            "id": "arp_dss_sn",
+            "name": "Blaise Diagne International Airport",
+            "latitude": 14.670284,
+            "longitude": -17.071337,
+            "icao_code": "GOBD",
+            "time_zone": "Africa/Dakar",
+            "city_name": "Dakar",
+            "iata_city_code": "DKR",
+            "type": "airport",
+            "city": {
+              "iata_code": "DKR",
+              "iata_country_code": "SN",
+              "id": "cit_dkr_sn",
+              "name": "Dakar",
+              "latitude": null,
+              "longitude": null,
+              "icao_code": null,
+              "time_zone": null,
+              "city_name": null,
+              "iata_city_code": "DKR",
+              "type": "city"
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "passengers": [
+    {
+      "id": "pas_0000BAIcXjh9cWzDkqIJDH",
+      "type": "adult",
+      "fare_type": null,
+      "age": null,
+      "given_name": null,
+      "family_name": null,
+      "loyalty_programme_accounts": []
+    },
+    {
+      "id": "pas_0000BAIcXjh9cWzDkqIJDM",
+      "type": "child",
+      "fare_type": null,
+      "age": null,
+      "given_name": null,
+      "family_name": null,
+      "loyalty_programme_accounts": []
+    },
+    {
+      "id": "pas_0000BAIcXjh9cWzDkqIJDR",
+      "type": "infant_without_seat",
+      "fare_type": null,
+      "age": 1,
+      "given_name": null,
+      "family_name": null,
+      "loyalty_programme_accounts": []
+    }
+  ],
+  "available_services": null,
+  "payment_requirements": {
+    "requires_instant_payment": false,
+    "payment_required_by": "2026-09-14T12:30:45Z",
+    "price_guarantee_expires_at": "2026-09-13T12:30:45Z"
+  },
+  "intended_services": null,
+  "available_airline_credit_ids": []
+}

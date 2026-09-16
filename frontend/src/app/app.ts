@@ -1,8 +1,10 @@
-import { Component, effect, inject, signal } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { CurrencyStore } from '@core/money/currency.store';
 import { RouterOutlet } from '@angular/router';
 import { TranslocoService } from '@jsverse/transloco';
 import { Footer, FooterColumn, Header, NavEntry } from '@shared/ui';
+import { firstValueFrom } from 'rxjs';
+import { CurrencyOption } from '@shared/models/money.model';
 
 @Component({
   selector: 'bip-root',
@@ -10,11 +12,14 @@ import { Footer, FooterColumn, Header, NavEntry } from '@shared/ui';
   template: `
     <div class="flex min-h-screen flex-col">
       <bip-header
-        [(currentLang)]="currentLang"
-        [(currentCurrency)]="currency.selected"
-        [currencies]="currency.currencies()"
-        [cartCount]="0"
-        [entries]="navEntries" />
+        (currentCurrencyChange)="currencyChange($event)"
+        (currentLangChange)="changeLanguage($event)"
+        [cartCount]="cartCount()"
+        [currencies]="_currencies"
+        [currentCurrency]="_currentCurrency"
+        [currentLang]="_currentLang"
+        [entries]="navEntries"
+        [languages]="languages" />
       <main class="flex-1">
         <router-outlet />
       </main>
@@ -23,7 +28,6 @@ import { Footer, FooterColumn, Header, NavEntry } from '@shared/ui';
   `,
 })
 export class App {
-  /** Les routes sont décidées ici, pas dans `shared/ui` (plan §2.2 règle 2). */
   protected readonly navEntries: readonly NavEntry[] = [
     { labelKey: 'nav.home', route: '/' },
     { labelKey: 'nav.flights', route: '/flights', disabled: true },
@@ -48,16 +52,38 @@ export class App {
       ],
     },
   ];
+  protected cartCount = signal(0);
 
   /** La devise d'affichage est indépendante de la langue (cadrage §11). */
-  protected readonly currency = inject(CurrencyStore);
-
+  private readonly currencyStore = inject(CurrencyStore);
   private readonly transloco = inject(TranslocoService);
-  protected currentLang = signal(this.transloco.getActiveLang());
 
-  constructor() {
-    effect((): void => {
-      this.transloco.setActiveLang(this.currentLang());
-    });
+  readonly languages = this.transloco.getAvailableLangs();
+  private readonly currentLang = signal(this.transloco.getActiveLang());
+
+  get _currentLang(): string {
+    return this.currentLang();
+  }
+
+  get _currentCurrency(): string {
+    return this.currencyStore.selected();
+  }
+
+  get _currencies(): readonly CurrencyOption[] {
+    return this.currencyStore.currencies();
+  }
+
+  protected async changeLanguage(lang: string): Promise<void> {
+    if (lang === this.currentLang()) {
+      return;
+    }
+
+    await firstValueFrom(this.transloco.load(lang));
+    this.transloco.setActiveLang(lang);
+    this.currentLang.set(lang);
+  }
+
+  protected currencyChange(currency: string): void {
+    this.currencyStore.select(currency);
   }
 }

@@ -5,7 +5,10 @@ export const routes: Routes = [
   {
     path: '',
     loadComponent: () => import('@features/home/home').then((m) => m.Home),
-    title: 'Book In Pass — Vols, séjours et activités',
+  },
+  {
+    path: 'search',
+    loadComponent: () => import('@features/search/flight-search').then((m) => m.FlightSearch)
   },
   {
     path: 'ui-kit',

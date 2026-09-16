@@ -1,14 +1,8 @@
-import { Directive, ElementRef, inject, input, output } from '@angular/core';
+import { booleanAttribute, Directive, ElementRef, inject, input, output } from '@angular/core';
 import { DOCUMENT } from '@angular/common';
 
-/**
- * Gestion du clic hors élément — utilisée par les panneaux en surcouche
- * (dropdown, select, modal, champ de localisation).
- * `mousedown` et non `click` : le panneau doit se fermer avant qu'un éventuel
- * blur ne déplace le focus.
- */
 @Directive({
-  selector: '[bipOutsideClick]',
+  selector: 'bip-outside-click, [bipOutsideClick]',
   host: {
     '(document:mousedown)': 'onPointer($event)',
     '(document:touchstart)': 'onPointer($event)',
@@ -16,7 +10,7 @@ import { DOCUMENT } from '@angular/common';
 })
 export class OutsideClickDirective {
   /** Permet de suspendre l'écoute quand le panneau est fermé. */
-  readonly outsideClickEnabled = input(true);
+  readonly outsideClickEnabled = input(true, { transform: booleanAttribute });
   readonly outsideClick = output<Event>();
 
   private readonly host = inject(ElementRef<HTMLElement>);

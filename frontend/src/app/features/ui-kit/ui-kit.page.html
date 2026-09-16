@@ -1,334 +1,326 @@
-<div class="mx-auto max-w-7xl px-4 py-8">
-  <header class="mb-8">
-    <h1 class="text-h1 text-muted">Socle — planche de validation</h1>
-    <p class="text-small text-muted mt-2 max-w-3xl">
-      Tous les composants partagés, dans tous leurs états. Les tokens viennent de
-      <code class="bg-surface-muted rounded px-1">styles/theme.css</code> ; aucune valeur brute n'est écrite ailleurs.
-    </p>
-  </header>
+<!--<div class="mx-auto max-w-7xl px-4 py-8">-->
+<!--  <header class="mb-8">-->
+<!--    <h1 class="text-3xl text-muted">Socle — planche de validation</h1>-->
+<!--    <p class="text-sm text-muted mt-2 max-w-3xl">-->
+<!--      Tous les composants partagés, dans tous leurs états. Les tokens viennent de-->
+<!--      <code class="bg-surface-muted rounded px-1">styles/theme.css</code> ; aucune valeur brute n'est écrite ailleurs.-->
+<!--    </p>-->
+<!--  </header>-->
 
-  <!-- ── Tokens ─────────────────────────────────────────────────────── -->
-  <section aria-labelledby="s-tokens" class="mb-10">
-    <h2 class="text-h2 text-muted mb-3" id="s-tokens">1 · Tokens</h2>
-    <bip-card padding="md">
-      <div class="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-6">
-        @for (swatch of swatches; track swatch.name) {
-          <div class="flex flex-col gap-1">
-            <div [class]="'rounded-card border-border-subtle h-14 border ' + swatch.class"></div>
-            <p class="text-label text-muted font-semibold">{{ swatch.name }}</p>
-            <p class="text-label text-muted font-mono">{{ swatch.hex }}</p>
-          </div>
-        }
-      </div>
+<!--  &lt;!&ndash; ── Tokens ─────────────────────────────────────────────────────── &ndash;&gt;-->
+<!--  <section aria-labelledby="s-tokens" class="mb-10">-->
+<!--    <h2 class="text-2xl text-muted mb-3" id="s-tokens">1 · Tokens</h2>-->
+<!--    <bip-card padding="md">-->
+<!--      <div class="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-6">-->
+<!--        @for (swatch of swatches; track swatch.name) {-->
+<!--          <div class="flex flex-col gap-1">-->
+<!--            <div [class]="'rounded-card border-border-subtle h-14 border ' + swatch.class"></div>-->
+<!--            <p class="text-xs text-muted font-semibold">{{ swatch.name }}</p>-->
+<!--            <p class="text-xs text-muted font-mono">{{ swatch.hex }}</p>-->
+<!--          </div>-->
+<!--        }-->
+<!--      </div>-->
 
-      <div class="border-border-subtle mt-4 border-t pt-4">
-        <p class="text-display text-muted">Display 34 / 48</p>
-        <p class="text-h1 text-muted">Titre H1 28 / 36</p>
-        <p class="text-h2 text-muted">Titre H2 22 / 28</p>
-        <p class="text-h3 text-muted">Titre H3 18 / 20</p>
-        <p class="text-body text-muted">Corps 16 — la taille de lecture par défaut.</p>
-        <p class="text-small text-muted">Réduit 14 — informations secondaires.</p>
-        <p class="text-label text-muted">Libellé 12 — plancher absolu, sans exception.</p>
-      </div>
+<!--      <div class="border-border-subtle mt-4 border-t pt-4">-->
+<!--        <p class="text-4xl text-muted">Display 34 / 48</p>-->
+<!--        <p class="text-3xl text-muted">Titre H1 28 / 36</p>-->
+<!--        <p class="text-2xl text-muted">Titre H2 22 / 28</p>-->
+<!--        <p class="text-xl text-muted">Titre H3 18 / 20</p>-->
+<!--        <p class="text-base text-muted">Corps 16 — la taille de lecture par défaut.</p>-->
+<!--        <p class="text-sm text-muted">Réduit 14 — informations secondaires.</p>-->
+<!--        <p class="text-xs text-muted">Libellé 12 — plancher absolu, sans exception.</p>-->
+<!--      </div>-->
 
-      <div class="border-border-subtle mt-4 flex flex-wrap items-end gap-4 border-t pt-4">
-        @for (radius of radii; track radius.name) {
-          <div class="flex flex-col items-center gap-1">
-            <div [class]="'bg-brand-soft border-brand-primary/30 h-12 w-16 border ' + radius.class"></div>
-            <p class="text-label text-muted">{{ radius.name }}</p>
-          </div>
-        }
-        <p class="text-small text-muted ml-auto">
-          Montant contractuel :
-          <strong class="text-ink">{{ 185000 | bipPrice: 'XOF' }}</strong>
-          · affiché en {{ currency.selected() }} :
-          <strong class="text-ink">{{ 185000 | bipPrice }}</strong>
-          @if (!currency.isContractCurrency() && currency.updatedAt(); as rateDate) {
-            <span class="text-label">(taux du {{ rateDate | translocoDate: { dateStyle: 'medium' } }} — le XOF fait foi)</span>
-          }
-        </p>
-      </div>
-    </bip-card>
-  </section>
+<!--      <div class="border-border-subtle mt-4 flex flex-wrap items-end gap-4 border-t pt-4">-->
+<!--        @for (radius of radii; track radius.name) {-->
+<!--          <div class="flex flex-col items-center gap-1">-->
+<!--            <div [class]="'bg-brand-soft border-brand-primary/30 h-12 w-16 border ' + radius.class"></div>-->
+<!--            <p class="text-xs text-muted">{{ radius.name }}</p>-->
+<!--          </div>-->
+<!--        }-->
+<!--        <p class="text-sm text-muted ml-auto">-->
+<!--          Montant contractuel :-->
+<!--          <strong class="text-ink">{{ 185000 | bipPrice: 'XOF' }}</strong>-->
+<!--          · affiché en {{ currency.selected() }} :-->
+<!--          <strong class="text-ink">{{ 185000 | bipPrice }}</strong>-->
+<!--          @if (!currency.isContractCurrency() && currency.updatedAt(); as rateDate) {-->
+<!--            <span class="text-xs">(taux du {{ rateDate | translocoDate: {dateStyle: 'medium'} }} — le XOF fait foi)</span>-->
+<!--          }-->
+<!--        </p>-->
+<!--      </div>-->
+<!--    </bip-card>-->
+<!--  </section>-->
 
-  <!-- ── Boutons ────────────────────────────────────────────────────── -->
-  <section aria-labelledby="s-buttons" class="mb-10">
-    <h2 class="text-h2 text-muted mb-3" id="s-buttons">2 · Boutons</h2>
-    <bip-card padding="md">
-      <table class="w-full min-w-160 border-collapse">
-        <thead>
-        <tr>
-          <th class="text-label text-muted p-2 text-left">Variante</th>
-          @for (state of buttonStates; track state) {
-            <th class="text-label text-muted p-2 text-left capitalize">{{ state }}</th>
-          }
-        </tr>
-        </thead>
-        <tbody>
-          @for (variant of buttonVariants; track variant) {
-            <tr class="border-border-subtle border-t">
-              <td class="text-small text-muted p-2 font-medium">{{ variant }}</td>
-              <td class="p-2">
-                <button [variant]="variant" bipButton type="button">Action</button>
-              </td>
-              <td class="p-2">
-                <button [variant]="variant" bipButton loading type="button">Action</button>
-              </td>
-              <td class="p-2">
-                <button [variant]="variant" bipButton disabled type="button">Action</button>
-              </td>
-            </tr>
-          }
-        </tbody>
-      </table>
+<!--  &lt;!&ndash; ── Boutons ────────────────────────────────────────────────────── &ndash;&gt;-->
+<!--  <section aria-labelledby="s-buttons" class="mb-10">-->
+<!--    <h2 class="text-2xl text-muted mb-3" id="s-buttons">2 · Boutons</h2>-->
+<!--    <bip-card padding="md">-->
+<!--      <table class="w-full min-w-160 border-collapse">-->
+<!--        <thead>-->
+<!--        <tr>-->
+<!--          <th class="text-xs text-muted p-2 text-left">Variante</th>-->
+<!--          @for (state of buttonStates; track state) {-->
+<!--            <th class="text-xs text-muted p-2 text-left capitalize">{{ state }}</th>-->
+<!--          }-->
+<!--        </tr>-->
+<!--        </thead>-->
+<!--        <tbody>-->
+<!--          @for (variant of buttonVariants; track variant) {-->
+<!--            <tr class="border-border-subtle border-t">-->
+<!--              <td class="text-sm text-muted p-2 font-medium">{{ variant }}</td>-->
+<!--              <td class="p-2">-->
+<!--                <button [variant]="variant" bipButton type="button">Action</button>-->
+<!--              </td>-->
+<!--              <td class="p-2">-->
+<!--                <button [variant]="variant" bipButton loading type="button">Action</button>-->
+<!--              </td>-->
+<!--              <td class="p-2">-->
+<!--                <button [variant]="variant" bipButton disabled type="button">Action</button>-->
+<!--              </td>-->
+<!--            </tr>-->
+<!--          }-->
+<!--        </tbody>-->
+<!--      </table>-->
 
-      <div class="border-border-subtle flex flex-wrap items-center gap-3 border-t pt-4">
-        @for (size of buttonSizes; track size) {
-          <button [size]="size" bipButton type="button" variant="primary">Taille {{ size }}</button>
-        }
-        <button bipButton block class="max-w-xs" type="button" variant="primary">Pleine largeur</button>
-      </div>
-      <p class="text-label text-muted">Hauteur minimale 44 px sur <code>md</code> et <code>lg</code> — cible tactile du cahier §3.2.</p>
-    </bip-card>
-  </section>
+<!--      <div class="border-border-subtle flex flex-wrap items-center gap-3 border-t pt-4">-->
+<!--        @for (size of buttonSizes; track size) {-->
+<!--          <bip-button [size]="size">Taille {{ size }}</bip-button>-->
+<!--        }-->
+<!--        <bip-button block class="max-w-xs">Pleine largeur</bip-button>-->
+<!--      </div>-->
+<!--      <p class="text-xs text-muted">Hauteur minimale 44 px sur <code>md</code> et <code>lg</code> — cible tactile du cahier §3.2.</p>-->
+<!--    </bip-card>-->
+<!--  </section>-->
 
-  <!-- ── Badges & indicateurs ───────────────────────────────────────── -->
-  <section aria-labelledby="s-badges" class="mb-10">
-    <h2 class="text-h2 text-muted mb-3" id="s-badges">3 · Badges et indicateurs</h2>
-    <bip-card padding="md">
-      <div class="flex flex-wrap items-center gap-2">
-        @for (tone of badgeTones; track tone) {
-          <bip-badge [tone]="tone">{{ tone }}</bip-badge>
-        }
-      </div>
-      <div class="text-muted flex items-center gap-4">
-        <bip-spinner size="xs"/>
-        <bip-spinner size="sm"/>
-        <bip-spinner size="md"/>
-        <bip-spinner size="lg"/>
-      </div>
-    </bip-card>
-  </section>
+<!--  &lt;!&ndash; ── Badges & indicateurs ───────────────────────────────────────── &ndash;&gt;-->
+<!--  <section aria-labelledby="s-badges" class="mb-10">-->
+<!--    <h2 class="text-2xl text-muted mb-3" id="s-badges">3 · Badges et indicateurs</h2>-->
+<!--    <bip-card padding="md">-->
+<!--      <div class="flex flex-wrap items-center gap-2">-->
+<!--        @for (tone of badgeTones; track tone) {-->
+<!--          <bip-badge [tone]="tone">{{ tone }}</bip-badge>-->
+<!--        }-->
+<!--      </div>-->
+<!--      <div class="text-muted flex items-center gap-4">-->
+<!--        <bip-spinner size="xs"/>-->
+<!--        <bip-spinner size="sm"/>-->
+<!--        <bip-spinner size="md"/>-->
+<!--        <bip-spinner size="lg"/>-->
+<!--      </div>-->
+<!--    </bip-card>-->
+<!--  </section>-->
 
-  <!-- ── Champs de formulaire ───────────────────────────────────────── -->
-  <section aria-labelledby="s-fields" class="mb-10">
-    <h2 class="text-h2 text-muted mb-3" id="s-fields">4 · Champs</h2>
-    <div class="grid gap-4 lg:grid-cols-2">
-      <bip-card padding="md" title="Saisie — états">
-        <bip-input inputId="f-normal" label="Normal" placeholder="Aminata Diallo"/>
-        <bip-input hint="Tel qu'il figure sur la pièce d'identité." inputId="f-hint" label="Avec aide"/>
-        <bip-input [value]="'aminata@'" error="L'adresse e-mail n'est pas valide." inputId="f-error" label="En erreur" type="email"/>
-        <bip-input [disabled]="true" [value]="'Non modifiable'" inputId="f-disabled" label="Désactivé"/>
-        <bip-input [value]="'BIP-2026-00418'" inputId="f-readonly" label="Lecture seule" readonly/>
-        <bip-input [value]="'185000'" inputId="f-prefix" label="Montant" prefix="F" suffix="CFA" type="number"/>
-        <bip-input inputId="f-required" label="Obligatoire" placeholder="+221 …" required type="tel"/>
-      </bip-card>
+<!--  &lt;!&ndash; ── Champs de formulaire ───────────────────────────────────────── &ndash;&gt;-->
+<!--  <section aria-labelledby="s-fields" class="mb-10">-->
+<!--    <h2 class="text-2xl text-muted mb-3" id="s-fields">4 · Champs</h2>-->
+<!--    <div class="grid gap-4 lg:grid-cols-2">-->
+<!--      <bip-card padding="md" title="Saisie — états">-->
+<!--        <bip-input inputId="f-normal" label="Normal" placeholder="Aminata Diallo"/>-->
+<!--        <bip-input hint="Tel qu'il figure sur la pièce d'identité." inputId="f-hint" label="Avec aide"/>-->
+<!--        <bip-input [value]="'aminata@'" error="L'adresse e-mail n'est pas valide." inputId="f-error" label="En erreur" type="email"/>-->
+<!--        <bip-input [disabled]="true" [value]="'Non modifiable'" inputId="f-disabled" label="Désactivé"/>-->
+<!--        <bip-input [value]="'BIP-2026-00418'" inputId="f-readonly" label="Lecture seule" readonly/>-->
+<!--        <bip-input [value]="'185000'" inputId="f-prefix" label="Montant" prefix="F" suffix="CFA" type="number"/>-->
+<!--        <bip-input inputId="f-required" label="Obligatoire" placeholder="+221 …" required type="tel"/>-->
+<!--      </bip-card>-->
 
-      <bip-card padding="md" title="Tailles et zone de texte">
-        <bip-input inputId="f-sm" label="Petite" placeholder="sm" size="sm"/>
-        <bip-input inputId="f-md" label="Moyenne" placeholder="md" size="md"/>
-        <bip-input inputId="f-lg" label="Grande" placeholder="lg" size="lg"/>
-        <bip-textarea [(value)]="giftMessage" [maxLength]="200" inputId="f-textarea" label="Message cadeau" placeholder="Bon voyage !"/>
-        <bip-textarea error="Ce champ est obligatoire." inputId="f-textarea-err" label="En erreur"/>
-      </bip-card>
+<!--      <bip-card padding="md" title="Tailles et zone de texte">-->
+<!--        <bip-input inputId="f-sm" label="Petite" placeholder="sm" size="sm"/>-->
+<!--        <bip-input inputId="f-md" label="Moyenne" placeholder="md" size="md"/>-->
+<!--        <bip-input inputId="f-lg" label="Grande" placeholder="lg" size="lg"/>-->
+<!--        <bip-textarea [(value)]="giftMessage" [maxLength]="200" inputId="f-textarea" label="Message cadeau" placeholder="Bon voyage !"/>-->
+<!--        <bip-textarea error="Ce champ est obligatoire." inputId="f-textarea-err" label="En erreur"/>-->
+<!--      </bip-card>-->
 
-      <bip-card padding="md" title="Cases et boutons radio">
-        <bip-checkbox [(checked)]="directOnly" inputId="c-1" label="Vol direct uniquement"/>
-        <bip-checkbox hint="Filtre P0 — distinct des options payantes." inputId="c-2" label="Bagage en soute inclus"/>
-        <bip-checkbox [disabled]="true" inputId="c-3" label="Désactivé"/>
-        <bip-checkbox error="Vous devez accepter les conditions." inputId="c-4" label="En erreur"/>
+<!--      <bip-card padding="md" title="Cases et boutons radio">-->
+<!--        <bip-checkbox [formField]="dataForm.oneWay" label="Vol direct uniquement"/>-->
+<!--        <bip-checkbox [formField]="dataForm.cgu" hint="Filtre P0 — distinct des options payantes." label="Conditions générales de vente"/>-->
+<!--        <bip-checkbox [formField]="dataForm.cdt" label="Désactivé"/>-->
 
-        <div class="border-border-subtle mt-2 border-t pt-3">
-          <bip-radio-group [(value)]="cabinRadio" [options]="cabins" groupName="r-list" label="Classe de voyage"/>
-        </div>
-        <div class="border-border-subtle border-t pt-3">
-          <bip-radio-group [(value)]="tripType" [options]="tripTypes" appearance="segmented" groupName="r-seg" label="Type de trajet"/>
-        </div>
-        <div class="border-border-subtle border-t pt-3">
-          <bip-radio-group [options]="cabins" error="Sélectionnez une classe." groupName="r-err" label="En erreur"/>
-        </div>
-      </bip-card>
+<!--        <div class="border-border-subtle mt-2 border-t pt-3">-->
+<!--          <bip-radio-group [formField]="dataForm.cabinRadio" [options]="cabins" label="Classe de voyage"/>-->
+<!--        </div>-->
+<!--        <div class="border-border-subtle border-t pt-3">-->
+<!--          <bip-radio-group [formField]="dataForm.tripType" [options]="tripTypes" appearance="segmented" label="Type de trajet"/>-->
+<!--        </div>-->
+<!--        &lt;!&ndash;        <div class="border-border-subtle border-t pt-3">&ndash;&gt;-->
+<!--        &lt;!&ndash;          <bip-radio-group [options]="cabins" label="En erreur"/>&ndash;&gt;-->
+<!--        &lt;!&ndash;        </div>&ndash;&gt;-->
+<!--      </bip-card>-->
 
-      <bip-card padding="md" title="Sélecteurs et surcouches">
-        <bip-select [(value)]="cabinSelect" [options]="cabins" inputId="s-1" label="Simple"/>
-        <bip-select
-          [(value)]="airlineSelect"
-          [options]="airlines"
-          hint="Compagnies à inclure dans les résultats."
-          inputId="s-2"
-          label="Multiple + recherche"
-          multiple/>
-        <bip-select [options]="cabins" error="Sélection obligatoire." inputId="s-3" label="En erreur"/>
-        <bip-select [disabled]="true" [options]="cabins" inputId="s-4" label="Désactivé"/>
+<!--      <bip-card padding="md" title="Sélecteurs et surcouches">-->
+<!--        <bip-select [formField]="dataForm.cabin" [options]="cabins" label="Simple"/>-->
+<!--        <bip-select [formField]="dataForm.airline" [options]="airlines" hint="Compagnies à inclure dans les résultats." label="Multiple" multiple/>-->
+<!--        <bip-select [disabled]="true" [options]="cabins" label="Désactivé"/>-->
 
-        <div class="border-border-subtle border-t pt-3">
-          <p class="text-small text-muted mb-2 font-semibold">Dropdown générique</p>
-          <bip-dropdown [value]="sortLabel()" label="Trier par" panelWidth="trigger">
-            <ul class="py-1" role="listbox">
-              @for (option of sortOptions; track option.value) {
-                <li
-                  (click)="sort.set(option.value)"
-                  (keydown.enter)="sort.set(option.value)"
-                  [attr.aria-selected]="sort() === option.value"
-                  class="hover:bg-brand-soft text-small flex min-h-11 cursor-pointer items-center px-3"
-                  role="option"
-                  tabindex="0">
-                  {{ option.label }}
-                </li>
-              }
-            </ul>
-          </bip-dropdown>
-        </div>
+<!--        <div class="border-border-subtle border-t pt-3">-->
+<!--          <p class="text-sm text-muted mb-2 font-semibold">Dropdown générique</p>-->
+<!--          <bip-dropdown [value]="sortLabel()" label="Trier par" panelWidth="trigger">-->
+<!--            <ul class="py-1" role="listbox">-->
+<!--              @for (option of sortOptions; track option.value) {-->
+<!--                <li-->
+<!--                  (click)="sort.set(option.value)"-->
+<!--                  (keydown.enter)="sort.set(option.value)"-->
+<!--                  [attr.aria-selected]="sort() === option.value"-->
+<!--                  class="hover:bg-brand-soft text-sm flex min-h-11 cursor-pointer items-center px-3"-->
+<!--                  role="option"-->
+<!--                  tabindex="0">-->
+<!--                  {{ option.label }}-->
+<!--                </li>-->
+<!--              }-->
+<!--            </ul>-->
+<!--          </bip-dropdown>-->
+<!--        </div>-->
 
-        <div class="border-border-subtle border-t pt-3">
-          <p class="text-small text-muted mb-2 font-semibold">Formulaire réactif</p>
-          <bip-input [formControl]="reactiveName" inputId="s-reactive" label="Lié à un FormControl"/>
-          <p class="text-label text-muted">Valeur : « {{ reactiveName.value }} »</p>
-        </div>
-      </bip-card>
-    </div>
-  </section>
+<!--        <div class="border-border-subtle border-t pt-3">-->
+<!--          <p class="text-sm text-muted mb-2 font-semibold">Formulaire réactif</p>-->
+<!--          <bip-input [formControl]="reactiveName" inputId="s-reactive" label="Lié à un FormControl"/>-->
+<!--          <p class="text-xs text-muted">Valeur : « {{ reactiveName.value }} »</p>-->
+<!--        </div>-->
+<!--      </bip-card>-->
+<!--    </div>-->
+<!--  </section>-->
 
-  <!-- ── Dates et voyageurs ─────────────────────────────────────────── -->
-  <section aria-labelledby="s-dates" class="mb-10">
-    <h2 class="text-h2 text-muted mb-3" id="s-dates">5 · Dates et voyageurs</h2>
-    <div class="grid gap-4 lg:grid-cols-3">
-      <bip-card padding="md" title="Date simple">
-        <bip-date-picker [(value)]="singleDate" label="Aller" mode="single"/>
-        <p class="text-label text-muted">{{ singleDate() | json }}</p>
-      </bip-card>
-      <bip-card padding="md" title="Plage, deux mois">
-        <bip-date-picker [(value)]="rangeDate" [visibleMonths]="2" label="Aller — retour" mode="range"/>
-        <p class="text-label text-muted">{{ rangeDate() | json }}</p>
-      </bip-card>
-      <bip-card padding="md" title="Indisponibilités et erreur">
-        <bip-date-picker [unavailable]="blockedDates" error="Aucun départ ce jour-là." label="Départ" mode="single"/>
-        <bip-people-selector [(value)]="passengers"/>
-        <p class="text-label text-muted">{{ passengers() | json }}</p>
-      </bip-card>
-    </div>
-  </section>
+<!--  &lt;!&ndash; ── Dates et voyageurs ─────────────────────────────────────────── &ndash;&gt;-->
+<!--  <section aria-labelledby="s-dates" class="mb-10">-->
+<!--    <h2 class="text-2xl text-muted mb-3" id="s-dates">5 · Dates et voyageurs</h2>-->
+<!--    <div class="grid gap-4 lg:grid-cols-3">-->
+<!--      <bip-card padding="md" title="Date simple">-->
+<!--        <bip-date-picker [(value)]="singleDate" label="Aller" mode="single"/>-->
+<!--        <p class="text-xs text-muted">{{ singleDate() | json }}</p>-->
+<!--      </bip-card>-->
+<!--      <bip-card padding="md" title="Plage, deux mois">-->
+<!--        <bip-date-picker [(value)]="rangeDate" [visibleMonths]="2" label="Aller — retour" mode="range"/>-->
+<!--        <p class="text-xs text-muted">{{ rangeDate() | json }}</p>-->
+<!--      </bip-card>-->
+<!--      <bip-card padding="md" title="Indisponibilités et erreur">-->
+<!--        <bip-date-picker [unavailable]="blockedDates" error="Aucun départ ce jour-là." label="Départ" mode="single"/>-->
+<!--        <bip-people-selector [(value)]="passengers"/>-->
+<!--        <p class="text-xs text-muted">{{ passengers() | json }}</p>-->
+<!--      </bip-card>-->
+<!--    </div>-->
+<!--  </section>-->
 
-  <!-- ── Départ / destination ───────────────────────────────────────── -->
-  <section aria-labelledby="s-places" class="mb-10">
-    <h2 class="text-h2 text-muted mb-3" id="s-places">6 · Départ et destination</h2>
-    <bip-card padding="md">
-      <p class="text-small text-muted">
-        Résultats regroupés par ville puis par aéroport (nom + code). Une ville multi-aéroports propose « tous les aéroports » — essayez
-        <strong>Dakar</strong>, <strong>Paris</strong> ou <strong>DSS</strong>. Navigation au clavier : ↑ ↓ puis Entrée.
-      </p>
-      <div class="grid gap-3 md:grid-cols-3">
-        <bip-location-field
-          [(selection)]="from"
-          [airports]="airports.airports()"
-          [loading]="airports.loading()"
-          inputId="p-from"
-          label="Départ"/>
-        <bip-location-field
-          [(selection)]="to"
-          [airports]="airports.airports()"
-          [loading]="airports.loading()"
-          inputId="p-to"
-          label="Destination"/>
-        <bip-location-field [airports]="airports.airports()" error="Choisissez un point de départ." inputId="p-err" label="En erreur"/>
-      </div>
-      <p class="text-label text-muted">
-        {{ airports.airports().length }} points chargés · sélection : {{ from()?.code ?? '—' }} →
-        {{ to()?.code ?? '—' }}
-      </p>
-    </bip-card>
-  </section>
+<!--  &lt;!&ndash; ── Départ / destination ───────────────────────────────────────── &ndash;&gt;-->
+<!--  <section aria-labelledby="s-places" class="mb-10">-->
+<!--    <h2 class="text-2xl text-muted mb-3" id="s-places">6 · Départ et destination</h2>-->
+<!--    <bip-card padding="md">-->
+<!--      <p class="text-sm text-muted">-->
+<!--        Résultats regroupés par ville puis par aéroport (nom + code). Une ville multi-aéroports propose « tous les aéroports » — essayez-->
+<!--        <strong>Dakar</strong>, <strong>Paris</strong> ou <strong>DSS</strong>. Navigation au clavier : ↑ ↓ puis Entrée.-->
+<!--      </p>-->
+<!--      <div class="grid gap-3 md:grid-cols-3">-->
+<!--        <bip-location-field-->
+<!--          [(selection)]="from"-->
+<!--          [airports]="airports.airports()"-->
+<!--          [loading]="airports.loading()"-->
+<!--          inputId="p-from"-->
+<!--          label="Départ"/>-->
+<!--        <bip-location-field-->
+<!--          [(selection)]="to"-->
+<!--          [airports]="airports.airports()"-->
+<!--          [loading]="airports.loading()"-->
+<!--          inputId="p-to"-->
+<!--          label="Destination"/>-->
+<!--        <bip-location-field [airports]="airports.airports()" error="Choisissez un point de départ." inputId="p-err" label="En erreur"/>-->
+<!--      </div>-->
+<!--      <p class="text-xs text-muted">-->
+<!--        {{ airports.airports().length }} points chargés · sélection : {{ from()?.code ?? '—' }} →-->
+<!--        {{ to()?.code ?? '—' }}-->
+<!--      </p>-->
+<!--    </bip-card>-->
+<!--  </section>-->
 
-  <!-- ── Les huit états ─────────────────────────────────────────────── -->
-  <section aria-labelledby="s-states" class="mb-10">
-    <h2 class="text-h2 text-muted mb-3" id="s-states">7 · Les huit états système</h2>
-    <p class="text-small text-muted mb-3 max-w-3xl">
-      AC13 : chaque appel API gère au minimum <em>loading</em>, <em>success</em>, <em>empty</em> et <em>error</em>. Le squelette a la même hauteur
-      que le contenu qu'il remplace — sinon CLS.
-    </p>
-    <div class="mb-3 flex flex-wrap gap-2">
-      @for (state of allStates; track state) {
-        <button (click)="demoState.set(state)" [variant]="demoState() === state ? 'primary' : 'outline'" bipButton size="sm" type="button">
-          {{ state }}
-        </button>
-      }
-    </div>
-    <bip-card padding="md">
-      <bip-system-state
-        (retry)="demoState.set('loading')"
-        [error]="demoState() === 'error' ? sampleError : null"
-        [message]="demoState() === 'partial' ? 'Le vol est confirmé, l’activité a échoué. Vous choisissez ligne par ligne.' : undefined"
-        [skeletonCount]="2"
-        [skeletonHeight]="88"
-        [status]="demoState()">
-        <div class="grid gap-3 sm:grid-cols-2">
-          @for (offer of sampleOffers; track offer.id) {
-            <div class="border-border-subtle rounded-card flex h-22 items-center gap-3 border p-3">
-                  <span class="bg-brand-soft text-brand-dark rounded-button text-label grid h-10 w-10 place-items-center font-bold">
-                    {{ offer.carrier }}
-                  </span>
-              <div class="min-w-0 flex-1">
-                <p class="text-small text-ink font-semibold">{{ offer.route }}</p>
-                <p class="text-label text-muted">{{ offer.detail }}</p>
-              </div>
-              <p class="text-small text-muted font-bold">{{ offer.price }}</p>
-            </div>
-          }
-        </div>
-      </bip-system-state>
-    </bip-card>
-  </section>
+<!--  &lt;!&ndash; ── Les huit états ─────────────────────────────────────────────── &ndash;&gt;-->
+<!--  <section aria-labelledby="s-states" class="mb-10">-->
+<!--    <h2 class="text-2xl text-muted mb-3" id="s-states">7 · Les huit états système</h2>-->
+<!--    <p class="text-sm text-muted mb-3 max-w-3xl">-->
+<!--      AC13 : chaque appel API gère au minimum <em>loading</em>, <em>success</em>, <em>empty</em> et <em>error</em>. Le squelette a la même hauteur-->
+<!--      que le contenu qu'il remplace — sinon CLS.-->
+<!--    </p>-->
+<!--    <div class="mb-3 flex flex-wrap gap-2">-->
+<!--      @for (state of allStates; track state) {-->
+<!--        <button (click)="demoState.set(state)" [variant]="demoState() === state ? 'primary' : 'outline'" bipButton size="sm" type="button">-->
+<!--          {{ state }}-->
+<!--        </button>-->
+<!--      }-->
+<!--    </div>-->
+<!--    <bip-card padding="md">-->
+<!--      <bip-system-state-->
+<!--        (retry)="demoState.set('loading')"-->
+<!--        [error]="demoState() === 'error' ? sampleError : null"-->
+<!--        [message]="demoState() === 'partial' ? 'Le vol est confirmé, l’activité a échoué. Vous choisissez ligne par ligne.' : undefined"-->
+<!--        [skeletonCount]="2"-->
+<!--        [skeletonHeight]="88"-->
+<!--        [status]="demoState()">-->
+<!--        <div class="grid gap-3 sm:grid-cols-2">-->
+<!--          @for (offer of sampleOffers; track offer.id) {-->
+<!--            <div class="border-border-subtle rounded-card flex h-22 items-center gap-3 border p-3">-->
+<!--                  <span class="bg-brand-soft text-brand-dark rounded-button text-xs grid h-10 w-10 place-items-center font-bold">-->
+<!--                    {{ offer.carrier }}-->
+<!--                  </span>-->
+<!--              <div class="min-w-0 flex-1">-->
+<!--                <p class="text-sm text-ink font-semibold">{{ offer.route }}</p>-->
+<!--                <p class="text-xs text-muted">{{ offer.detail }}</p>-->
+<!--              </div>-->
+<!--              <p class="text-sm text-muted font-bold">{{ offer.price }}</p>-->
+<!--            </div>-->
+<!--          }-->
+<!--        </div>-->
+<!--      </bip-system-state>-->
+<!--    </bip-card>-->
+<!--  </section>-->
 
-  <!-- ── Cartes et fenêtre modale ───────────────────────────────────── -->
-  <section aria-labelledby="s-surfaces" class="mb-10">
-    <h2 class="text-h2 text-muted mb-3" id="s-surfaces">8 · Cartes et fenêtre modale</h2>
-    <div class="grid gap-4 lg:grid-cols-3">
-      <bip-card padding="md" subtitle="Sous-titre facultatif" title="Carte simple">
-        <p class="text-small text-muted">Contenu projeté.</p>
-      </bip-card>
-      <bip-card interactive padding="md" title="Carte cliquable">
-        <p class="text-small text-muted">Ombre et anneau de focus au survol.</p>
-        <div cardActions>
-          <bip-badge tone="success">Confirmé</bip-badge>
-        </div>
-      </bip-card>
-      <bip-card flat padding="md" title="Carte plate">
-        <p class="text-small text-muted">Sans ombre — pour les blocs imbriqués.</p>
-        <div cardFooter class="border-border-subtle border-t pt-3">
-          <button bipButton type="button" variant="link">Action secondaire</button>
-        </div>
-      </bip-card>
-    </div>
+<!--  &lt;!&ndash; ── Cartes et fenêtre modale ───────────────────────────────────── &ndash;&gt;-->
+<!--  <section aria-labelledby="s-surfaces" class="mb-10">-->
+<!--    <h2 class="text-2xl text-muted mb-3" id="s-surfaces">8 · Cartes et fenêtre modale</h2>-->
+<!--    <div class="grid gap-4 lg:grid-cols-3">-->
+<!--      <bip-card padding="md" subtitle="Sous-titre facultatif" title="Carte simple">-->
+<!--        <p class="text-sm text-muted">Contenu projeté.</p>-->
+<!--      </bip-card>-->
+<!--      <bip-card interactive padding="md" title="Carte cliquable">-->
+<!--        <p class="text-sm text-muted">Ombre et anneau de focus au survol.</p>-->
+<!--        <div cardActions>-->
+<!--          <bip-badge tone="success">Confirmé</bip-badge>-->
+<!--        </div>-->
+<!--      </bip-card>-->
+<!--      <bip-card flat padding="md" title="Carte plate">-->
+<!--        <p class="text-sm text-muted">Sans ombre — pour les blocs imbriqués.</p>-->
+<!--        <div cardFooter class="border-border-subtle border-t pt-3">-->
+<!--          <button bipButton type="button" variant="link">Action secondaire</button>-->
+<!--        </div>-->
+<!--      </bip-card>-->
+<!--    </div>-->
 
-    <div class="mt-4 flex flex-wrap gap-3">
-      <button (click)="modal.open()" bipButton type="button" variant="primary">Ouvrir la modale</button>
-      <button (click)="blocking.open()" bipButton type="button" variant="outline">Modale non dismissible</button>
-    </div>
+<!--    <div class="mt-4 flex flex-wrap gap-3">-->
+<!--      <button (click)="modal.open()" bipButton type="button" variant="primary">Ouvrir la modale</button>-->
+<!--      <button (click)="blocking.open()" bipButton type="button" variant="outline">Modale non dismissible</button>-->
+<!--    </div>-->
 
-    <bip-modal #modal subtitle="AC05 — la saisie est conservée" title="Confirmer le changement de prix">
-      <p class="text-small text-muted">
-        Le prix est passé de <strong>{{ oldPrice | translocoCurrency }}</strong> à
-        <strong>{{ newPrice | translocoCurrency }}</strong>. Vos voyageurs, options et coordonnées sont conservés.
-      </p>
-      <div class="flex gap-2" modalFooter>
-        <button (click)="modal.close()" bipButton type="button" variant="outline">Refuser</button>
-        <button (click)="modal.close()" bipButton type="button" variant="primary">Accepter</button>
-      </div>
-    </bip-modal>
+<!--    <bip-modal #modal subtitle="AC05 — la saisie est conservée" title="Confirmer le changement de prix">-->
+<!--      <p class="text-sm text-muted">-->
+<!--        Le prix est passé de <strong>{{ oldPrice | translocoCurrency }}</strong> à-->
+<!--        <strong>{{ newPrice | translocoCurrency }}</strong>. Vos voyageurs, options et coordonnées sont conservés.-->
+<!--      </p>-->
+<!--      <div class="flex gap-2" modalFooter>-->
+<!--        <button (click)="modal.close()" bipButton type="button" variant="outline">Refuser</button>-->
+<!--        <button (click)="modal.close()" bipButton type="button" variant="primary">Accepter</button>-->
+<!--      </div>-->
+<!--    </bip-modal>-->
 
-    <bip-modal
-      #blocking
-      [backdropDismissible]="false"
-      [dismissible]="false"
-      subtitle="AC14 — aucun message d'échec avant décision du serveur"
-      title="Paiement en cours">
-      <div class="flex items-center gap-3">
-        <bip-spinner class="text-brand-primary" size="md"/>
-        <p class="text-small text-muted">Nous interrogeons le statut de votre paiement…</p>
-      </div>
-      <div modalFooter>
-        <button (click)="blocking.close()" bipButton type="button" variant="ghost">Fermer (démo)</button>
-      </div>
-    </bip-modal>
-  </section>
-</div>
+<!--    <bip-modal-->
+<!--      #blocking-->
+<!--      [backdropDismissible]="false"-->
+<!--      [dismissible]="false"-->
+<!--      subtitle="AC14 — aucun message d'échec avant décision du serveur"-->
+<!--      title="Paiement en cours">-->
+<!--      <div class="flex items-center gap-3">-->
+<!--        <bip-spinner class="text-brand-primary" size="md"/>-->
+<!--        <p class="text-sm text-muted">Nous interrogeons le statut de votre paiement…</p>-->
+<!--      </div>-->
+<!--      <div modalFooter>-->
+<!--        <button (click)="blocking.close()" bipButton type="button" variant="ghost">Fermer (démo)</button>-->
+<!--      </div>-->
+<!--    </bip-modal>-->
+<!--  </section>-->
+<!--</div>-->

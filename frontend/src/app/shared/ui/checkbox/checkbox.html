@@ -1,8 +1,9 @@
-<div class="flex items-center gap-x-1.5">
+@let classes = hideLabel() ? "w-fit" : "gap-x-1.5";
+<div class="flex items-center {{classes}}">
   <input (blur)="touch.emit()"
          (change)="checked.set($any($event.target).checked)"
          [attr.aria-describedby]="hint() ? inputId() + '-hint' : null"
-         [attr.aria-invalid]="showError()"
+         [attr.aria-invalid]="this.touched() && this.invalid()"
          [checked]="checked()"
          [class]="controlClass()"
          [disabled]="disabled()"
@@ -10,24 +11,29 @@
          [name]="name()"
          type="checkbox"/>
 
-  <div class="min-w-0 flex-1 space-y-0.5">
-    <label [for]="inputId() || name()" class="text-small text-muted block cursor-pointer font-medium select-none">
-      {{ label() }}
-      @if (required()) {
-        <span aria-hidden="true" class="text-state-error">*</span>
-      }
-    </label>
-  </div>
+  @if (hideLabel()) {
+    <p class="sr-only">{{ label() }}</p>
+  } @else {
+    <div class="min-w-0 flex-1 space-y-0.5">
+      <label [for]="inputId() || name()" class="text-sm text-muted block cursor-pointer font-medium select-none">
+        {{ label() }}
+        @if (required()) {
+          <span aria-hidden="true" class="text-state-error">*</span>
+        }
+      </label>
+    </div>
+  }
 </div>
-<div class="ml-6">
-  @if (showError()) {
+
+<div [class.ml-6]="!hideLabel()">
+  @if (this.touched() && this.invalid()) {
     @for (error of errors() //noinspection ForBlockNonIterableVar; track error) {
-      <p class="text-label text-state-error flex items-center gap-1">
+      <p class="text-xs text-state-error flex items-center gap-1">
         <ng-icon color="red" name="heroExclamationCircleSolid"/>
         <span class="select-none">{{ error.message }}</span>
       </p>
     }
   } @else if (hint()) {
-    <p [id]="(inputId() || name()) + '-hint'" class="text-label text-muted select-none">{{ hint() }}</p>
+    <p [id]="(inputId() || name()) + '-hint'" class="text-xs text-muted select-none">{{ hint() }}</p>
   }
 </div>

@@ -1,11 +1,11 @@
-import { Component, computed, input, model, output } from '@angular/core';
+import { booleanAttribute, Component, computed, input, model, output } from '@angular/core';
 import { FormCheckboxControl, ValidationError, WithOptionalFieldTree } from '@angular/forms/signals';
 import { NgIcon, provideIcons } from '@ng-icons/core';
 import { heroExclamationCircleSolid } from '@ng-icons/heroicons/solid';
 
 @Component({
   selector: 'bip-checkbox',
-  host: { class: 'block space-y-1' },
+  host: { class: 'block', '[class.space-y-1]': '!hideLabel()' },
   templateUrl: './checkbox.html',
   imports: [NgIcon],
   providers: [provideIcons({ heroExclamationCircleSolid })],
@@ -13,6 +13,7 @@ import { heroExclamationCircleSolid } from '@ng-icons/heroicons/solid';
 export class Checkbox implements FormCheckboxControl {
   readonly inputId = input<string>();
   readonly label = input.required<string>();
+  readonly hideLabel = input(false, { transform: booleanAttribute });
   readonly hint = input<string>();
 
   readonly name = input('');
@@ -23,8 +24,6 @@ export class Checkbox implements FormCheckboxControl {
   readonly disabled = input(false);
 
   readonly errors = input<readonly WithOptionalFieldTree<ValidationError>[]>([]);
-  readonly showError = computed(() => (this.touched() || this.dirty()) && this.errors().length > 0);
-
   readonly checked = model(false);
 
   readonly touch = output<void>();
@@ -32,7 +31,7 @@ export class Checkbox implements FormCheckboxControl {
   readonly controlClass = computed(() => {
     const base = [
       'h-4 w-4 shrink-0 rounded-lg border-2 bip-focusable accent-brand-primary',
-      this.showError() ? 'border-state-error' : 'border-border-strong',
+      this.touched() && this.invalid() ? 'border-state-error' : 'border-border-strong',
     ];
     if (this.disabled()) {
       base.push('cursor-not-allowed pointer-events-none opacity-50');

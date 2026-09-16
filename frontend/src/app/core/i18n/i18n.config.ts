@@ -1,14 +1,11 @@
 import { EnvironmentProviders, makeEnvironmentProviders } from '@angular/core';
 import { provideTransloco, TranslocoConfig } from '@jsverse/transloco';
 import { provideTranslocoLocale, TranslocoLocaleConfig } from '@jsverse/transloco-locale';
-import {
-  cookiesStorage,
-  GetLangParams,
-  provideTranslocoPersistLang,
-} from '@jsverse/transloco-persist-lang';
+import { cookiesStorage, GetLangParams, provideTranslocoPersistLang } from '@jsverse/transloco-persist-lang';
 import { CONTRACT_CURRENCY } from '@shared/models/money.model';
 import { environment } from '@env';
 import { HttpTranslocoLoader } from './transloco-loader';
+import { provideTranslocoMessageformat } from '@jsverse/transloco-messageformat';
 
 /** Langue de référence : un libellé fr manquant doit se voir, pas se déguiser. */
 export const DEFAULT_LANG = 'fr';
@@ -74,10 +71,8 @@ const localeConfig: TranslocoLocaleConfig = {
 export function provideI18n(): EnvironmentProviders {
   return makeEnvironmentProviders([
     provideTransloco({ config: translocoConfig, loader: HttpTranslocoLoader }),
-    provideTranslocoPersistLang({
-      getLangFn,
-      storage: { useValue: cookiesStorage(LANG_COOKIE_HOURS) },
-    }),
+    provideTranslocoMessageformat({locales: ['fr', 'en']}),
+    provideTranslocoPersistLang({ getLangFn, storage: { useValue: cookiesStorage(LANG_COOKIE_HOURS) } }),
     provideTranslocoLocale(localeConfig),
   ]);
 }

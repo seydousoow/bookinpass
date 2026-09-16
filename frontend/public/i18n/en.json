@@ -1,10 +1,30 @@
 {
   "common": {
+    "bag": "Baggage",
+    "clear": "Clear",
+    "editable": "Editable",
     "no-element": "No element",
     "select": "Select an item",
+    "choose": "Choose",
+    "loading": "Loading",
+    "required-field": "This field is required",
     "radio": {
       "no-option": "No options specified for radio group",
       "min-option": "At least two options required for radio button group."
+    },
+    "view-details": "See details"
+  },
+  "picker": {
+    "previous": "Previous month",
+    "next": "Next month",
+    "placeholder": "Choose a date",
+    "travel-one-way-placeholder": "Departure",
+    "travel-round-trip-placeholder": "Departure - Return",
+    "select": {
+      "one-way": "Select a Date",
+      "inbound": "Select the departure date",
+      "outbound": "Select the return date",
+      "travel-date": "{count, plural, one {Your travel date} other {Your travel dates}}"
     }
   },
   "nav": {
@@ -40,8 +60,63 @@
     "travelers": "Travellers",
     "cabin": "Cabin",
     "submit": "Search",
-    "oneWay": "One way",
-    "roundTrip": "Round trip"
+    "one-way": "One way",
+    "round-trip": "Round trip",
+    "filter": {
+      "title": "Filter offers",
+      "recommended": "Recommended choice",
+      "airlines": {
+        "title": "Airlines"
+      },
+      "price": {
+        "title": "Budget",
+        "per-person": "{count, plural, =2 {Round Trip / Person} other {One Way / Person} }"
+      },
+      "stops": {
+        "title": "Stops",
+        "options": "{count, plural, =0 {Direct only} one {# stop max} other {# Any}}",
+        "desc": "{count, plural, =0 {Direct} one {# stop} other {# stops}}"
+      },
+      "bags": {
+        "title": "Bags",
+        "cabin": "Carry-on baggage included",
+        "hold": "Checked baggage included"
+      }
+    },
+    "error": {
+      "invalid-title": "Invalid search",
+      "invalid-message": "Some information required for your search is missing or incorrect.",
+      "back-home": "Back to home"
+    },
+    "location": {
+      "origin": "Where from ?",
+      "destination": "Where to ?",
+      "all-airports": "All airports · {name}",
+      "placeholder": "City, airport or code",
+      "min-typing": "{count, plural, =1 {Enter at least # character} other {Enter at least # characters}}",
+      "no-result": "No match found « {value} »}",
+      "similar-location": "The places of origin and destination must be different."
+    },
+    "passenger": {
+      "add-a": "Add a",
+      "remove-a": "Remove a",
+      "adult": {
+        "label": "Adult",
+        "detailed": "{count, plural, one {# adult} other {# adults}}",
+        "hint": "+12 years old"
+      },
+      "children": {
+        "label": "Child",
+        "detailed": "{count, plural, one {# child} other {# children}}",
+        "hint": "2 to 12 years"
+      },
+      "infant": {
+        "label": "Infant",
+        "detailed": "{count, plural, one {# infant} other {# infants}}",
+        "hint": "Less than 2 years old",
+        "requirement": "Each adult can accompany up to two children, with a maximum of one baby per adult."
+      }
+    }
   },
   "home": {
     "title": "One pass for every journey",

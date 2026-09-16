@@ -1,64 +1,184 @@
-import { Component, inject, signal } from '@angular/core';
-import { TranslocoDirective } from '@jsverse/transloco';
-import { AirportStore } from '@core/places/airport.store';
-import { PlaceSelection } from '@shared/models/place.model';
+// noinspection JSUnusedLocalSymbols
+
+import { Component, computed, effect, inject, signal } from '@angular/core';
+import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
 import { SelectOption } from '@shared/models/select.model';
-import { Button, Card, DatePicker, DateRangeValue, LocationField, PassengerCount, PeopleSelector, RadioGroup, Select } from '@shared/ui';
+import { IFlightSearch, TripType } from '@shared/models/search.model';
+import { SearchStore } from '@core/search/search.store';
+import {
+  Button,
+  Card,
+  DatePicker,
+  DatePickerMode,
+  fromIso,
+  isAfterDay,
+  isBeforeDay,
+  isValidPassengerCount,
+  LocationField,
+  PassengerSelector,
+  RadioGroup,
+  Select,
+  todayIso,
+  toIso,
+} from '@shared/ui';
+import { form, FormField, FormRoot, required, validate } from '@angular/forms/signals';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'bip-home-page',
-  imports: [TranslocoDirective, LocationField, DatePicker, PeopleSelector, RadioGroup, Select, Button, Card],
+  imports: [TranslocoDirective, DatePicker, PassengerSelector, RadioGroup, Select, Button, Card, FormField, LocationField, FormRoot],
   templateUrl: './home.html',
 })
 export class Home {
-  protected readonly airports = inject(AirportStore);
-
-  protected readonly tripType = signal<'round' | 'oneway'>('round');
-  protected readonly origin = signal<PlaceSelection | null>(null);
-  protected readonly destination = signal<PlaceSelection | null>(null);
-  protected readonly dates = signal<DateRangeValue>({ start: null, end: null });
-  protected readonly passengers = signal<PassengerCount>({ adults: 1, children: 0, infants: 0 });
-  protected readonly cabin = signal<string[]>(['economy']);
-  protected readonly lastQuery = signal<string | null>(null);
-
-  protected readonly tripTypes: readonly SelectOption<'round' | 'oneway'>[] = [
-    { label: 'Aller-retour', value: 'round' },
-    { label: 'Aller simple', value: 'oneway' },
+  protected readonly minSearchDate = todayIso();
+  protected readonly tripTypes: readonly SelectOption<TripType>[] = [
+    { label: 'search.round-trip', value: 'round' },
+    { label: 'search.one-way', value: 'oneway' },
   ];
-
   protected readonly cabins: readonly SelectOption[] = [
     { label: 'Économique', value: 'economy' },
     { label: 'Premium', value: 'premium' },
     { label: 'Affaires', value: 'business' },
     { label: 'Première', value: 'first' },
   ];
+  private readonly search = signal<IFlightSearch>({
+    tripType: 'round',
+    origin: '',
+    destination: '',
+    cabin: ['economy'],
+    dates: { start: null, end: null },
+    passengers: { adults: 1, children: 0, infants: 0 },
+  });
+  readonly maxSearchDate = computed(() => {
+    const start = this.search().dates.start;
+    const date = start ? fromIso(start) : new Date();
+    date.setFullYear(date.getFullYear() + 1);
+    return toIso(date);
+  });
+  protected readonly searchForm = form<IFlightSearch>(
+    this.search,
+    (path) => {
+      required(path.tripType, { message: 'common.required-field' });
+      required(path.origin, { message: 'common.required-field' });
+      required(path.destination, { message: 'common.required-field' });
 
-  protected sameCityError(): string | undefined {
-    const from = this.origin();
-    const to = this.destination();
-    return from && to && from.code === to.code ? 'Le départ et la destination doivent être différents.' : undefined;
-  }
+      required(path.cabin, { message: 'common.required-field' });
 
-  protected canSearch(): boolean {
-    const hasPlaces = !!this.origin() && !!this.destination() && !this.sameCityError();
-    const hasDates = this.tripType() === 'round' ? !!this.dates().start && !!this.dates().end : !!this.dates().start;
-    return hasPlaces && hasDates;
-  }
+      validate(path.destination, ({ value, valueOf }) => {
+        const origin = valueOf(path.origin);
+        const destination = value();
+        if (origin !== null && origin.length > 0 && destination.length > 0 && Object.is(origin, destination)) {
+          return { kind: 'similarLocation', message: 'search.location.similar-location' };
+        }
+        return null;
+      });
 
-  protected submit(): void {
-    this.lastQuery.set(
-      JSON.stringify(
-        {
-          tripType: this.tripType(),
-          from: this.origin()?.code,
-          to: this.destination()?.code,
-          dates: this.dates(),
-          passengers: this.passengers(),
-          cabin: this.cabin()[0],
+      validate(path.dates, ({ value, valueOf }) => {
+        const tripType = valueOf(path.tripType);
+        const { start, end } = value();
+        if (!start) {
+          return { kind: 'requiredStart', message: 'search.location.date.start-required' };
+        }
+        if (isBeforeDay(start, todayIso())) {
+          return { kind: 'startMinDate', message: 'search.location.date.start-past' };
+        }
+        if (tripType === 'oneway') {
+          return null;
+        }
+        if (!end) {
+          return { kind: 'requiredEnd', message: 'search.location.date.end-required' };
+        }
+        if (!isAfterDay(end, start)) {
+          return { kind: 'endMinDate', message: 'search.location.date.end-past' };
+        }
+        return null;
+      });
+
+      validate(path.passengers, ({ value }) => {
+        if (!isValidPassengerCount(value())) {
+          return { kind: 'passenger-count', message: 'search.passenger.count' };
+        }
+        return null;
+      });
+    },
+    {
+      submission: {
+        action: (f) => {
+          this.submitForm(f().value());
+          return Promise.resolve(null);
         },
-        null,
-        2,
-      ),
-    );
+        ignoreValidators: 'none',
+        onInvalid: (field) => {
+          const firstError = field().errorSummary()[0];
+          firstError?.fieldTree().focusBoundControl();
+        },
+      },
+    },
+  );
+
+  private readonly transloco = inject(TranslocoService);
+  private readonly router = inject(Router);
+  private readonly searchStore = inject(SearchStore);
+  private readonly restoredFromStorage = signal(false);
+
+  constructor() {
+    // Pré-remplissage depuis la dernière recherche validée (plan §10.3 : après
+    // le rendu, jamais pendant l'hydratation) — une seule fois, pour ne pas
+    // écraser une saisie en cours si le store change ensuite.
+    effect(() => {
+      const last = this.searchStore.lastSearch();
+      if (!last || this.restoredFromStorage()) {
+        return;
+      }
+      this.restoredFromStorage.set(true);
+      this.search.update((old) => ({
+        tripType: last.tripType || old.tripType,
+        origin: last.origin || old.origin,
+        destination: last.destination || old.destination,
+        dates: last.dates || old.dates,
+        passengers: last.passengers || old.passengers,
+        cabin: [last.cabin ?? old.cabin[0]],
+      }));
+    });
+  }
+
+  get pickerLabel(): string {
+    const dep = this.transloco.translate('search.depart');
+    if (this.search().tripType === 'oneway') {
+      return dep;
+    }
+    return `${dep} — ${this.transloco.translate('search.return')}`;
+  }
+
+  get pickerMode(): DatePickerMode {
+    return this.search().tripType === 'round' ? 'range' : 'single';
+  }
+
+  get visibleMonth(): number {
+    //todo: check mobile rendering for 2. Restrict to 1 if needed
+    return this.search().tripType === 'round' ? 2 : 1;
+  }
+
+  private submitForm({
+    cabin,
+    dates: { end, start },
+    destination: d,
+    origin: o,
+    passengers: { adults, children, infants },
+    tripType: t,
+  }: IFlightSearch) {
+    const queryParams: Record<string, string | number> = { t, o, d, from: String(start) };
+    if (end) {
+      queryParams['to'] = String(end);
+    }
+    queryParams['cabin'] = cabin[0];
+    queryParams['adt'] = adults;
+    if (infants > 0) {
+      queryParams['inf'] = infants;
+    }
+    if (children > 0) {
+      queryParams['chd'] = children;
+    }
+    void this.router.navigate(['/', 'search'], { queryParams });
   }
 }

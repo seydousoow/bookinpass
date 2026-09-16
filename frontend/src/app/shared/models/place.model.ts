@@ -12,12 +12,6 @@ export interface Airport {
   readonly cityCode: string;
   /** Région / état — utile à la recherche, jamais affiché. */
   readonly state: string;
-  /**
-   * Importance commerciale, de 1 (porte d'entrée intercontinentale) à 4
-   * (aérodrome secondaire). Sert uniquement à départager des résultats de
-   * pertinence équivalente ; jamais affiché.
-   */
-  readonly hubRank: number;
   readonly countryName: string;
   readonly countryCode: string;
 }

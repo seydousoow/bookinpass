@@ -34,25 +34,8 @@
      laisse le rendu Android au hasard (cadrage §6.4). */
   --font-sans: 'Segoe UI', system-ui, -apple-system, Roboto, 'Helvetica Neue', Arial, sans-serif;
 
-  /* Échelle mobile — cadrage §6.2. Plancher absolu 12px, sans exception. */
-  --text-display: 2.125rem; /* 34 */
-  --text-display--line-height: 1.176;
-  --text-display--font-weight: 700;
-  --text-h1: 1.75rem; /* 28 */
-  --text-h1--line-height: 1.286;
-  --text-h1--font-weight: 700;
-  --text-h2: 1.375rem; /* 22 */
-  --text-h2--line-height: 1.273;
-  --text-h2--font-weight: 600;
-  --text-h3: 1.125rem; /* 18 */
-  --text-h3--line-height: 1.333;
-  --text-h3--font-weight: 600;
-  --text-body: 1rem; /* 16 */
-  --text-body--line-height: 1.5;
-  --text-small: 0.875rem; /* 14 */
-  --text-small--line-height: 1.428;
-  --text-label: 0.75rem; /* 12 — plancher */
-  --text-label--line-height: 1.333;
+  --text-xss: 0.625rem;
+  --text-xss--line-height: 1.4;
 
   /* Rayons — quatre valeurs, pas une de plus (plan §3.3). */
   --radius-button: 10px;
@@ -69,14 +52,4 @@
 
   --shadow-card: 0 1px 2px rgb(23 20 40 / 0.06), 0 4px 12px rgb(23 20 40 / 0.05);
   --shadow-panel: 0 8px 32px rgb(23 20 40 / 0.12);
-}
-
-/* Échelle desktop — cadrage §6.2 */
-@media (width >= 64rem) {
-  @theme {
-    --text-display: 3rem; /* 48 */
-    --text-h1: 2.25rem; /* 36 */
-    --text-h2: 1.75rem; /* 28 */
-    --text-h3: 1.25rem; /* 20 */
-  }
 }

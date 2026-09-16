@@ -1,10 +1,14 @@
-import { addMonths, fromIso, isBetween, monthGrid, toIso, weekdayLabels } from './date-utils';
+// noinspection ES6PreferShortImport
+
+import { addMonths, fromIso, isBetween, IsoDate, monthGrid, toIso } from './date-utils';
 
 describe('date-utils', () => {
   it('convertit sans décalage de fuseau', () => {
-    expect(toIso(fromIso('2026-09-02'))).toBe('2026-09-02');
-    expect(toIso(fromIso('2026-01-01'))).toBe('2026-01-01');
-    expect(toIso(fromIso('2026-12-31'))).toBe('2026-12-31');
+    expect(toIso(fromIso('2026-09-02' as IsoDate))).toBe('2026-09-02');
+    expect(toIso(new Date('2026-09-02'))).toBe('2026-09-02');
+    expect(toIso(new Date(2026, 8, 2))).toBe('2026-09-02');
+    expect(toIso(fromIso('2026-01-01' as IsoDate))).toBe('2026-01-01');
+    expect(toIso(fromIso('2026-12-31' as IsoDate))).toBe('2026-12-31');
   });
 
   it('construit une grille de 42 cellules commençant un lundi', () => {
@@ -27,15 +31,10 @@ describe('date-utils', () => {
   });
 
   it('exclut les bornes de la plage', () => {
-    expect(isBetween('2026-09-05', '2026-09-01', '2026-09-10')).toBe(true);
-    expect(isBetween('2026-09-01', '2026-09-01', '2026-09-10')).toBe(false);
-    expect(isBetween('2026-09-10', '2026-09-01', '2026-09-10')).toBe(false);
-    expect(isBetween('2026-09-05', '2026-09-01', null)).toBe(false);
-  });
-
-  it('rend sept libellés de jours à partir du lundi', () => {
-    const labels = weekdayLabels('fr-FR');
-    expect(labels).toHaveLength(7);
-    expect(labels[0].toLowerCase()).toContain('lun');
+    expect(isBetween('2026-09-05' as IsoDate, '2026-09-01' as IsoDate, '2026-09-10' as IsoDate)).toBeTruthy();
+    expect(isBetween('2026-09-05' as IsoDate, '2026-09-01' as IsoDate, '2026-09-10' as IsoDate)).toBeTruthy();
+    expect(isBetween('2026-09-01' as IsoDate, '2026-09-01' as IsoDate, '2026-09-10' as IsoDate)).toBeFalsy();
+    expect(isBetween('2026-09-10' as IsoDate, '2026-09-01' as IsoDate, '2026-09-10' as IsoDate)).toBeFalsy();
+    expect(isBetween('2026-09-05' as IsoDate, '2026-09-01' as IsoDate, null)).toBeFalsy();
   });
 });

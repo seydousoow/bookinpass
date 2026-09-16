@@ -54,7 +54,7 @@ couche basse, un composant partagé **ne peut pas** appeler l'API ni connaître 
 
 Toutes les couleurs, tailles de police, rayons et espacements sont déclarés une seule fois dans `src/styles/theme.css`, en `@theme` Tailwind. **Aucune
 valeur brute ailleurs.** Les composants ne composent que des classes utilitaires adossées à ces tokens (`bg-brand-primary`, `rounded-card`,
-`text-small`…).
+`text-sm`…).
 
 Planche de validation : **`/ui-kit`** — chaque composant partagé y figure dans tous ses états.
 

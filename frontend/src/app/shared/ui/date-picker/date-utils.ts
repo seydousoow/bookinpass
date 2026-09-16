@@ -1,37 +1,54 @@
 /**
  * Utilitaires de date volontairement sans dépendance externe et sans fuseau :
  * une date de voyage est un jour civil, pas un instant. Le format d'échange est
- * `YYYY-MM-DD`, directement plaçable dans l'URL (plan §5.2).
+ * `YYYY-MM-DD', directement plaçable dans l'URL (plan §5.2).
  */
-export type IsoDate = string;
+declare const isoDateBrand: unique symbol;
+
+export type IsoDate = string & {
+  readonly [isoDateBrand]: true;
+};
 
 export function toIso(date: Date): IsoDate {
   const y = date.getFullYear();
   const m = `${date.getMonth() + 1}`.padStart(2, '0');
   const d = `${date.getDate()}`.padStart(2, '0');
-  return `${y}-${m}-${d}`;
+  return `${y}-${m}-${d}` as IsoDate;
 }
 
-export function fromIso(iso: IsoDate): Date {
+export const fromIso = (iso: IsoDate): Date => {
   const [y, m, d] = iso.split('-').map(Number);
   return new Date(y, m - 1, d);
-}
+};
 
-export function todayIso(): IsoDate {
-  return toIso(new Date());
-}
+export const todayIso = (): IsoDate => toIso(new Date());
 
-export function addMonths(date: Date, count: number): Date {
-  return new Date(date.getFullYear(), date.getMonth() + count, 1);
-}
+export const addMonths = (date: Date, count: number): Date => new Date(date.getFullYear(), date.getMonth() + count, 1);
 
-export function isSameDay(a: IsoDate | null, b: IsoDate | null): boolean {
-  return !!a && !!b && a === b;
-}
+export const isSameDay = (a: IsoDate | null, b: IsoDate | null): boolean => {
+  if (!a || !b) {
+    return false;
+  }
+  return a === b;
+};
 
-export function isBetween(day: IsoDate, start: IsoDate | null, end: IsoDate | null): boolean {
+export const isBeforeDay = (a: IsoDate | null, b: IsoDate | null): boolean => {
+  if (!a || !b) {
+    return false;
+  }
+  return a < b;
+};
+
+export const isAfterDay = (a: IsoDate | null, b: IsoDate | null): boolean => {
+  if (!a || !b) {
+    return false;
+  }
+  return a > b;
+};
+
+export const isBetween = (day: IsoDate, start: IsoDate | null, end: IsoDate | null): boolean => {
   return !!start && !!end && day > start && day < end;
-}
+};
 
 export interface DayCell {
   readonly iso: IsoDate;
@@ -57,25 +74,12 @@ export function monthGrid(anchor: Date): DayCell[] {
   return cells;
 }
 
-export function monthLabel(anchor: Date, locale: string): string {
-  return new Intl.DateTimeFormat(locale, { month: 'long', year: 'numeric' }).format(anchor);
-}
-
-export function weekdayLabels(locale: string): string[] {
-  const formatter = new Intl.DateTimeFormat(locale, { weekday: 'short' });
-  // 2024-01-01 est un lundi.
-  return Array.from({ length: 7 }, (_, i) =>
-    formatter.format(new Date(2024, 0, 1 + i)).replace('.', ''),
-  );
-}
+export const monthLabel = (anchor: Date, locale: string): string =>
+  new Intl.DateTimeFormat(locale, { month: 'long', year: 'numeric' }).format(anchor);
 
 export function formatDisplay(iso: IsoDate | null, locale: string): string {
   if (!iso) {
     return '';
   }
-  return new Intl.DateTimeFormat(locale, {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-  }).format(fromIso(iso));
+  return new Intl.DateTimeFormat(locale, { day: '2-digit', month: 'short', year: 'numeric' }).format(fromIso(iso));
 }

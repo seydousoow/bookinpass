@@ -31,24 +31,24 @@ describe('CurrencyStore', () => {
   });
 
   it('rend le montant inchangé en devise contractuelle', () => {
-    expect(makeStore().convert(185000, 'XOF')).toBe(185000);
+    expect(makeStore().convertFromContract(185000, 'XOF')).toBe(185000);
   });
 
   it('convertit avec le taux servi', () => {
-    const converted = makeStore().convert(655957, 'EUR');
+    const converted = makeStore().convertFromContract(655957, 'EUR');
     // 655,957 XOF = 1 EUR (parité fixe).
     expect(converted).toBeCloseTo(1000, 0);
   });
 
   it('rend null plutôt qu’un prix inventé si le taux manque', () => {
-    expect(makeStore().convert(1000, 'JPY')).toBeNull();
+    expect(makeStore().convertFromContract(1000, 'JPY')).toBeNull();
   });
 
   it('rend null pour toute devise tant que les taux ne sont pas chargés', () => {
     const store = makeStore(throwError(() => new Error('offline')));
-    expect(store.convert(1000, 'EUR')).toBeNull();
+    expect(store.convertFromContract(1000, 'EUR')).toBeNull();
     // La devise contractuelle, elle, reste toujours affichable.
-    expect(store.convert(1000, 'XOF')).toBe(1000);
+    expect(store.convertFromContract(1000, 'XOF')).toBe(1000);
   });
 
   it('expose les devises servies par le backend', () => {

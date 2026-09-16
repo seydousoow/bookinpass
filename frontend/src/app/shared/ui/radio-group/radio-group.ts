@@ -1,24 +1,22 @@
-import { Component, computed, effect, input, model, output } from '@angular/core';
+import { booleanAttribute, Component, computed, effect, input, model, output } from '@angular/core';
+// noinspection ES6PreferShortImport
 import { SelectOption } from '../../models/select.model';
 import { FormValueControl, ValidationError, WithOptionalFieldTree } from '@angular/forms/signals';
-import { translate } from '@jsverse/transloco';
+import { translate, TranslocoDirective } from '@jsverse/transloco';
 import { NgIcon, provideIcons } from '@ng-icons/core';
 import { heroExclamationCircleSolid } from '@ng-icons/heroicons/solid';
 
-/**
- * Groupe de boutons radio. Deux présentations : liste verticale, ou segments
- * horizontaux (utilisés par le sélecteur aller simple / aller-retour).
- */
 @Component({
   selector: 'bip-radio-group',
   host: { class: 'block' },
   templateUrl: './radio-group.html',
-  imports: [NgIcon],
+  imports: [NgIcon, TranslocoDirective],
   providers: [provideIcons({ heroExclamationCircleSolid })],
 })
 export class RadioGroup<T = string> implements FormValueControl<T | null> {
   readonly options = input.required<readonly SelectOption<T>[]>();
-  readonly label = input<string>();
+  readonly label = input.required<string>();
+  readonly hideLabel = input(false, { transform: booleanAttribute });
   readonly appearance = input<'list' | 'segmented'>('list');
 
   readonly name = input('');
@@ -29,7 +27,7 @@ export class RadioGroup<T = string> implements FormValueControl<T | null> {
   readonly disabled = input(false);
   readonly errors = input<readonly WithOptionalFieldTree<ValidationError>[]>([]);
   readonly value = model<T | null>(null);
-  readonly showError = computed(() => (this.touched() || this.dirty()) && this.errors().length > 0);
+  readonly showError = computed(() => this.touched() && this.invalid());
 
   readonly touch = output<void>();
 
@@ -57,7 +55,7 @@ export class RadioGroup<T = string> implements FormValueControl<T | null> {
   protected segmentClass(selected: boolean, itemDisabled: boolean): string {
     const base = [
       'relative flex min-h-9 items-center justify-center',
-      'rounded-button px-4 text-small font-semibold',
+      'rounded-button px-4 text-sm font-semibold',
       'transition-colors duration-300 ease-out',
       'has-[:focus-visible]:ring-2',
       'has-[:focus-visible]:ring-brand-primary',

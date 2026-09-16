@@ -180,7 +180,7 @@ composant écrit deux fois est une dette payée sur les six verticales.
 | `SearchShell` | Formulaire contextuel, état de recherche | idle, loading, error | AC13 |
 | `LocationField` | Ville, gare, port, aéroport, adresse | idle, loading, empty, error | AC13, AC16 |
 | `DatePicker` | Date simple, plage, indisponibilités | idle, loading | AC16 |
-| `PeopleSelector` | Adultes, enfants, bébés, chambres | idle | AC16 |
+| `PassengerSelector` | Adultes, enfants, bébés, chambres | idle | AC16 |
 | `OfferCard` | Visuel, attributs, badges, prix, CTA | idle, loading, expired | AC03, AC05 |
 | `FilterPanel` | Filtres, compteur, reset, tiroir mobile | idle, empty | AC01, AC16 |
 | `PriceSummary` | Sous-total, frais, remise, total XOF | idle, loading, expired | **AC03** |

@@ -7,12 +7,88 @@ html {
 }
 
 body {
-  @apply bg-surface-page text-body font-sans text-ink antialiased;
+  @apply bg-surface-page text-base font-sans text-ink antialiased;
 }
 
 /* Anneau de focus unique pour toute l'application (parcours clavier, AC). */
 .bip-focusable {
   @apply focus-visible:ring-brand-primary focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none;
+}
+
+
+@layer base {
+  [type=button], button, bip-button, option, optgroup, [ngOption], ng-option {
+    &:not(:disabled),
+    &:not(.disabled) {
+      @apply cursor-pointer;
+    }
+  }
+
+  :disabled, .disabled {
+    @apply bg-surface-muted pointer-events-none cursor-not-allowed opacity-60;
+  }
+
+  ng-icon-stack {
+    ng-icon {
+      @apply relative!;
+    }
+  }
+}
+
+/* Tooltip */
+[data-tooltip] {
+  position: relative; /* important pour que le ::after s’ancre dessus */
+  cursor: pointer;
+}
+
+[data-tooltip]::after {
+  content: attr(data-tooltip);
+  visibility: hidden;
+  opacity: 0;
+  background-color: #555;
+  color: #fff;
+  text-align: center;
+  border-radius: 6px;
+  padding: 5px;
+  position: absolute;
+  z-index: 50;
+  white-space: nowrap;
+  transition: opacity 0.3s;
+  font-size: .8rem;
+}
+
+/* Affichage au hover */
+[data-tooltip]:hover::after {
+  visibility: visible;
+  opacity: 1;
+}
+
+/* Tooltip en bas */
+[data-tooltip].tooltip-bottom::after {
+  top: 125%;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+/* Tooltip en haut */
+[data-tooltip].tooltip-top::after {
+  bottom: 125%;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+/* Tooltip à droite */
+[data-tooltip].tooltip-right::after {
+  top: 50%;
+  left: 125%;
+  transform: translateY(-50%);
+}
+
+/* Tooltip à gauche */
+[data-tooltip].tooltip-left::after {
+  top: 50%;
+  right: 125%;
+  transform: translateY(-50%);
 }
 
 @media (prefers-reduced-motion: reduce) {

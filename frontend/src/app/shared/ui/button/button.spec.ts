@@ -11,14 +11,7 @@ import { Button } from './button';
 @Component({
   imports: [Button],
   template: `
-    <button
-      bipButton
-      [variant]="variant()"
-      [loading]="loading()"
-      [disabled]="disabled()"
-      (click)="clicks.set(clicks() + 1)">
-      Payer
-    </button>
+    <button bipButton [variant]="variant()" [loading]="loading()" [disabled]="disabled()" (click)="clicks.set(clicks() + 1)">Payer</button>
   `,
 })
 class Host {

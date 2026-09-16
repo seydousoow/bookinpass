@@ -1,0 +1,44 @@
+<ng-container *transloco="let t">
+  @if (invalid()) {
+    <bip-modal [backdropDismissible]="false" [dismissible]="false" [opened]="true" [title]="t('search.error.invalid-title')">
+      <p class="text-sm text-muted">{{ t('search.error.invalid-message') }}</p>
+      <div modalFooter>
+        <bip-button (clicked)="backToHome()" type="button" variant="primary">{{ t('search.error.back-home') }}</bip-button>
+      </div>
+    </bip-modal>
+  } @else if (loading()) {
+    <bip-search-skeleton/>
+  } @else if (!hasOffers()) {
+    no offers
+  } @else {
+    <div class="mx-auto max-w-6xl bg-surface-card/95 grid grid-cols-1 py-2 h-full">
+      @defer (on idle) {
+        <div class="grid w-full grid-cols-1 md:grid-cols-4 md:gap-2">
+          <bip-flight-search-filter [offers]="offers()" [loading]="loading()" [querySelection]="airlineParam()"/>
+
+          <div class="col-span-3 flex flex-col gap-2 md:pr-2">
+            <bip-search-summary (invalidChange)="onSearchInvalid($event)"
+                                [(value)]="search"
+                                [adults]="adults()"
+                                [cabin]="cabin()"
+                                [children]="children()"
+                                [destination]="destination()"
+                                [from]="from()"
+                                [infants]="infants()"
+                                [origin]="origin()"
+                                [to]="to()"
+                                [tripType]="tripType()"/>
+
+            <cdk-virtual-scroll-viewport class="h-full" [itemSize]="168" appendOnly>
+              <ng-container *cdkVirtualFor="let offer of offers(); trackBy: trackOffer">
+                <bip-flight-offer-card [attr.data-offer-id]="offer.id" [offer]="offer" (selected)="open(offer)"/>
+              </ng-container>
+            </cdk-virtual-scroll-viewport>
+          </div>
+        </div>
+      } @placeholder {
+        <bip-search-skeleton/>
+      }
+    </div>
+  }
+</ng-container>

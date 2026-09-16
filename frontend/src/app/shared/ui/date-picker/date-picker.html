@@ -1,0 +1,79 @@
+<bip-dropdown (blur)="touch.emit()"
+              [prefix]="prefixIcon()"
+              (openedChange)="opened.set($event)"
+              *transloco="let t"
+              [disabled]="disabled()"
+              [error]="touched() && invalid()"
+              [hideLabel]="hideLabel()"
+              [label]="label()"
+              [name]="name()"
+              [opened]="opened()"
+              [placeholder]="placeholder()"
+              [value]="displayValue()"
+              panelWidth="auto">
+  <div class="p-3">
+    <div class="flex items-center justify-between gap-2 pb-2">
+      <bip-button (clicked)="shift(-1)" [disabled]="!canGoBack()" size="sm" variant="ghost">
+        <span class="sr-only">{{ t('picker.previous') }}</span>
+        <ng-icon name="heroChevronLeftSolid"/>
+      </bip-button>
+
+      <div class="flex flex-1 justify-around gap-6">
+        @for (month of months(); track month.key) {
+          <p class="text-sm text-ink font-semibold capitalize">{{ month.label }}</p>
+        }
+      </div>
+
+      <bip-button (clicked)="shift(1)" [disabled]="!canGoForward()" size="sm" variant="ghost">
+        <span class="sr-only">{{ t('picker.next') }}</span>
+        <ng-icon name="heroChevronRightSolid"/>
+      </bip-button>
+    </div>
+
+    <div class="flex gap-6">
+      @for (month of months(); track month.key) {
+        <table class="border-separate border-spacing-0.5" role="grid">
+          <thead>
+          <tr>
+            @for (day of weekdays(); track $index) {
+              <th class="text-xs text-muted w-9 font-medium capitalize" scope="col">{{ day }}</th>
+            }
+          </tr>
+          </thead>
+          <tbody>
+            @for (week of month.weeks; track $index) {
+              <tr>
+                @for (cell of week; track cell.iso) {
+                  <td class="p-0">
+                    @if (cell.inMonth) {
+                      <button (click)="pick(cell.iso)"
+                              (mouseenter)="hovered.set(cell.iso)"
+                              (mouseleave)="hovered.set(null)"
+                              [attr.aria-pressed]="isEdge(cell.iso)"
+                              [class]="dayClass(cell)"
+                              [disabled]="isDisabled(cell.iso)"
+                              type="button">
+                        {{ cell.dayNumber }}
+                      </button>
+                    } @else {
+                      <span class="block h-9 w-9"></span>
+                    }
+                  </td>
+                }
+              </tr>
+            }
+          </tbody>
+        </table>
+      }
+    </div>
+
+    <div class="border-border-subtle mt-2 flex items-center justify-between gap-2 border-t pt-2">
+      <p class="text-xs text-muted">{{ helperText() }}</p>
+      <bip-button (clicked)="clear()" size="sm" variant="ghost">{{ t('common.clear') }}</bip-button>
+    </div>
+  </div>
+</bip-dropdown>
+
+@if (touched() && invalid()) {
+  <p class="text-xs text-state-error mt-1.5">{{ errors()[0].message | transloco }}</p>
+}

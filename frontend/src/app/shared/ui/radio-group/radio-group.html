@@ -1,11 +1,13 @@
-<fieldset [attr.aria-invalid]="showError()" [disabled]="disabled()">
-  @if (label()) {
-    <legend class="text-small text-muted mb-2 flex items-center gap-1 font-semibold">
-      {{ label() }}
+<fieldset *transloco="let t" [attr.aria-invalid]="showError()" [disabled]="disabled()">
+  @if (!hideLabel()) {
+    <legend class="text-sm text-muted mb-2 flex items-center gap-1 font-semibold">
+      {{ t(label()) }}
       @if (required()) {
         <span aria-hidden="true" class="text-state-error">*</span>
       }
     </legend>
+  } @else {
+    <legend class="sr-only"> {{ t(label()) }}</legend>
   }
 
   @if (appearance() === 'segmented') {
@@ -21,7 +23,7 @@
                  [value]="option.value"
                  class="sr-only"
                  type="radio"/>
-          <span class="relative z-10">{{ option.label }}</span>
+          <span class="relative z-10">{{ t(option.label) }}</span>
         </label>
       }
     </div>
@@ -39,10 +41,10 @@
                  class="border-border-strong accent-brand-primary bip-focusable h-4 w-4 shrink-0 cursor-pointer border-2"
                  type="radio"/>
 
-          <label [for]="radioId(i)" class="text-small text-muted block cursor-pointer font-medium">
-            {{ option.label }}
+          <label [for]="radioId(i)" class="text-sm text-muted block cursor-pointer font-medium">
+            {{ t(option.label) }}
             @if (option.hint) {
-              <span class="text-label text-muted block font-normal">{{ option.hint }}</span>
+              <span class="text-xs text-muted block font-normal">{{ t(option.hint) }}</span>
             }
           </label>
         </div>
@@ -51,10 +53,12 @@
   }
   @if (showError()) {
     @for (error of errors(); track error) {
-      <p class="text-label text-state-error flex items-center gap-1">
-        <ng-icon color="red" name="heroExclamationCircleSolid"/>
-        <span>{{ error.message }}</span>
-      </p>
+      @if (error.message) {
+        <p class="text-xs text-state-error flex items-center gap-1">
+          <ng-icon color="red" name="heroExclamationCircleSolid"/>
+          <span>{{ t(error.message) }}</span>
+        </p>
+      }
     }
   }
 </fieldset>

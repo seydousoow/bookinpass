@@ -1,7 +1,11 @@
+// noinspection ES6PreferShortImport
+
 import { Component, computed, input, output } from '@angular/core';
-import { AppError } from '@shared/models/app-error';
-import { SystemStatus } from '@shared/models/system-state';
+import { AppError } from '../../models/app-error';
+import { SystemStatus } from '../../models/system-state';
 import { Button } from '../button/button';
+import { NgIcon, provideIcons } from '@ng-icons/core';
+import { heroExclamationCircleSolid } from '@ng-icons/heroicons/solid';
 
 /**
  * Rendu des huit états du cahier §11. Deux règles portées ici, pas ailleurs :
@@ -11,8 +15,9 @@ import { Button } from '../button/button';
  */
 @Component({
   selector: 'bip-system-state',
-  imports: [Button],
+  imports: [Button, NgIcon],
   host: { class: 'block' },
+  providers: [provideIcons({ heroExclamationCircleSolid })],
   template: `
     @switch (status()) {
       @case ('success') {
@@ -20,40 +25,31 @@ import { Button } from '../button/button';
       }
       @case ('partial') {
         <div class="border-state-warning bg-state-warning-soft rounded-card mb-3 border p-3">
-          <p class="text-small text-ink font-semibold">{{ title() || 'Confirmation partielle' }}</p>
-          <p class="text-small text-ink/80 mt-1">{{ message() }}</p>
+          <p class="text-sm text-ink font-semibold">{{ title() || 'Confirmation partielle' }}</p>
+          <p class="text-sm text-ink/80 mt-1">{{ message() }}</p>
         </div>
         <ng-content />
       }
       @case ('loading') {
-        <div class="animate-pulse space-y-3" [attr.aria-busy]="true" aria-live="polite">
+        <div [attr.aria-busy]="true" aria-live="polite" class="animate-pulse space-y-3">
           <span class="sr-only">Chargement en cours</span>
           @for (line of skeletonLines(); track $index) {
-            <div class="bg-border-subtle rounded-card" [style.height.px]="skeletonHeight()"></div>
+            <div [style.height.px]="skeletonHeight()" class="bg-border-subtle rounded-card"></div>
           }
         </div>
       }
       @default {
         <div [class]="panelClass()" role="status">
-          <div [class]="iconClass()" aria-hidden="true">
-            <svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-              <path
-                fill-rule="evenodd"
-                d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm0-13a.75.75 0 0 1 .75.75v4.5a.75.75 0 0 1-1.5 0v-4.5A.75.75 0 0 1 10 5Zm0 9.5a1 1 0 1 0 0-2 1 1 0 0 0 0 2Z"
-                clip-rule="evenodd" />
-            </svg>
-          </div>
+          <ng-icon name="heroExclamationCircleSolid" aria-hidden="true" [color]="iconClass()" />
           <div class="min-w-0 flex-1">
-            <p class="text-small text-ink font-semibold">{{ resolvedTitle() }}</p>
-            <p class="text-small text-muted mt-1">{{ resolvedMessage() }}</p>
+            <p class="text-sm text-ink font-semibold">{{ resolvedTitle() }}</p>
+            <p class="text-sm text-muted mt-1">{{ resolvedMessage() }}</p>
             @if (error()?.preserved; as preserved) {
-              <p class="text-label text-muted mt-1.5 italic">{{ preserved }}</p>
+              <p class="text-xs text-muted mt-1.5 italic">{{ preserved }}</p>
             }
           </div>
           @if (actionLabel()) {
-            <button bipButton variant="outline" size="sm" type="button" (click)="retry.emit()">
-              {{ actionLabel() }}
-            </button>
+            <bip-button (clicked)="retry.emit()" size="sm" variant="outline">{{ actionLabel() }}</bip-button>
           }
         </div>
       }
@@ -70,9 +66,7 @@ export class SystemState {
   readonly skeletonHeight = input(96);
   readonly retry = output<void>();
 
-  protected readonly skeletonLines = computed(() =>
-    Array.from({ length: this.skeletonCount() }, (_, i) => i),
-  );
+  protected readonly skeletonLines = computed(() => Array.from({ length: this.skeletonCount() }, (_, i) => i));
 
   protected readonly resolvedTitle = computed(() => {
     if (this.title()) {
@@ -122,10 +116,10 @@ export class SystemState {
 
   protected iconClass(): string {
     const tones: Record<string, string> = {
-      expired: 'text-state-warning',
-      error: 'text-state-error',
-      offline: 'text-muted',
+      expired: '--color-state-warning',
+      error: '--color-state-error',
+      offline: '--color-muted',
     };
-    return `mt-0.5 shrink-0 ${tones[this.status()] ?? 'text-muted'}`;
+    return `var(--${tones[this.status()] ?? '--color-muted'})`;
   }
 }

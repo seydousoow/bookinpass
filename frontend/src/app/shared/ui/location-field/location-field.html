@@ -10,12 +10,12 @@
 
     <input
       #combobox="ngCombobox"
-      (expandedChange)="open.set($event)"
+      (expandedChange)="opened.set($event)"
       [(value)]="query"
       [aria-placeholder]="t(placeholder())"
       [attr.aria-invalid]="touched() && invalid()"
       [disabled]="disabled()"
-      [expanded]="open()"
+      [expanded]="opened()"
       [id]="name()"
       [name]="name()"
       [placeholder]="t(placeholder())"
@@ -24,7 +24,7 @@
       ngCombobox
       type="text"/>
 
-    @if (loading) {
+    @if (loading()) {
       <bip-spinner class="text-brand-primary" size="xs"/>
     } @else if (query()) {
       <span class="text-muted cursor-pointer bip-focusable flex justify-center" type="button">

@@ -4,13 +4,17 @@ import { booleanAttribute, Component, computed, inject, input, model, output, si
 import { FormValueControl, ValidationError, WithOptionalFieldTree } from '@angular/forms/signals';
 import { Combobox, ComboboxPopup, ComboboxWidget } from '@angular/aria/combobox';
 import { Listbox, Option } from '@angular/aria/listbox';
-import { createAirportIndex, searchAirports } from './airport-search';
-import { Spinner } from '../spinner/spinner';
-import { Airport, CityGroup, PlaceSelection } from '../../models/place.model';
-import { AirportStore } from './airport.store';
 import { NgIcon, provideIcons } from '@ng-icons/core';
 import { heroMapPinSolid, heroXMarkSolid } from '@ng-icons/heroicons/solid';
 import { TranslocoDirective, TranslocoPipe } from '@jsverse/transloco';
+
+import { Spinner } from '../spinner/spinner';
+import { Airport, CityGroup, PlaceSelection } from '../../models/place.model';
+import { createAirportIndex, searchAirports } from './airport-search';
+import { AirportStore } from './airport.store';
+
+const SEARCH_MIN_LENGTH = 2;
+const MAX_RESULTS = 180;
 
 @Component({
   selector: 'bip-location-field',
@@ -21,10 +25,14 @@ import { TranslocoDirective, TranslocoPipe } from '@jsverse/transloco';
 })
 export class LocationField implements FormValueControl<string | null> {
   readonly label = input.required<string>();
-  readonly hideLabel = input(false, { transform: booleanAttribute });
+  readonly hideLabel = input(false, {
+    transform: booleanAttribute,
+  });
   readonly placeholder = input('search.location.placeholder');
 
   readonly minLength = input<number>();
+  readonly maxGroups = input(8);
+
   readonly name = input('');
   readonly touched = input(false);
   readonly invalid = input(false);
@@ -32,126 +40,145 @@ export class LocationField implements FormValueControl<string | null> {
   readonly required = input(false);
   readonly disabled = input(false);
   readonly errors = input<readonly WithOptionalFieldTree<ValidationError>[]>([]);
+
   readonly touch = output<void>();
   readonly value = model<string | null>(null);
-  readonly selected = signal<PlaceSelection | undefined>(undefined);
 
-  readonly maxGroups = input(8);
+  protected readonly selected = signal<PlaceSelection | undefined>(undefined);
 
-  protected open = model(false);
+  protected readonly opened = model(false);
   protected query = model('');
-  /** La valeur du listbox : le code de la sélection courante, préfixé par son type. */
-  protected readonly selectedCodes = computed(() => {
-    const current = this.selected();
-    return current ? [`${current.kind}:${current.code}`] : [];
-  });
-
-  private readonly airportStore = inject(AirportStore);
-  /** Index Fuse.js, reconstruit uniquement quand le jeu de données change. */
-  private readonly index = computed(() => createAirportIndex(this.airports));
   /**
-   * Regroupement ville → aéroports, appliqué APRÈS la recherche : l'ordre des
-   * groupes suit donc le classement par pertinence de Fuse.
+   * Current listbox selection.
+   *
+   * Format:
+   *   city:CDG
+   *   airport:CDG
+   */
+  protected readonly selectedCodes = computed(() => {
+    const selection = this.selected();
+    return selection ? [`${selection.kind}:${selection.code}`] : [];
+  });
+  private readonly airportStore = inject(AirportStore);
+  protected readonly loading = this.airportStore.loading;
+  protected readonly airports = this.airportStore.airports;
+  /**
+   * Fuse index is rebuilt only when the airport dataset changes.
+   */
+  private readonly airportIndex = computed(() => createAirportIndex(this.airports()));
+  /**
+   * Search and group airports by city.
+   *
+   * Search ranking is preserved because grouping happens after
+   * the Fuse results have been returned.
    */
   protected readonly groups = computed<readonly CityGroup[]>(() => {
-    const q = this.query().trim();
-    const matches = q.length < 2 ? this.airports.slice(0, 60) : searchAirports(this.index(), q, 60);
-
-    const byCity = new Map<string, Airport[]>();
-    for (const airport of matches) {
-      const bucket = byCity.get(airport.cityCode);
-      if (bucket) {
-        bucket.push(airport);
+    const query = this.query().trim();
+    const airports =
+      query.length < SEARCH_MIN_LENGTH ? this.airports().slice(0, MAX_RESULTS) : searchAirports(this.airportIndex(), query, MAX_RESULTS);
+    const groups = new Map<string, Airport[]>();
+    for (const airport of airports) {
+      const airportsInCity = groups.get(airport.cityCode);
+      if (airportsInCity) {
+        airportsInCity.push(airport);
       } else {
-        byCity.set(airport.cityCode, [airport]);
+        groups.set(airport.cityCode, [airport]);
       }
     }
 
-    return [...byCity.entries()].slice(0, this.maxGroups()).map(([cityCode, list]) => ({
-      cityCode,
-      cityName: list[0].cityName,
-      countryName: list[0].countryName,
-      countryCode: list[0].countryCode,
-      airports: list,
-    }));
+    return [...groups.entries()].slice(0, this.maxGroups()).map(([cityCode, cityAirports]) => {
+      const { cityName, countryCode, countryName } = cityAirports[0];
+      return { cityCode, cityName: cityName, countryName: countryName, countryCode: countryCode, airports: cityAirports };
+    });
   });
-
-  get loading(): boolean {
-    return this.airportStore.loading();
-  }
-
-  get airports(): readonly Airport[] {
-    return this.airportStore.airports();
-  }
-
-  reset(): void {
-    /* empty */
-  }
 
   clear(): void {
     this.query.set('');
     this.selected.set(undefined);
-    this.reset();
+    this.value.set(null);
+  }
+
+  reset(): void {
+    // Nothing to reset.
   }
 
   protected wrapperClass(): string {
-    const base = [
+    const classes = [
       'flex min-h-11 items-center gap-2 rounded-field border bg-surface-card px-3 py-2 transition-colors focus-within:ring-2 focus-within:ring-brand-primary focus-within:ring-offset-2',
     ];
-    if (this.touched() && !this.invalid()) {
-      base.push('border-state-error');
+
+    if (this.touched() && this.invalid()) {
+      classes.push('border-state-error');
+    } else if (this.opened()) {
+      classes.push('border-brand-primary');
     } else {
-      base.push(this.open() ? 'border-brand-primary' : 'border-border-strong  hover:border-brand-primary/60');
+      classes.push('border-border-strong', 'hover:border-brand-primary/60');
     }
-    // base.push(this.disabled() ? 'bg-surface-muted cursor-not-allowed opacity-60' : 'cursor-pointer');
-    return base.join(' ');
+
+    if (this.disabled()) {
+      classes.push('cursor-not-allowed', 'bg-surface-muted', 'opacity-60');
+    }
+
+    return classes.join(' ');
   }
 
   protected rowClass(active: boolean): string {
-    const base = ['flex min-h-11 items-center gap-2 px-3 py-2 w-full justify-between items-center'];
-    base.push(active ? 'bg-brand-soft' : 'hover:bg-brand-soft/60');
-    return base.join(' ');
+    return ['flex min-h-11 w-full items-center justify-between gap-2 px-3 py-2', active ? 'bg-brand-soft' : 'hover:bg-brand-soft/60',].join(' ');
   }
 
-  /** Reconstruit une sélection métier à partir du code choisi dans le listbox. */
+  /**
+   * Reconstructs the domain selection from the listbox value.
+   */
   protected onPick(codes: string[]): void {
-    const picked = codes[0];
-    if (!picked) {
+    const code = codes[0];
+    if (!code) {
       return;
     }
-    const [kind, code] = picked.split(':');
 
-    let next: PlaceSelection | null = null;
-    if (kind === 'city') {
-      const group = this.groups().find((g) => g.cityCode === code);
-      if (group) {
-        next = {
-          kind: 'city',
-          code: group.cityCode,
-          label: group.cityName,
-          subLabel: `Tous les aéroports · ${group.countryName}`,
-          countryCode: group.countryCode,
-        };
-      }
-    } else {
-      const airport = this.airports.find((a) => a.iata === code);
-      if (airport) {
-        next = {
-          kind: 'airport',
-          code: airport.iata,
-          label: airport.name,
-          subLabel: `${airport.cityName}, ${airport.countryName}`,
-          countryCode: airport.countryCode,
-        };
-      }
-    }
-
-    if (!next) {
+    const [kind, value] = code.split(':');
+    if (!value) {
       return;
     }
-    this.selected.set(next);
-    this.value.set(next.code);
-    this.query.set(`${next.label} (${next.code})`);
-    this.open.set(false);
+
+    const selection = kind === 'city' ? this.findCitySelection(value) : kind === 'airport' ? this.findAirportSelection(value) : undefined;
+    if (!selection) {
+      return;
+    }
+
+    this.selected.set(selection);
+    this.value.set(selection.code);
+    this.query.set(`${selection.label} (${selection.code})`);
+    this.opened.set(false);
+  }
+
+  private findCitySelection(cityCode: string): PlaceSelection | undefined {
+    const city = this.groups().find((group) => group.cityCode === cityCode);
+
+    if (!city) {
+      return undefined;
+    }
+    return {
+      kind: 'city',
+      code: city.cityCode,
+      label: city.cityName,
+      subLabel: `Tous les aéroports · ${city.countryName}`,
+      countryCode: city.countryCode,
+    };
+  }
+
+  private findAirportSelection(iata: string): PlaceSelection | undefined {
+    const airport = this.airports().find(({ iata: x }) => x === iata);
+
+    if (!airport) {
+      return undefined;
+    }
+
+    return {
+      kind: 'airport',
+      code: airport.iata,
+      label: airport.name,
+      subLabel: `${airport.cityName}, ${airport.countryName}`,
+      countryCode: airport.countryCode,
+    };
   }
 }

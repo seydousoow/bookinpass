@@ -34,7 +34,7 @@ export class PricePipe implements PipeTransform {
       return this.lastValue;
     }
 
-    const converted = this.currency.convert(amountXof, target);
+    const converted = this.currency.convertFromContract(amountXof, target);
     // Taux indisponible : on montre le montant contractuel plutôt qu'un prix inventé.
     const value =
       converted === null

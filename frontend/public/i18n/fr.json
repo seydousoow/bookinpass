@@ -1,10 +1,30 @@
 {
   "common": {
+    "bag": "Bagage",
+    "clear": "Effacer",
+    "editable": "Modifiable",
     "no-element": "Aucun élément",
     "select": "Sélectionner",
+    "choose": "Choisir",
+    "loading": "Chargement",
+    "required-field": "Ce champ est requis",
     "radio": {
       "no-option": "Aucune option spécifiée pour le groupe radio.",
       "min-option": "Au moins deux options sont requises pour le groupe de boutons radio."
+    },
+    "view-details": "Voir les détails"
+  },
+  "picker": {
+    "previous": "Mois précédent",
+    "next": "Mois suivant",
+    "placeholder": "Choisir une date",
+    "travel-one-way-placeholder": "Aller",
+    "travel-round-trip-placeholder": "Aller - Retour",
+    "select": {
+      "one-way": "Sélectionnez une date",
+      "inbound": "Sélectionnez la date de départ",
+      "outbound": "Sélectionnez la date de retour",
+      "travel-date": "{count, plural, one {Votre date de voyage} other {Vos dates de voyage}}"
     }
   },
   "nav": {
@@ -40,8 +60,63 @@
     "travelers": "Voyageurs",
     "cabin": "Classe",
     "submit": "Rechercher",
-    "oneWay": "Aller simple",
-    "roundTrip": "Aller-retour"
+    "one-way": "Aller simple",
+    "round-trip": "Aller-retour",
+    "filter": {
+      "title": "Filtrer les offres",
+      "recommended": "Choix recommandé",
+      "airlines": {
+        "title":  "Compagnies"
+      },
+      "price": {
+        "title": "Budget",
+        "per-person": "{count, plural, =2 {Aller-Retour / Personne} other {Aller Simple / Personne} }"
+      },
+      "stops": {
+        "title": "Escales",
+        "options": "{count, plural, =0 {Vols directs uniquement} one {# escale maximum} other {# escales admises}}",
+        "desc": "{count, plural, =0 {Direct} one {# escale} other {# escales}}"
+      },
+      "bags": {
+        "title": "Bagages",
+        "cabin": "Bagage à main inclus",
+        "hold": "Bagages enregistrés inclus"
+      }
+    },
+    "error": {
+      "invalid-title": "Recherche invalide",
+      "invalid-message": "Des informations essentielles à votre recherche sont manquantes ou incorrectes.",
+      "back-home": "Retour à l'accueil"
+    },
+    "location": {
+      "origin": "D'où partez-vous ?",
+      "destination": "Où allez-vous ?",
+      "all-airports": "Tous les aéroports · {name}",
+      "placeholder": "Ville, aéroport ou code",
+      "min-typing": "{count, plural, one {Saisissez au moins # caractère} other {Saisissez au moins # caractères}}",
+      "no-result": "Aucune correspondance pour « {value} »",
+      "similar-location": "Les lieux d'origine et de destination doivent être différents."
+    },
+    "passenger": {
+      "add-a": "Ajouter un",
+      "remove-a": "Retirer un",
+      "adult": {
+        "label": "Adulte",
+        "detailed": "{count, plural, one {# adulte} other {# adultes}}",
+        "hint": "12 ans et plus"
+      },
+      "children": {
+        "label": "Enfant",
+        "detailed": "{count, plural, one {# enfant} other {# enfants}}",
+        "hint": "De 2 à 11 ans"
+      },
+      "infant": {
+        "label": "Bébé",
+        "detailed": "{count, plural, one {# bébé} other {# bébés}}",
+        "hint": "Moins de 2 ans",
+        "requirement": "Chaque adulte peut accompagner jusqu’à deux enfants, avec au maximum un bébé par adulte."
+      }
+    }
   },
   "home": {
     "title": "Un seul passe pour tous vos voyages",

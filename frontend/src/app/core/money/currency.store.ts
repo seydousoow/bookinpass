@@ -1,6 +1,7 @@
-import { afterNextRender, computed, inject, Injectable, signal } from '@angular/core';
+import { afterNextRender, computed, inject, Service, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { CONTRACT_CURRENCY, CurrencyOption, ExchangeRates } from '@shared/models/money.model';
+import { TranslocoService } from '@jsverse/transloco';
 
 const STORAGE_KEY = 'bip.currency';
 
@@ -12,23 +13,22 @@ const STORAGE_KEY = 'bip.currency';
  * qu'un confort de lecture. Les taux viennent du backend — ici une FIXTURE
  * `rates.json` en attendant le point d'entrée réel.
  */
-@Injectable({ providedIn: 'root' })
+@Service()
 export class CurrencyStore {
-  private readonly http = inject(HttpClient);
-
-  private readonly ratesData = signal<ExchangeRates | null>(null);
   readonly selected = signal<string>(CONTRACT_CURRENCY);
-
+  readonly isContractCurrency = computed(() => this.selected() === CONTRACT_CURRENCY);
+  private readonly ratesData = signal<ExchangeRates | null>(null);
   /** Date du taux appliqué, à afficher partout où un prix converti est montré. */
   readonly updatedAt = computed(() => this.ratesData()?.updatedAt ?? null);
-  readonly isContractCurrency = computed(() => this.selected() === CONTRACT_CURRENCY);
-
+  private readonly transloco = inject(TranslocoService);
   /** Les devises proposées viennent de la charge utile : le backend décide. */
   readonly currencies = computed<readonly CurrencyOption[]>(() => {
     const data = this.ratesData();
-    const codes = data ? Object.keys(data.rates) : [CONTRACT_CURRENCY];
-    return codes.map((code) => ({ code, label: currencyLabel(code) }));
+    const local = this.transloco.activeLang();
+    const codes: string[] = [...new Set(data ? Object.keys(data.rates) : [CONTRACT_CURRENCY])];
+    return codes.map((code) => ({ code, label: currencyLabel(code, local) }));
   });
+  private readonly http = inject(HttpClient);
 
   constructor() {
     // Ni `localStorage` ni le réseau au rendu serveur (plan §10.3).
@@ -42,22 +42,54 @@ export class CurrencyStore {
     this.selected.set(code);
     try {
       localStorage.setItem(STORAGE_KEY, code);
-    } catch {
+    } catch (e) {
+      console.error(e);
       // Navigation privée ou stockage refusé : le choix vaut pour la session.
     }
   }
 
   /**
    * Convertit un montant exprimé dans la devise contractuelle. Tant que les
-   * taux ne sont pas chargés, on rend le montant d'origine plutôt qu'un prix
-   * faux : mieux vaut un XOF juste qu'un euro inventé.
+   * taux ne sont pas chargés, on rend le montant d'origine plutôt qu'un faux prix.
+   * Il vaut mieux un XOF juste qu'un euro inventé.
    */
-  convert(amountXof: number, currency = this.selected()): number | null {
+  convertFromContract(amountXof: number, currency = this.selected()): number | null {
     if (currency === CONTRACT_CURRENCY) {
       return amountXof;
     }
     const rate = this.ratesData()?.rates[currency];
     return rate === undefined ? null : amountXof * rate;
+  }
+
+  convert(amount: number, from: string, to = this.selected()): number | null {
+    if (from === to) {
+      return amount;
+    }
+
+    const rates = this.ratesData()?.rates;
+
+    if (!rates) {
+      return null;
+    }
+
+    // Rates are assumed to be relative to the contract currency (XOF).
+    if (from === CONTRACT_CURRENCY) {
+      const rate = rates[to];
+      return rate === undefined ? null : amount * rate;
+    }
+
+    if (to === CONTRACT_CURRENCY) {
+      const rate = rates[from];
+      return rate === undefined ? null : amount / rate;
+    }
+
+    const fromRate = rates[from];
+    const toRate = rates[to];
+
+    if (fromRate === undefined || toRate === undefined) {
+      return null;
+    }
+    return (amount / fromRate) * toRate;
   }
 
   private restore(): void {
