@@ -1,6 +1,6 @@
 import { Component, computed, effect, inject, input, model } from '@angular/core';
 import { provideIcons } from '@ng-icons/core';
-import { DateRangeValue, IFlightSearch, normalizeCabin, PersistedFlightSearch, TripType } from '@shared/models';
+import { DateRangeValue, IFlightSearch, normalizeCabin, PersistedFlightSearch, TTripType } from '@shared/models';
 import { SearchStore } from '@core/search/search.store';
 import { IsoDate, isValidPassengerCount, PassengerCount } from '@shared/ui';
 import { FormValueControl, ValidationError, WithOptionalFieldTree } from '@angular/forms/signals';
@@ -23,7 +23,7 @@ export class SearchSummary implements FormValueControl<IFlightSearch> {
   readonly disabled = model(false);
   readonly errors = model<readonly WithOptionalFieldTree<ValidationError>[]>([]);
 
-  readonly tripType = input<TripType | undefined>(undefined);
+  readonly tripType = input<TTripType | undefined>(undefined);
   readonly origin = input<string | undefined>(undefined);
   readonly destination = input<string | undefined>(undefined);
   readonly from = input<string | undefined>(undefined);

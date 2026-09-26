@@ -7,7 +7,7 @@ import {
   heroQuestionMarkCircleSolid,
   heroShoppingBagSolid,
 } from '@ng-icons/heroicons/solid';
-import { Button } from '@shared/ui';
+import { Button, Viewport } from '@shared/ui';
 import { FlightOffer, FlightSegment, InboundOfferSlice, OutboundOfferSlice } from '@shared/models/flight.model';
 import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
 import { TranslocoLocaleService } from '@jsverse/transloco-locale';
@@ -19,7 +19,7 @@ import { NgOptimizedImage } from '@angular/common';
   imports: [Button, TranslocoDirective, NgOptimizedImage, NgIcon, NgIconStack],
   providers: [provideIcons({ heroBriefcaseSolid, heroChevronRightSolid, heroQuestionMarkCircleSolid, heroShoppingBagSolid, heroLightBulbSolid })],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  host: { class: 'block w-full p-2 md:pr-3' },
+  host: { class: 'block w-full md:pr-3' },
 })
 export class FlightOfferCard {
   readonly offer = input.required<FlightOffer>();
@@ -42,6 +42,11 @@ export class FlightOfferCard {
   private readonly translocoLocale = inject(TranslocoLocaleService);
   private readonly transloco = inject(TranslocoService);
   private readonly locale = this.transloco.activeLang;
+  private readonly viewport = inject(Viewport);
+
+  get isMobile(): boolean {
+    return this.viewport.isMobile();
+  }
 
   protected firstSegment(slice: OutboundOfferSlice | InboundOfferSlice): FlightSegment {
     return slice.segments[0];
@@ -85,6 +90,7 @@ export class FlightOfferCard {
       maximumFractionDigits: currency === 'XOF' ? 0 : 2,
     });
   }
+
   protected hasCheckedBaggage(slice: OutboundOfferSlice | InboundOfferSlice): boolean {
     return slice.segments.some((segment) => segment.passengers.some((passenger) => passenger.baggages.some((baggage) => baggage.type === 'checked')));
   }
@@ -92,20 +98,6 @@ export class FlightOfferCard {
   protected hasCabinBaggage(slice: OutboundOfferSlice | InboundOfferSlice): boolean {
     return slice.segments.some((segment) =>
       segment.passengers.some((passenger) => passenger.baggages.some((baggage) => baggage.type === 'carry_on')),
-    );
-  }
-
-  protected checkedBaggageQuantity(slice: OutboundOfferSlice | InboundOfferSlice): number {
-    return slice.segments.reduce(
-      (total, segment) =>
-        total +
-        segment.passengers.reduce(
-          (passengerTotal, passenger) =>
-            passengerTotal +
-            passenger.baggages.filter((baggage) => baggage.type === 'checked').reduce((quantity, baggage) => quantity + baggage.quantity, 0),
-          0,
-        ),
-      0,
     );
   }
 

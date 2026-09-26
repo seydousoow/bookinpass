@@ -1,9 +1,7 @@
-// noinspection JSUnusedLocalSymbols
-
 import { Component, computed, effect, inject, signal } from '@angular/core';
 import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
 import { SelectOption } from '@shared/models/select.model';
-import { IFlightSearch, TripType } from '@shared/models/search.model';
+import { CABIN_CLASSES, IFlightSearch, TCabinClass, TTripType } from '@shared/models/search.model';
 import { SearchStore } from '@core/search/search.store';
 import {
   Button,
@@ -31,15 +29,9 @@ import { Router } from '@angular/router';
 })
 export class Home {
   protected readonly minSearchDate = todayIso();
-  protected readonly tripTypes: readonly SelectOption<TripType>[] = [
+  protected readonly tripTypes: readonly SelectOption<TTripType>[] = [
     { label: 'search.round-trip', value: 'round' },
     { label: 'search.one-way', value: 'oneway' },
-  ];
-  protected readonly cabins: readonly SelectOption[] = [
-    { label: 'Économique', value: 'economy' },
-    { label: 'Premium', value: 'premium' },
-    { label: 'Affaires', value: 'business' },
-    { label: 'Première', value: 'first' },
   ];
   private readonly search = signal<IFlightSearch>({
     tripType: 'round',
@@ -115,8 +107,10 @@ export class Home {
       },
     },
   );
-
   private readonly transloco = inject(TranslocoService);
+  protected readonly cabins: readonly SelectOption<TCabinClass>[] = CABIN_CLASSES.map((value) => ({
+    label: this.transloco.translate(`search.cabin.${value}`), value,
+  }));
   private readonly router = inject(Router);
   private readonly searchStore = inject(SearchStore);
   private readonly restoredFromStorage = signal(false);
@@ -132,13 +126,14 @@ export class Home {
       }
       this.restoredFromStorage.set(true);
       this.search.update((old) => ({
-        tripType: last.tripType || old.tripType,
-        origin: last.origin || old.origin,
-        destination: last.destination || old.destination,
-        dates: last.dates || old.dates,
-        passengers: last.passengers || old.passengers,
+        tripType: last.tripType ?? old.tripType,
+        origin: last.origin ?? old.origin,
+        destination: last.destination ?? old.destination,
+        dates: last.dates ?? old.dates,
+        passengers: last.passengers ?? old.passengers,
         cabin: [last.cabin ?? old.cabin[0]],
       }));
+      console.log(this.search());
     });
   }
 

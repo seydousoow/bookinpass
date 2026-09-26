@@ -2,6 +2,7 @@
   "common": {
     "bag": "Baggage",
     "clear": "Clear",
+    "close": "Close",
     "editable": "Editable",
     "no-element": "No element",
     "select": "Select an item",
@@ -58,7 +59,13 @@
     "depart": "Departure",
     "return": "Return",
     "travelers": "Travellers",
-    "cabin": "Cabin",
+    "cabin": {
+      "title": "Cabin class",
+      "economy": "Economy",
+      "premium": "Premium Economy",
+      "business": "Business",
+      "first": "First"
+    },
     "submit": "Search",
     "one-way": "One way",
     "round-trip": "Round trip",

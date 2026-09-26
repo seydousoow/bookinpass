@@ -2,6 +2,7 @@
   "common": {
     "bag": "Bagage",
     "clear": "Effacer",
+    "close": "Fermer",
     "editable": "Modifiable",
     "no-element": "Aucun élément",
     "select": "Sélectionner",
@@ -58,7 +59,13 @@
     "depart": "Aller",
     "return": "Retour",
     "travelers": "Voyageurs",
-    "cabin": "Classe",
+    "cabin": {
+      "title": "Classe",
+      "economy": "Économique",
+      "premium": "Éco Premium",
+      "business": "Affaires",
+      "first": "Première"
+    },
     "submit": "Rechercher",
     "one-way": "Aller simple",
     "round-trip": "Aller-retour",
@@ -116,7 +123,7 @@
         "hint": "Moins de 2 ans",
         "requirement": "Chaque adulte peut accompagner jusqu’à deux enfants, avec au maximum un bébé par adulte."
       }
-    }
+    },
   },
   "home": {
     "title": "Un seul passe pour tous vos voyages",

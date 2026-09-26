@@ -3,31 +3,25 @@ import { Component, computed, inject, input, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { Button, Modal } from '@shared/ui';
-import { FlightSearchResult, IFlightSearch, TripType } from '@shared/models';
-import { SearchSkeleton } from '@core/search/skeleton/search-skeleton';
-import { SearchSummary } from '@core/search/summary/search-summary';
-import { FlightSearchFilter } from '@core/search/filter/flight-search-filter';
-import { FlightOfferCard } from '@core/search/offer-card/offer-card';
+import { FlightSearchResult, IFlightSearch, TTripType } from '@shared/models';
+import { SearchSkeleton } from '@features/search/skeleton/search-skeleton';
+import { SearchSummary } from '@features/search/summary/search-summary';
+import { FlightSearchFilter } from '@features/search/filter/flight-search-filter';
+import { FlightOfferCard } from '@features/search/offer-card/offer-card';
 import { FlightOffer } from '@shared/models/flight.model';
 import { ScrollingModule } from '@angular/cdk/scrolling';
+import { NgIcon, provideIcons } from '@ng-icons/core';
+import { heroFunnel } from '@ng-icons/heroicons/outline';
 
 @Component({
   selector: 'bip-search',
   templateUrl: './flight-search.html',
   host: { class: 'block p-0 h-[calc(100vh-65px)]' },
-  imports: [
-    Modal,
-    Button,
-    TranslocoDirective,
-    SearchSkeleton,
-    SearchSummary,
-    FlightSearchFilter,
-    FlightOfferCard,
-    ScrollingModule
-  ],
+  providers: [provideIcons({ heroFunnel })],
+  imports: [Modal, Button, TranslocoDirective, SearchSkeleton, SearchSummary, FlightSearchFilter, FlightOfferCard, ScrollingModule, NgIcon],
 })
 export class FlightSearch {
-  readonly tripType = input<TripType | undefined>(undefined, { alias: 't' });
+  readonly tripType = input<TTripType | undefined>(undefined, { alias: 't' });
   readonly origin = input<string | undefined>(undefined, { alias: 'o' });
   readonly destination = input<string | undefined>(undefined, { alias: 'd' });
   readonly from = input<string | undefined>(undefined);

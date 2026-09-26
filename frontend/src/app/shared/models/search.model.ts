@@ -1,21 +1,30 @@
 import { IsoDate, PassengerCount } from '@shared/ui';
 import { FlightOffer, FlightSearchSlices, SearchPassenger } from './flight.model';
 
-export type TripType = 'round' | 'oneway';
+export const CABIN_CLASSES = ['economy', 'premium', 'business', 'first'] as const;
 
-export type CabinClass = 'economy' | 'premium' | 'business' | 'first';
+export type TTripType = 'round' | 'oneway';
 
-export type LocationType = 'airport' | 'city';
+export type TCabinClass = (typeof CABIN_CLASSES)[number];
 
-export type PassengerType = 'adult' | 'child' | 'infant_without_seat' | 'infant_with_seat';
+export type TLocationType = 'airport' | 'city';
 
-export type BaggageType = 'checked' | 'carry_on';
+export type TPassengerType = 'adult' | 'child' | 'infant_without_seat' | 'infant_with_seat';
 
-export type AmenityCost = 'included' | 'paid' | 'n/a';
+export type TBaggageType = 'checked' | 'carry_on';
 
-export type Legroom = 'standard' | 'more' | 'less';
+export type TAmenityCost = 'included' | 'paid' | 'n/a';
 
-export type SeatType = 'standard' | 'recliner' | 'flat' | 'flatbed';
+export type TLegroom = 'standard' | 'more' | 'less';
+
+export type TSeatType = 'standard' | 'recliner' | 'flat' | 'flatbed';
+
+export function normalizeCabin(value: string | undefined): TCabinClass {
+  if (!value || !CABIN_CLASSES.includes(value as TCabinClass)) {
+    return 'economy';
+  }
+  return value.toLowerCase() as TCabinClass;
+}
 
 export interface AirlineFilter {
   readonly code: string;
@@ -43,30 +52,21 @@ export interface DateRangeValue {
  * Persisted search
  * ========================================================================== */
 export interface IFlightSearch {
-  tripType: TripType;
+  tripType: TTripType;
   origin: string;
   destination: string;
   dates: DateRangeValue;
   passengers: PassengerCount;
-  cabin: CabinClass[];
+  cabin: TCabinClass[];
 }
 
 export interface PersistedFlightSearch {
-  readonly tripType: TripType;
+  readonly tripType: TTripType;
   readonly origin: string;
   readonly destination: string;
   readonly dates: DateRangeValue;
   readonly passengers: PassengerCount;
-  readonly cabin: CabinClass;
-}
-
-const CABIN_CLASSES: readonly CabinClass[] = ['economy', 'premium', 'business', 'first'];
-
-export function normalizeCabin(value: string | undefined): CabinClass {
-  if (!value || !CABIN_CLASSES.includes(value as CabinClass)) {
-    return 'economy';
-  }
-  return value.toLowerCase() as CabinClass;
+  readonly cabin: TCabinClass;
 }
 
 /* ==========================================================================
@@ -83,7 +83,7 @@ export interface FlightSearchData {
 
   readonly airline_credit_ids: readonly string[];
 
-  readonly cabin_class: CabinClass;
+  readonly cabin_class: TCabinClass;
   readonly live_mode: boolean;
   readonly created_at: string;
 

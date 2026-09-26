@@ -1,0 +1,273 @@
+<ng-container *transloco="let t">
+  @if (opened()) {
+    <bip-overlay
+      (clicked)="close()"
+      class="fixed inset-0 z-40"
+    />
+  }
+
+  <section [attr.aria-label]="t('search.offer-details.title')"
+           [attr.aria-modal]="dialogActive() ? 'true' : null"
+           [attr.role]="dialogActive() ? 'dialog' : null"
+           [cdkTrapFocusAutoCapture]="dialogActive()"
+           [cdkTrapFocus]="dialogActive()"
+           [class.translate-y-full]="!opened()"
+           class="fixed inset-x-0 bottom-0 z-50 flex h-dvh w-full flex-col bg-surface-card transition-transform duration-300 ease-out
+            md:inset-x-auto md:bottom-auto md:left-1/2 md:top-1/2 md:h-auto md:max-h-[90vh] md:w-150 md:-translate-x-1/2 md:-translate-y-1/2 md:rounded-xl md:shadow-xl">
+    <!-- ============================================================
+         Header
+         ============================================================ -->
+    <header class="flex shrink-0 items-center justify-between border-b border-border-muted px-4 py-4 md:px-6">
+      <div class="min-w-0">
+        <h2 class="truncate text-xl font-bold">{{ t('search.offer-details.title') }}</h2>
+      </div>
+
+      <bip-button (clicked)="close()" class="shrink-0" size="sm" variant="ghost">
+        <span class="sr-only">{{ t('common.close') }}</span>
+        <ng-icon name="heroXMark"/>
+      </bip-button>
+    </header>
+
+    <!-- ============================================================
+         Scrollable content
+         ============================================================ -->
+
+    <div class="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-5 md:px-6">
+      <!-- ==========================================================
+           Actions
+           ========================================================== -->
+      <div class="mb-7 flex items-center gap-5">
+        <button class="inline-flex items-center gap-2 text-sm font-semibold text-brand" type="button">
+          <ng-icon name="heroArrowsRightLeft"/>
+          {{ t('search.offer-details.save') }}
+        </button>
+
+        <button class="inline-flex items-center gap-2 text-sm font-semibold text-brand" type="button">
+          {{ t('search.offer-details.share') }}
+        </button>
+      </div>
+
+      <!-- ==========================================================
+           OUTBOUND
+           ========================================================== -->
+      <section>
+        <div class="mb-4">
+          <h3 class="text-lg font-bold">{{ t('search.offer-details.outbound') }}</h3>
+
+          <p class="text-sm text-muted">
+            {{ outboundSlice().segments.length - 1 }}
+            {{ t('search.offer-details.stops') }} · {{ formatDuration(outboundSlice().duration) }}
+          </p>
+        </div>
+
+        <div class="space-y-0">
+          @for (segment of outboundSlice().segments; track segment.id; let last = $last) {
+            <!-- ====================================================
+                 Departure
+                 ==================================================== -->
+            <div class="relative flex gap-4">
+              <!-- timeline -->
+              <div class="flex w-8 shrink-0 flex-col items-center">
+
+                <span class="mt-1 size-3 rounded-full border-2 border-brand bg-surface-card"></span>
+                @if (!last) {
+                  <span class=" w-px flex-1 bg-border-strong"></span>
+                }
+              </div>
+
+              <div class="min-w-0 flex-1 pb-6">
+                <p class="text-sm text-muted">{{ formatDate(segment.departing_at) }} · {{ formatTime(segment.departing_at) }}</p>
+                <p class="mt-1 font-bold">{{ segment.origin.iata_code }} · {{ segment.origin.name }}</p>
+
+                <div class="mt-4 flex items-center gap-3">
+                  <div class="relative size-8"><img [alt]="segment.marketing_carrier.name" [ngSrc]="airlineLogo(segment)" class="object-contain" fill/></div>
+
+                  <div class="text-sm">
+                    <p class="font-medium">{{ segment.marketing_carrier.name }}</p>
+                    <p class="text-muted">{{ segmentLabel(segment) }} · {{ segment.passengers[0]?.cabin_class_marketing_name }}</p>
+                    <p class="text-muted">{{ t('search.offer-details.flight-duration') }} : {{ formatDuration(segment.duration) }}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- ====================================================
+                 Stop
+                 ==================================================== -->
+            @for (stop of segment.stops; track stop.id) {
+              <div class="relative flex gap-4">
+                <div class="flex w-8 shrink-0 justify-center">
+                  <span class="h-14 w-px border-l border-dashed border-border-strong"></span>
+                </div>
+
+                <div class="flex items-center gap-2 pb-6 text-sm">
+                  <ng-icon class="text-muted" name="heroClock"/>
+                  <span>{{ t('search.offer-details.stop') }} : {{ stopDuration(stop) }}</span>
+                </div>
+              </div>
+            }
+
+            <!-- ====================================================
+                 Destination
+                 ==================================================== -->
+            @if (last) {
+              <div class="relative flex gap-4">
+                <div class="flex w-8 shrink-0 justify-center">
+                  <span class="mt-1 size-3 rounded-full border-2 border-brand bg-surface-card"></span>
+                </div>
+
+                <div class="min-w-0 pb-7">
+                  <p class="text-sm text-muted">{{ formatDate(segment.arriving_at) }} · {{ formatTime(segment.arriving_at) }}</p>
+                  <p class="mt-1 font-bold">{{ segment.destination.iata_code }} · {{ segment.destination.name }}</p>
+                </div>
+              </div>
+            }
+          }
+        </div>
+      </section>
+
+      <!-- ==========================================================
+           INBOUND
+           ========================================================== -->
+      @if (inboundSlice(); as inbound) {
+        <hr class="my-5 border-border-muted">
+        <section>
+          <div class="mb-4">
+            <h3 class="text-lg font-bold">{{ t('search.offer-details.inbound') }}</h3>
+            <p class="text-sm text-muted">{{ inbound.segments.length - 1 }} {{ t('search.offer-details.stops') }} · {{ formatDuration(inbound.duration) }}</p>
+          </div>
+
+          <div class="space-y-0">
+            @for (segment of inbound.segments; track segment.id; let last = $last) {
+              <div class="relative flex gap-4">
+                <div class="flex w-8 shrink-0 flex-col items-center">
+                  <span class=" mt-1 size-3 rounded-full border-2 border-brand bg-surface-card"></span>
+                  @if (!last) {
+                    <span class="w-px flex-1 bg-border-strong"></span>
+                  }
+                </div>
+
+                <div class="min-w-0 flex-1 pb-6">
+                  <p class="text-sm text-muted">{{ formatDate(segment.departing_at) }} · {{ formatTime(segment.departing_at) }}</p>
+                  <p class="mt-1 font-bold">{{ segment.origin.iata_code }} · {{ segment.origin.name }}</p>
+
+                  <div class="mt-4 flex items-center gap-3">
+                    <div class="relative size-8">
+                      <img [alt]="segment.marketing_carrier.name" [ngSrc]="airlineLogo(segment)" class="object-contain" fill/>
+                    </div>
+                    <div class="text-sm">
+                      <p class="font-medium">{{ segment.marketing_carrier.name }}</p>
+                      <p class="text-muted">{{ segmentLabel(segment) }} · {{ segment.passengers[0]?.cabin_class_marketing_name }}</p>
+                      <p class="text-muted">{{ t('search.offer-details.flight-duration') }} : {{ formatDuration(segment.duration) }}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              @for (stop of segment.stops; track stop.id) {
+                <div class="relative flex gap-4">
+                  <div class="flex w-8 shrink-0 justify-center">
+                    <span class="h-14 w-px border-l border-dashed border-border-strong"></span>
+                  </div>
+
+                  <div class="flex items-center gap-2 pb-6 text-sm">
+                    <ng-icon class="text-muted" name="heroClock"/>
+                    <span>{{ t('search.offer-details.stop') }} : {{ stopDuration(stop) }}</span>
+                  </div>
+                </div>
+              }
+
+              @if (last) {
+                <div class="relative flex gap-4">
+                  <div class="flex w-8 shrink-0 justify-center">
+                    <span class="mt-1 size-3 rounded-full border-2 border-brand bg-surface-card"></span>
+                  </div>
+
+                  <div class="min-w-0 pb-7">
+                    <p class="text-sm text-muted">{{ formatDate(segment.arriving_at) }} · {{ formatTime(segment.arriving_at) }}</p>
+                    <p class="mt-1 font-bold">{{ segment.destination.iata_code }} · {{ segment.destination.name }}</p>
+                  </div>
+                </div>
+              }
+            }
+          </div>
+        </section>
+      }
+
+      <!-- ==========================================================
+           Baggage
+           ========================================================== -->
+      <hr class="my-5 border-border-muted">
+      <section>
+        <h3 class="text-lg font-bold">{{ t('search.offer-details.baggage.title') }}</h3>
+        <p class="mt-1 text-sm text-muted">{{ t('search.offer-details.baggage.subtitle') }}</p>
+
+        <div class="mt-5 space-y-5">
+          <div class="flex gap-4">
+            <ng-icon class="mt-1 size-6 shrink-0" name="trollley"/>
+            <div>
+              <p class="font-medium">{{ baggage().carryOn }}{{ t('search.offer-details.baggage.carry-on') }}</p>
+              <p class="text-sm text-muted">{{ t('search.offer-details.baggage.carry-on-description') }}</p>
+              <p class="text-sm text-success">{{ t('common.included') }}</p>
+            </div>
+          </div>
+
+          <div class="flex gap-4">
+            <ng-icon class="mt-1 size-6 shrink-0" name="heroSuitcase"/>
+            <div>
+              <p class="font-medium">{{ baggage().checked }} {{ t('search.offer-details.baggage.checked') }}</p>
+              <p class="text-sm text-muted">{{ t('search.offer-details.baggage.checked-description') }}</p>
+              <p class="text-sm text-success">{{ t('common.included') }}</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==========================================================
+           Fare rules
+           ========================================================== -->
+      <hr class="my-5 border-border-muted">
+
+      <section>
+        <h3 class="text-lg font-bold">{{ t('search.offer-details.fare-rules.title') }}</h3>
+        <p class="mt-1 text-sm text-muted">{{ t('search.offer-details.fare-rules.subtitle') }}</p>
+        <div class="mt-5 space-y-5">
+          @if (canRefund()) {
+            <div class="flex gap-4">
+              <ng-icon class="mt-1 size-6 shrink-0" name="heroCheckCircle"/>
+              <div>
+                <p class="font-medium">{{ t('search.offer-details.fare-rules.refundable') }}</p>
+                <p class="text-sm text-muted">{{ t('search.offer-details.fare-rules.refundable-description') }}</p>
+              </div>
+            </div>
+          }
+          @if (hasChanges()) {
+            <div class="flex gap-4">
+              <ng-icon class="mt-1 size-6 shrink-0" name="heroPencilSquare"/>
+              <div>
+                <p class="font-medium">{{ t('search.offer-details.fare-rules.changeable') }}</p>
+                <p class="text-sm text-muted">{{ t('search.offer-details.fare-rules.changeable-description') }}</p>
+              </div>
+            </div>
+          }
+        </div>
+      </section>
+    </div>
+    <!-- ============================================================
+         Sticky footer
+         ============================================================ -->
+    <footer class="flex shrink-0 items-center justify-between gap-4 border-t border-border-muted bg-surface-card px-4 py-4 md:rounded-b-xl md:px-6">
+      <div class="min-w-0">
+        <div class="flex items-baseline gap-2">
+          <strong class="text-xl">
+            {{ offer().total_amount | translocoCurrency : 'narrowSymbol' : {currency: offer().total_currency, minimumFractionDigits: 0, maximumFractionDigits: getMaxDigit(offer().total_currency)} }}
+          </strong>
+          <!--          <span class="text-sm text-muted">{{ offer().total_currency }}</span>-->
+        </div>
+        <p class="text-xs text-muted">{{ t('search.offer-details.total') }}</p>
+      </div>
+
+      <bip-button (clicked)="selected.emit()" class="shrink-0" variant="primary">{{ t('search.offer-details.continue') }}</bip-button>
+    </footer>
+  </section>
+</ng-container>

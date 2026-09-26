@@ -1,4 +1,4 @@
-import { AmenityCost, BaggageType, CabinClass, Legroom, LocationType, PassengerType, SeatType } from './search.model';
+import { TAmenityCost, TBaggageType, TCabinClass, TLegroom, TLocationType, TPassengerType, TSeatType } from './search.model';
 
 /**
  * The requested journey.
@@ -12,8 +12,8 @@ import { AmenityCost, BaggageType, CabinClass, Legroom, LocationType, PassengerT
 export type FlightSearchSlices = readonly [OutboundSearchSlice] | readonly [OutboundSearchSlice, InboundSearchSlice];
 
 export interface OutboundSearchSlice {
-  readonly destination_type: LocationType;
-  readonly origin_type: LocationType;
+  readonly destination_type: TLocationType;
+  readonly origin_type: TLocationType;
   readonly departure_date: string;
 
   readonly origin: FlightLocation;
@@ -21,8 +21,8 @@ export interface OutboundSearchSlice {
 }
 
 export interface InboundSearchSlice {
-  readonly destination_type: LocationType;
-  readonly origin_type: LocationType;
+  readonly destination_type: TLocationType;
+  readonly origin_type: TLocationType;
   readonly departure_date: string;
 
   readonly origin: FlightLocation;
@@ -105,8 +105,8 @@ export interface OutboundOfferSlice {
   readonly id: string;
   readonly duration: string;
 
-  readonly destination_type: LocationType;
-  readonly origin_type: LocationType;
+  readonly destination_type: TLocationType;
+  readonly origin_type: TLocationType;
 
   readonly fare_brand_name: string | null;
   readonly ngs_shelf: number | null;
@@ -124,8 +124,8 @@ export interface InboundOfferSlice {
   readonly id: string;
   readonly duration: string;
 
-  readonly destination_type: LocationType;
-  readonly origin_type: LocationType;
+  readonly destination_type: TLocationType;
+  readonly origin_type: TLocationType;
 
   readonly fare_brand_name: string | null;
   readonly ngs_shelf: number | null;
@@ -220,7 +220,7 @@ export interface FlightStop {
 
 export interface SearchPassenger {
   readonly id: string;
-  readonly type: PassengerType | null;
+  readonly type: TPassengerType | null;
 
   readonly fare_type: string | null;
   readonly age: number | null;
@@ -235,7 +235,7 @@ export interface SearchPassenger {
 export interface OfferPassenger {
   readonly passenger_id: string;
 
-  readonly cabin_class: CabinClass;
+  readonly cabin_class: TCabinClass;
   readonly cabin_class_marketing_name: string;
 
   readonly fare_basis_code: string;
@@ -248,7 +248,7 @@ export interface OfferPassenger {
 export interface SegmentPassenger {
   readonly passenger_id: string;
 
-  readonly cabin_class: CabinClass;
+  readonly cabin_class: TCabinClass;
   readonly cabin_class_marketing_name: string;
 
   readonly fare_basis_code: string;
@@ -263,7 +263,7 @@ export interface SegmentPassenger {
  * ========================================================================== */
 
 export interface Baggage {
-  readonly type: BaggageType;
+  readonly type: TBaggageType;
   readonly quantity: number;
 }
 
@@ -273,7 +273,7 @@ export interface Baggage {
 
 export interface Cabin {
   readonly marketing_name: string;
-  readonly name: CabinClass;
+  readonly name: TCabinClass;
 
   readonly amenities: CabinAmenities;
 }
@@ -286,12 +286,12 @@ export interface CabinAmenities {
 
 export interface WifiAmenity {
   readonly available: boolean;
-  readonly cost: AmenityCost;
+  readonly cost: TAmenityCost;
 }
 
 export interface SeatAmenity {
-  readonly type: SeatType;
-  readonly legroom: Legroom;
+  readonly type: TSeatType;
+  readonly legroom: TLegroom;
   readonly pitch: string;
 }
 
@@ -332,7 +332,7 @@ export interface Airline {
 export interface FlightLocation {
   readonly id: string;
 
-  readonly type: LocationType;
+  readonly type: TLocationType;
   readonly name: string;
 
   readonly iata_code: string;
@@ -354,7 +354,7 @@ export interface FlightLocation {
 export interface CityLocation {
   readonly id: string;
 
-  readonly type: LocationType;
+  readonly type: TLocationType;
   readonly name: string;
 
   readonly iata_code: string;

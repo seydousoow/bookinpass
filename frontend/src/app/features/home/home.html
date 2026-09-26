@@ -26,7 +26,7 @@
           </div>
 
           <div class="flex flex-wrap items-end gap-3">
-            <bip-select [formField]="searchForm.cabin" [options]="cabins" class="w-full sm:w-56" label="search.cabin"/>
+            <bip-select [formField]="searchForm.cabin" [options]="cabins" class="w-full sm:w-56" label="search.cabin.title"/>
             <button bipButton [disabled]="searchForm().invalid()" [loading]="searchForm().pending()" class="ml-auto w-full sm:w-auto" size="lg" type="submit" variant="accent">
               {{ t('search.submit') }}
             </button>
