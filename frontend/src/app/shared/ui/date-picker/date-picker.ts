@@ -9,7 +9,7 @@ import { TranslocoDirective, TranslocoPipe, TranslocoService } from '@jsverse/tr
 import { Button } from '../button/button';
 import { Dropdown } from '../dropdown/dropdown';
 import { addMonths, DayCell, formatDisplay, fromIso, isBetween, IsoDate, isSameDay, monthGrid, monthLabel, todayIso } from './date-utils';
-import { DateRangeValue } from '@shared/models';
+import { IDateRangeValue } from '@shared/models';
 
 export type DatePickerMode = 'single' | 'range';
 
@@ -20,7 +20,7 @@ export type DatePickerMode = 'single' | 'range';
   providers: [provideIcons({ heroChevronLeftSolid, heroChevronRightSolid })],
   templateUrl: './date-picker.html',
 })
-export class DatePicker implements FormValueControl<DateRangeValue> {
+export class DatePicker implements FormValueControl<IDateRangeValue> {
   readonly label = input.required<string>();
   readonly hideLabel = input(false, { transform: booleanAttribute });
   readonly mode = input<DatePickerMode>('single');
@@ -42,7 +42,7 @@ export class DatePicker implements FormValueControl<DateRangeValue> {
   readonly disabled = input(false);
   readonly errors = input<readonly WithOptionalFieldTree<ValidationError>[]>([]);
   readonly touch = output<void>();
-  readonly value = model<DateRangeValue>({ start: null, end: null });
+  readonly value = model<IDateRangeValue>({ start: null, end: null });
 
   protected readonly opened = signal(false);
   protected readonly hovered = signal<IsoDate | null>(null);

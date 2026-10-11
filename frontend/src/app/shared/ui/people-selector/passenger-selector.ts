@@ -5,10 +5,10 @@ import { Dropdown } from '../dropdown/dropdown';
 import { Button } from '../button/button';
 import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
 
-import { isValidPassengerCount, maximumAdults, maximumChildren, maximumInfants, minimumAdults, PassengerCount } from './passenger.helper';
+import { isValidPassengerCount, maximumAdults, maximumChildren, maximumInfants, minimumAdults, IPassengerCount } from './passenger.helper';
 import { FormValueControl, ValidationError } from '@angular/forms/signals';
 
-type PassengerType = keyof PassengerCount;
+type PassengerType = keyof IPassengerCount;
 
 interface PassengerRow {
   readonly key: PassengerType;
@@ -25,8 +25,8 @@ interface PassengerRow {
   host: { class: 'block' },
   templateUrl: './passenger-selector.html',
 })
-export class PassengerSelector implements FormValueControl<PassengerCount> {
-  readonly value = model<PassengerCount>({ adults: 1, children: 0, infants: 0 });
+export class PassengerSelector implements FormValueControl<IPassengerCount> {
+  readonly value = model<IPassengerCount>({ adults: 1, children: 0, infants: 0 });
   readonly errors = input<readonly ValidationError.WithOptionalFieldTree[]>([]);
   readonly invalid = input(false);
   readonly touched = input(false);
@@ -81,7 +81,7 @@ export class PassengerSelector implements FormValueControl<PassengerCount> {
   protected step(key: PassengerType, delta: -1 | 1): void {
     this.touch.emit();
     this.value.update((current) => {
-      const next: PassengerCount = { ...current, [key]: current[key] + delta };
+      const next: IPassengerCount = { ...current, [key]: current[key] + delta };
       return isValidPassengerCount(next) ? next : current;
     });
   }

@@ -1,16 +1,17 @@
 // noinspection ES6PreferShortImport
 
 import { DOCUMENT, isPlatformBrowser } from '@angular/common';
-import { booleanAttribute, Component, effect, inject, input, model, output, PLATFORM_ID } from '@angular/core';
+import { booleanAttribute, Component, DestroyRef, effect, inject, input, model, output, PLATFORM_ID } from '@angular/core';
 import { CdkTrapFocus } from '@angular/cdk/a11y';
 import { Overlay } from '../overlay/overlay';
 import { Button } from '../button/button';
 import { NgIcon, provideIcons } from '@ng-icons/core';
 import { heroXMarkSolid } from '@ng-icons/heroicons/solid';
+import { TranslocoPipe } from '@jsverse/transloco';
 
 @Component({
   selector: 'bip-modal',
-  imports: [Overlay, CdkTrapFocus, Button, NgIcon],
+  imports: [Overlay, CdkTrapFocus, Button, NgIcon, TranslocoPipe],
   host: { '(document:keydown.escape)': 'onEscape()' },
   providers: [provideIcons({ heroXMarkSolid })],
   templateUrl: './modal.html',
@@ -18,6 +19,8 @@ import { heroXMarkSolid } from '@ng-icons/heroicons/solid';
 export class Modal {
   readonly opened = model(false);
   readonly title = input.required<string>();
+  readonly showTitle = input(true, { transform: booleanAttribute });
+  readonly showFooter = input(true, { transform: booleanAttribute });
   readonly subtitle = input<string>();
   readonly size = input<'sm' | 'md' | 'lg'>('md');
   readonly dismissible = input(true, { transform: booleanAttribute });
@@ -27,6 +30,8 @@ export class Modal {
 
   private readonly document = inject(DOCUMENT);
   private readonly isBrowser = isPlatformBrowser(inject(PLATFORM_ID));
+  /** Vrai tant que cette modale tient le verrou de défilement du body. */
+  private locked = false;
 
   constructor() {
     // Verrou de défilement — navigateur uniquement (plan §10.3).
@@ -34,7 +39,14 @@ export class Modal {
       if (!this.isBrowser) {
         return;
       }
-      this.document.body.style.overflow = this.opened() ? 'hidden' : '';
+      this.locked = this.opened();
+      this.document.body.style.overflow = this.locked ? 'hidden' : '';
+    });
+    // Une modale retirée du DOM (ex. sous un `@if`) ne repasse jamais par l'effet : on libère le verrou ici.
+    inject(DestroyRef).onDestroy(() => {
+      if (this.locked) {
+        this.document.body.style.overflow = '';
+      }
     });
   }
 
@@ -44,15 +56,18 @@ export class Modal {
 
   close(): void {
     this.opened.set(false);
+    // Libération immédiate : le parent peut détruire la modale avant que l'effet ne repasse.
+    if (this.locked) {
+      this.locked = false;
+      this.document.body.style.overflow = '';
+    }
     this.closed.emit();
   }
 
   protected panelClass(): string {
-    const sizes = { sm: 'sm:max-w-md', md: 'sm:max-w-lg', lg: 'sm:max-w-2xl' } as const;
+    const sizes = { sm: 'max-w-md', md: 'sm:max-w-lg', lg: 'sm:max-w-2xl' } as const;
     return [
-      'relative z-50 flex max-h-[90vh] w-full flex-col rounded-t-panel bg-surface-card',
-      'shadow-panel sm:rounded-panel',
-      sizes[this.size()],
+      'relative z-50 flex max-h-[90vh] w-full flex-col bg-surface-card shadow-panel rounded-panel', sizes[this.size()],
     ].join(' ');
   }
 

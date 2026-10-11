@@ -1,0 +1,68 @@
+<ng-container *transloco="let t">
+  @if (open()) {
+    <bip-overlay (clicked)="close()" class="md:hidden"/>
+  }
+
+  <div
+    [attr.aria-label]="isSheetActive() ? t('search.filter.title') : null"
+    [attr.aria-modal]="isSheetActive() ? true : null"
+    [attr.role]="isSheetActive() ? 'dialog' : null"
+    [cdkTrapFocusAutoCapture]="isSheetActive()"
+    [cdkTrapFocus]="isSheetActive()"
+    [class.pointer-events-none]="isSheetHidden()"
+    [class.translate-y-full]="isSheetHidden()"
+    [inert]="isSheetHidden()"
+    class="fixed inset-x-0 bottom-0 z-50 grid h-dvh w-full grid-cols-1 gap-4 overflow-y-auto bg-surface-card p-6 md:p-3 not-md:pb-2 transition-transform duration-300 ease-out
+         md:pointer-events-auto md:static md:z-auto md:h-auto md:max-h-vh md:w-full md:translate-y-0
+         md:grid-cols-1 md:border-r md:border-r-zinc-100 md:transition-none">
+    <div class="flex items-center justify-between">
+      <p class="text-xl font-bold">{{ t('search.filter.title') }}</p>
+      <bip-button (clicked)="close()" class="md:hidden" size="sm" variant="ghost">
+        <span class="sr-only">{{ t('common.close') }}</span>
+        <ng-icon name="heroXMarkSolid"/>
+      </bip-button>
+    </div>
+
+    <hr class="border-black/50">
+
+    <div class="grid grid-cols-1 gap-2 not-last:border-b not-last:border-b-muted not-last:pb-4">
+      <p class="text-sm font-semibold text-brand-dark">{{ t('search.filter.stops.title') }}</p>
+
+      <div class="grid grid-cols-1 gap-y-1">
+        @for (option of connectionOptions; track option.value) {
+          <bip-checkbox (checkedChange)="maxConnection.set(option.value)" [checked]="maxConnection() === option.value" [label]="t(option.label, {count: option.value})"/>
+        }
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 gap-2 not-last:border-b not-last:border-b-muted not-last:pb-4">
+      <p class="text-sm font-semibold text-brand-dark">{{ t('search.filter.bags.title') }}</p>
+
+      <div class="grid grid-cols-1 gap-y-1">
+        @for (option of bagOptions; track option.value) {
+          <bip-checkbox (checkedChange)="onBagFilter(option.value, $event)" [checked]="baggage()[option.value]" [label]="t(option.label)"/>
+        }
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 gap-2 not-last:border-b not-last:border-b-muted not-last:pb-4">
+      <p class="text-sm font-semibold text-brand-dark">{{ t('search.filter.price.title') }}</p>
+      <bip-slider [(value)]="budget" [currency]="currency()" [max]="maxPrice()" [min]="0" [step]="step"/>
+    </div>
+
+    <div class="grid grid-cols-1 gap-2 not-last:border-b not-last:border-b-muted not-last:pb-4">
+      <p class="text-sm font-semibold text-brand-dark">{{ t('search.filter.airlines.title') }}</p>
+
+      <div class="grid grid-cols-1 gap-y-1">
+        @for (option of airlines(); track option.code) {
+          <div class="flex flex-nowrap justify-between items-center space-x-1">
+            <bip-checkbox (checkedChange)="airlineSelection.toggle(option.code)"
+                          [checked]="airlineSelection.isEmpty() || airlineSelection.isSelected(option.code)"
+                          [label]="option.name"/>
+            <bip-badge size="sm"> {{ option.offerCount }}</bip-badge>
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+</ng-container>

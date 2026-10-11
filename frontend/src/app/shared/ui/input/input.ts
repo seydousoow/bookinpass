@@ -17,15 +17,17 @@ const sizesStyling = {
   imports: [Field],
   host: { '[class.hidden]': 'hidden()', '[class.block]': '!hidden()' },
   template: `
-    <bip-field [hideLabel]="hideLabel()" [hint]="hint()" [label]="label()" [name]="name()" [required]="required()">
+    <bip-field [errors]="errors()" [hideLabel]="hideLabel()" [hint]="hint()" [label]="label()" [name]="name()" [required]="required()" [showErrors]="touched() && invalid()">
       <div class="relative flex items-center">
         @if (prefix()) {
           <span class="text-muted pointer-events-none absolute left-3 flex items-center text-sm">{{ prefix() }}</span>
         }
         <input (blur)="touch.emit()"
+               (input)="onInput($event)"
                [attr.aria-describedby]="describedBy()"
                [attr.aria-invalid]="touched() && invalid()"
                [attr.autocomplete]="autocomplete()"
+               [attr.max]="dateMax()"
                [attr.maxlength]="maxLength()"
                [class]="controlClass()"
                [disabled]="disabled()"
@@ -47,7 +49,9 @@ export class TextInput<T = string> implements FormValueControl<T | null> {
   readonly label = input.required<string>();
   readonly hideLabel = input(false, { transform: booleanAttribute });
 
-  readonly type = input<'text' | 'email' | 'tel' | 'number' | 'password' | 'search'>('text');
+  readonly type = input<'text' | 'email' | 'tel' | 'number' | 'password' | 'search' | 'date'>('text');
+  /** Borne haute native — utile pour `type="date"` (ex. : pas de date de naissance future). */
+  readonly dateMax = input<string>();
   readonly placeholder = input<string>();
   readonly hint = input<string>();
   readonly prefix = input<string>();
@@ -99,6 +103,10 @@ export class TextInput<T = string> implements FormValueControl<T | null> {
     }
     return base.join(' ');
   });
+
+  protected onInput(event: Event): void {
+    this.value.set((event.target as HTMLInputElement).value as T);
+  }
 
   private readonly transloco = inject(TranslocoService);
   readonly _placeholder = computed(() => {

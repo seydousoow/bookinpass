@@ -77,8 +77,7 @@ export class Button {
         this.size() === 'sm' ? 'text-sm' : 'text-base',
       );
     } else {
-      base.push(sizes[this.size()]);
-      base.push(variants[this.variant()]);
+      base.push(sizes[this.size()], variants[this.variant()]);
     }
 
     if (this.disabled()) {

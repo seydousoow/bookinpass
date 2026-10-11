@@ -15,7 +15,6 @@ body {
   @apply focus-visible:ring-brand-primary focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none;
 }
 
-
 @layer base {
   [type=button], button, bip-button, option, optgroup, [ngOption], ng-option {
     &:not(:disabled),
@@ -33,6 +32,17 @@ body {
       @apply relative!;
     }
   }
+
+  cdk-virtual-scroll-viewport {
+    scrollbar-width: none; /* Hide scrollbar on Firefox */
+    -ms-overflow-style: none; /* Hide scrollbar on IE and Edge */
+    overflow: -webkit-hidden-scrollbar; /* Hide scrollbar on Chrome, Safari,  and newer versions of Edge */
+
+    & > .cdk-virtual-scroll-content-wrapper {
+      @apply w-auto max-w-full;
+    }
+  }
+
 }
 
 /* Tooltip */

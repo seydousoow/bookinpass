@@ -9,12 +9,8 @@
           <bip-radio-group [formField]="searchForm.tripType" [options]="tripTypes" appearance="segmented" hideLabel label/>
 
           <div class="grid gap-2 md:grid-cols-2 xl:grid-cols-4">
-            <bip-location-field [formField]="searchForm.origin"
-                                label="search.location.origin"
-                                placeholder/>
-            <bip-location-field [formField]="searchForm.destination"
-                                label="search.location.destination"
-                                placeholder/>
+            <bip-location-field [formField]="searchForm.origin" label="search.location.origin" placeholder/>
+            <bip-location-field [formField]="searchForm.destination" label="search.location.destination" placeholder/>
             <bip-date-picker [formField]="searchForm.dates"
                              [label]="pickerLabel"
                              [minDate]="minSearchDate"
@@ -26,7 +22,7 @@
           </div>
 
           <div class="flex flex-wrap items-end gap-3">
-            <bip-select [formField]="searchForm.cabin" [options]="cabins" class="w-full sm:w-56" label="search.cabin.title"/>
+            <bip-select [formField]="searchForm.cabin" [options]="cabins()" class="w-full sm:w-56" label="search.cabin.title"/>
             <button bipButton [disabled]="searchForm().invalid()" [loading]="searchForm().pending()" class="ml-auto w-full sm:w-auto" size="lg" type="submit" variant="accent">
               {{ t('search.submit') }}
             </button>

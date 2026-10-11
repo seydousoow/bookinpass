@@ -3,7 +3,7 @@
 import { afterRenderEffect, booleanAttribute, Component, computed, input, model, output, signal, viewChild } from '@angular/core';
 import { Combobox, ComboboxPopup, ComboboxWidget } from '@angular/aria/combobox';
 import { Listbox, Option } from '@angular/aria/listbox';
-import { SelectOption } from '../../models/select.model';
+import { ISelectOption } from '../../models/select.model';
 import { Field } from '../field/field';
 import { FormValueControl, ValidationError, WithOptionalFieldTree } from '@angular/forms/signals';
 import { CdkConnectedOverlay } from '@angular/cdk/overlay';
@@ -19,7 +19,7 @@ import { NgIcon, provideIcons } from '@ng-icons/core';
   providers: [provideIcons({ heroCheckSolid, heroChevronDownSolid })],
 })
 export class Select<T = string> implements FormValueControl<T[]> {
-  readonly options = input.required<readonly SelectOption<T>[]>();
+  readonly options = input.required<readonly ISelectOption<T>[]>();
   readonly label = input.required<string>();
   readonly hideLabel = input(false, { transform: booleanAttribute });
 
@@ -35,7 +35,7 @@ export class Select<T = string> implements FormValueControl<T[]> {
   readonly required = input(false);
   readonly disabled = input(false);
   readonly errors = input<readonly WithOptionalFieldTree<ValidationError>[]>([]);
-  readonly showErrors = computed(() => this.touched() || this.invalid());
+  readonly showErrors = computed(() => this.touched() && this.invalid());
   readonly touch = output<void>();
 
   readonly value = model<T[]>([]);

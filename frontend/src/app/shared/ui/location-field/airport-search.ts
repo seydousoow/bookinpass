@@ -1,7 +1,7 @@
 // noinspection NonAsciiCharacters
 
 import Fuse, { IFuseOptions } from 'fuse.js';
-import { Airport } from '@shared/models/place.model';
+import { IAirport } from '@shared/models/place.model';
 
 /**
  * Ligatures et lettres barrées que la décomposition NFD ne sépare pas : elles
@@ -62,7 +62,7 @@ export function normalizeForSearch(value: string): string {
  * que `airport` conserve la forme accentuée, seule affichée au client.
  */
 interface IndexedAirport {
-  readonly airport: Airport;
+  readonly airport: IAirport;
   readonly iata: string;
   readonly cityName: string;
   readonly name: string;
@@ -109,7 +109,7 @@ export const AIRPORT_FUSE_OPTIONS: IFuseOptions<IndexedAirport> = {
  * Indexe une fois pour toutes. Réindexer — ou renormaliser — à chaque frappe sur
  * 2 000 entrées est la seule façon de rendre ce champ lent.
  */
-export function createAirportIndex(airports: readonly Airport[]): Fuse<IndexedAirport> {
+export function createAirportIndex(airports: readonly IAirport[]): Fuse<IndexedAirport> {
   const indexed = airports.map<IndexedAirport>((airport) => ({
     airport,
     iata: normalizeForSearch(airport.iata),
@@ -140,7 +140,7 @@ const MAX_CANDIDATES = 240;
  * cas demande un signal de popularité que le front n'a pas : il viendra du
  * backend, avec le référentiel.
  */
-export function searchAirports(index: Fuse<IndexedAirport>, query: string, limit: number): readonly Airport[] {
+export function searchAirports(index: Fuse<IndexedAirport>, query: string, limit: number): readonly IAirport[] {
   const normalized = normalizeForSearch(query);
   if (!normalized) {
     return [];

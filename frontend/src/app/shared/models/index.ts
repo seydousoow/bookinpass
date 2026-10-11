@@ -4,3 +4,4 @@ export * from './search.model';
 export * from './flight.model'
 export * from './select.model';
 export * from './system-state';
+export * from './flight-offer.model';

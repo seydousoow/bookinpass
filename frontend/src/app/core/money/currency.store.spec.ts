@@ -1,10 +1,11 @@
 import { TestBed } from '@angular/core/testing';
+import { APP_CONFIG } from '@core/config/app-config.token';
 import { HttpClient } from '@angular/common/http';
 import { of, throwError } from 'rxjs';
-import { ExchangeRates } from '@shared/models/money.model';
+import { IExchangeRates } from '@shared/models/money.model';
 import { CurrencyStore } from './currency.store';
 
-const RATES: ExchangeRates = {
+const RATES: IExchangeRates = {
   base: 'XOF',
   updatedAt: '2026-09-03T00:00:00.000Z',
   rates: { XOF: 1, EUR: 0.00152449, USD: 0.00165 },
@@ -12,7 +13,7 @@ const RATES: ExchangeRates = {
 
 function makeStore(response = of(RATES)) {
   TestBed.configureTestingModule({
-    providers: [{ provide: HttpClient, useValue: { get: () => response } }],
+    providers: [{ provide: HttpClient, useValue: { get: () => response } }, { provide: APP_CONFIG, useValue: { production: false, apiBaseUrl: '/api' } }],
   });
   const store = TestBed.inject(CurrencyStore);
   // `afterNextRender` ne s'exécute pas ici : on déclenche le chargement à la main.
@@ -64,7 +65,7 @@ describe('CurrencyStore', () => {
 
   it('oublie une devise que le backend ne sert plus', () => {
     TestBed.configureTestingModule({
-      providers: [{ provide: HttpClient, useValue: { get: () => of(RATES) } }],
+      providers: [{ provide: HttpClient, useValue: { get: () => of(RATES) } }, { provide: APP_CONFIG, useValue: { production: false, apiBaseUrl: '/api' } }],
     });
     const store = TestBed.inject(CurrencyStore);
     store.selected.set('GBP');

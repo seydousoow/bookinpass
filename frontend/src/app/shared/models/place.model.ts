@@ -2,9 +2,9 @@
  * Point de départ / d'arrivée. Aucune sémantique fournisseur ici (plan §2.2
  * règle 3) : le front ne connaît que le contrat Book In Pass.
  */
-export type PlaceKind = 'city' | 'airport';
+export type TPlaceKind = 'city' | 'airport';
 
-export interface Airport {
+export interface IAirport {
   readonly iata: string;
   readonly name: string;
   readonly cityName: string;
@@ -17,17 +17,17 @@ export interface Airport {
 }
 
 /** Une ville et ses aéroports — la forme affichée dans le champ de recherche. */
-export interface CityGroup {
+export interface ICityGroup {
   readonly cityCode: string;
   readonly cityName: string;
   readonly countryName: string;
   readonly countryCode: string;
-  readonly airports: readonly Airport[];
+  readonly airports: readonly IAirport[];
 }
 
 /** Ce que le champ émet : soit une ville entière, soit un aéroport précis. */
-export interface PlaceSelection {
-  readonly kind: PlaceKind;
+export interface IPlaceSelection {
+  readonly kind: TPlaceKind;
   /** Code IATA ville (kind = city) ou aéroport (kind = airport). */
   readonly code: string;
   readonly label: string;

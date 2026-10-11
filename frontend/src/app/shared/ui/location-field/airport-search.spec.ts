@@ -1,7 +1,7 @@
-import { Airport } from '@shared/models/place.model';
+import { IAirport } from '@shared/models/place.model';
 import { createAirportIndex, normalizeForSearch, searchAirports } from './airport-search';
 
-const airport = (over: Partial<Airport> & Pick<Airport, 'iata'>): Airport => ({
+const airport = (over: Partial<IAirport> & Pick<IAirport, 'iata'>): IAirport => ({
   name: `${over.iata} Airport`,
   cityName: 'Ville',
   cityCode: over.iata,
@@ -11,7 +11,7 @@ const airport = (over: Partial<Airport> & Pick<Airport, 'iata'>): Airport => ({
   ...over,
 });
 
-const DATA: readonly Airport[] = [
+const DATA: readonly IAirport[] = [
   airport({
     iata: 'DSS',
     name: 'Aéroport international Blaise Diagne',

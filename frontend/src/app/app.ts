@@ -4,7 +4,7 @@ import { RouterOutlet } from '@angular/router';
 import { TranslocoService } from '@jsverse/transloco';
 import { Footer, FooterColumn, Header, NavEntry } from '@shared/ui';
 import { firstValueFrom } from 'rxjs';
-import { CurrencyOption } from '@shared/models/money.model';
+import { ICurrencyOption } from '@shared/models/money.model';
 
 @Component({
   selector: 'bip-root',
@@ -69,7 +69,7 @@ export class App {
     return this.currencyStore.selected();
   }
 
-  get _currencies(): readonly CurrencyOption[] {
+  get _currencies(): readonly ICurrencyOption[] {
     return this.currencyStore.currencies();
   }
 

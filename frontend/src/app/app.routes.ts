@@ -8,7 +8,19 @@ export const routes: Routes = [
   },
   {
     path: 'search',
-    loadComponent: () => import('@features/search/flight-search').then((m) => m.FlightSearch)
+    loadComponent: () => import('@features/flight/search/flight-search').then((m) => m.FlightSearch),
+  },
+  {
+    path: 'flight',
+    children: [
+      {
+        path: ':offerId',
+        loadComponent: () => import('@features/flight/details/flight-offer').then((o) => o.FlightOffer),
+      },
+      {
+        path: '**', redirectTo: '/'
+      }
+    ],
   },
   {
     path: 'ui-kit',

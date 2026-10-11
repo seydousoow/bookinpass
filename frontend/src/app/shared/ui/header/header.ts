@@ -1,7 +1,7 @@
 import { Component, computed, input, model, signal } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { LangDefinition, TranslocoDirective } from '@jsverse/transloco';
-import { CurrencyOption } from '../../models/money.model';
+import { ICurrencyOption } from '../../models/money.model';
 import { Button } from '../button/button';
 import { CurrencySelector } from '../currency-selector/currency-selector';
 import { NgIcon, provideIcons } from '@ng-icons/core';
@@ -26,7 +26,7 @@ export class Header {
   /** Devise d'affichage — indépendante de la langue. */
   currentCurrency = model.required<string>();
 
-  readonly currencies = input<readonly CurrencyOption[]>([]);
+  readonly currencies = input<readonly ICurrencyOption[]>([]);
   readonly entries = input<readonly NavEntry[]>([]);
   readonly cartCount = input(0);
   protected readonly mobileOpen = signal(false);

@@ -1,7 +1,8 @@
 import { afterNextRender, computed, inject, Service, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { CONTRACT_CURRENCY, CurrencyOption, ExchangeRates } from '@shared/models/money.model';
+import { CONTRACT_CURRENCY, ICurrencyOption, IExchangeRates } from '@shared/models/money.model';
 import { TranslocoService } from '@jsverse/transloco';
+import { APP_CONFIG } from '@core/config/app-config.token';
 
 const STORAGE_KEY = 'bip.currency';
 
@@ -10,19 +11,19 @@ const STORAGE_KEY = 'bip.currency';
  * un client peut lire le site en français et voir les prix en euros.
  *
  * Le montant contractuel reste le XOF (cadrage §11) ; la conversion n'est
- * qu'un confort de lecture. Les taux viennent du backend — ici une FIXTURE
- * `rates.json` en attendant le point d'entrée réel.
+ * qu'un confort de lecture. Les taux viennent du backend (`GET /api/rates`).
  */
 @Service()
 export class CurrencyStore {
   readonly selected = signal<string>(CONTRACT_CURRENCY);
   readonly isContractCurrency = computed(() => this.selected() === CONTRACT_CURRENCY);
-  private readonly ratesData = signal<ExchangeRates | null>(null);
+  private readonly ratesData = signal<IExchangeRates | null>(null);
   /** Date du taux appliqué, à afficher partout où un prix converti est montré. */
   readonly updatedAt = computed(() => this.ratesData()?.updatedAt ?? null);
   private readonly transloco = inject(TranslocoService);
+  private readonly apiBaseUrl = inject(APP_CONFIG).apiBaseUrl;
   /** Les devises proposées viennent de la charge utile : le backend décide. */
-  readonly currencies = computed<readonly CurrencyOption[]>(() => {
+  readonly currencies = computed<readonly ICurrencyOption[]>(() => {
     const data = this.ratesData();
     const local = this.transloco.activeLang();
     const codes: string[] = [...new Set(data ? Object.keys(data.rates) : [CONTRACT_CURRENCY])];
@@ -104,7 +105,7 @@ export class CurrencyStore {
   }
 
   private loadRates(): void {
-    this.http.get<ExchangeRates>('/rates.json').subscribe({
+    this.http.get<IExchangeRates>(`${this.apiBaseUrl}/rates`).subscribe({
       next: (data) => {
         this.ratesData.set(data);
         // Une devise mémorisée que le backend ne sert plus doit être oubliée.

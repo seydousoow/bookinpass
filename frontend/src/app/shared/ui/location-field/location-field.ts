@@ -1,6 +1,6 @@
 // noinspection ES6PreferShortImport
 
-import { booleanAttribute, Component, computed, inject, input, model, output, signal } from '@angular/core';
+import { booleanAttribute, Component, computed, effect, inject, input, model, output, signal } from '@angular/core';
 import { FormValueControl, ValidationError, WithOptionalFieldTree } from '@angular/forms/signals';
 import { Combobox, ComboboxPopup, ComboboxWidget } from '@angular/aria/combobox';
 import { Listbox, Option } from '@angular/aria/listbox';
@@ -9,7 +9,7 @@ import { heroMapPinSolid, heroXMarkSolid } from '@ng-icons/heroicons/solid';
 import { TranslocoDirective, TranslocoPipe } from '@jsverse/transloco';
 
 import { Spinner } from '../spinner/spinner';
-import { Airport, CityGroup, PlaceSelection } from '../../models/place.model';
+import { IAirport, ICityGroup, IPlaceSelection } from '../../models/place.model';
 import { createAirportIndex, searchAirports } from './airport-search';
 import { AirportStore } from './airport.store';
 
@@ -44,17 +44,11 @@ export class LocationField implements FormValueControl<string | null> {
   readonly touch = output<void>();
   readonly value = model<string | null>(null);
 
-  protected readonly selected = signal<PlaceSelection | undefined>(undefined);
+  protected readonly selected = signal<IPlaceSelection | undefined>(undefined);
 
   protected readonly opened = model(false);
   protected query = model('');
-  /**
-   * Current listbox selection.
-   *
-   * Format:
-   *   city:CDG
-   *   airport:CDG
-   */
+
   protected readonly selectedCodes = computed(() => {
     const selection = this.selected();
     return selection ? [`${selection.kind}:${selection.code}`] : [];
@@ -72,11 +66,11 @@ export class LocationField implements FormValueControl<string | null> {
    * Search ranking is preserved because grouping happens after
    * the Fuse results have been returned.
    */
-  protected readonly groups = computed<readonly CityGroup[]>(() => {
+  protected readonly groups = computed<readonly ICityGroup[]>(() => {
     const query = this.query().trim();
     const airports =
       query.length < SEARCH_MIN_LENGTH ? this.airports().slice(0, MAX_RESULTS) : searchAirports(this.airportIndex(), query, MAX_RESULTS);
-    const groups = new Map<string, Airport[]>();
+    const groups = new Map<string, IAirport[]>();
     for (const airport of airports) {
       const airportsInCity = groups.get(airport.cityCode);
       if (airportsInCity) {
@@ -92,9 +86,23 @@ export class LocationField implements FormValueControl<string | null> {
     });
   });
 
+  constructor() {
+    effect(() => {
+      const value = this.value();
+      const selected = this.selected();
+      console.log(value, selected)
+      if (value && (!selected || !Object.is(value, selected.code))) {
+        const selection = this.findAirportSelection(value) ?? this.findCitySelection(value);
+        this.selected.set(selection);
+        if (selection) {
+          this.query.set(`${selection.label} (${selection.code})`);
+        }
+      }
+    });
+  }
+
   clear(): void {
     this.query.set('');
-    this.selected.set(undefined);
     this.value.set(null);
   }
 
@@ -123,7 +131,7 @@ export class LocationField implements FormValueControl<string | null> {
   }
 
   protected rowClass(active: boolean): string {
-    return ['flex min-h-11 w-full items-center justify-between gap-2 px-3 py-2', active ? 'bg-brand-soft' : 'hover:bg-brand-soft/60',].join(' ');
+    return ['flex min-h-11 w-full items-center justify-between gap-2 px-3 py-2', active ? 'bg-brand-soft' : 'hover:bg-brand-soft/60'].join(' ');
   }
 
   /**
@@ -151,7 +159,7 @@ export class LocationField implements FormValueControl<string | null> {
     this.opened.set(false);
   }
 
-  private findCitySelection(cityCode: string): PlaceSelection | undefined {
+  private findCitySelection(cityCode: string): IPlaceSelection | undefined {
     const city = this.groups().find((group) => group.cityCode === cityCode);
 
     if (!city) {
@@ -166,7 +174,7 @@ export class LocationField implements FormValueControl<string | null> {
     };
   }
 
-  private findAirportSelection(iata: string): PlaceSelection | undefined {
+  private findAirportSelection(iata: string): IPlaceSelection | undefined {
     const airport = this.airports().find(({ iata: x }) => x === iata);
 
     if (!airport) {

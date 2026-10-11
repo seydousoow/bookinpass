@@ -1,0 +1,46 @@
+<div *transloco="let t" class="space-y-0">
+  @for (segment of segments(); track segment.id; let last = $last; let index = $index) {
+    <div  class="relative flex">
+      <div class="flex w-8 shrink-0 flex-col items-center pt-2">
+        <span class="size-4 rounded-full border-2 border-brand bg-surface-card"></span>
+        <span class="w-px flex-1 bg-border-strong mt-1.5"></span>
+      </div>
+
+      <div class="min-w-0 flex-1">
+        <p class="text-sm text-ink pt-1">{{ formatDate(segment.departing_at) | titlecase }}</p>
+        <p class="text-sm font-bold">{{ segment.origin.iata_code }} · {{ segment.origin.name }}</p>
+
+        <div class="m-3 flex items-center gap-3">
+          <div class="relative size-10"><img [alt]="segment.marketing_carrier.name" [ngSrc]="airlineLogo(segment)" class="object-contain" fill/></div>
+
+          <div class="text-sm">
+            <p class="font-medium">{{ segment.marketing_carrier.name }}</p>
+            <p class="text-ink">{{ segmentLabel(segment) }} · {{ segment.passengers[0]?.cabin_class_marketing_name }}</p>
+            <p class="text-ink">{{ t('search.offer-summary.flight-duration') }} : {{ formatDuration(segment.duration) }}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="relative flex pt-1.5">
+      <div class="flex w-8 shrink-0 flex-col items-center pt-0.5">
+        <span class="size-4 rounded-full border-2 border-brand bg-surface-card"></span>
+        @if (!last) {
+          <span class="w-px flex-1 border-l border-dashed border-border-strong mt-1.5"></span>
+        }
+      </div>
+
+      <div class="min-w-0 flex-1">
+        <p class="text-sm text-ink ">{{ formatDate(segment.arriving_at) | titlecase }}</p>
+        <p class="text-sm font-bold">{{ segment.destination.iata_code }} · {{ segment.destination.name }}</p>
+
+        @if (!last) {
+          <div class="flex items-start p-4 gap-2 text-sm">
+            <ng-icon class="text-ink" name="heroClock"/>
+            <span>{{ t('search.offer-summary.single-stop') }} : {{ computeStop(index) }}</span>
+          </div>
+        }
+      </div>
+    </div>
+  }
+</div>

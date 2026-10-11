@@ -7,6 +7,8 @@ import { RenderMode, ServerRoute } from '@angular/ssr';
 export const serverRoutes: ServerRoute[] = [
   { path: '', renderMode: RenderMode.Client },
   { path: 'search', renderMode: RenderMode.Client },
+  { path: 'flight', renderMode: RenderMode.Client },
+  { path: 'flight/**', renderMode: RenderMode.Client },
   { path: 'ui-kit', renderMode: RenderMode.Client },
   { path: '**', renderMode: RenderMode.Server },
 ];

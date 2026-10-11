@@ -1,7 +1,7 @@
-import { IsoDate, PassengerCount } from '@shared/ui';
-import { FlightOffer, FlightSearchSlices, SearchPassenger } from './flight.model';
+import { IPassengerCount, IsoDate } from '@shared/ui';
+import { IFlightLocation, IFlightOffer, ILoyaltyProgrammeAccount } from './flight.model';
 
-export const CABIN_CLASSES = ['economy', 'premium', 'business', 'first'] as const;
+export const CABIN_CLASSES = ['economy', 'premium_economy', 'business', 'first'] as const;
 
 export type TTripType = 'round' | 'oneway';
 
@@ -9,15 +9,15 @@ export type TCabinClass = (typeof CABIN_CLASSES)[number];
 
 export type TLocationType = 'airport' | 'city';
 
-export type TPassengerType = 'adult' | 'child' | 'infant_without_seat' | 'infant_with_seat';
+export type TPassengerType = 'adult' | 'child' | 'infant_without_seat';
 
 export type TBaggageType = 'checked' | 'carry_on';
 
-export type TAmenityCost = 'included' | 'paid' | 'n/a';
+export type TAmenityCost = 'included' | 'paid' | 'n/a' | 'free' | 'free or paid';
 
-export type TLegroom = 'standard' | 'more' | 'less';
+export type TLegroom = 'standard' | 'more' | 'less' | 'n/a';
 
-export type TSeatType = 'standard' | 'recliner' | 'flat' | 'flatbed';
+export type TSeatType = "standard" | "skycouch" | "recliner" | "angle_flat" | "full_flat" | "full_flat_pod" | "private_suite";
 
 export function normalizeCabin(value: string | undefined): TCabinClass {
   if (!value || !CABIN_CLASSES.includes(value as TCabinClass)) {
@@ -26,24 +26,19 @@ export function normalizeCabin(value: string | undefined): TCabinClass {
   return value.toLowerCase() as TCabinClass;
 }
 
-export interface AirlineFilter {
+export interface IAirlineFilter {
   readonly code: string;
   readonly name: string;
   readonly logoUrl: string;
   readonly offerCount: number;
 }
 
-export interface BagFilter {
+export interface IBagFilter {
   cabin: boolean;
   hold: boolean;
 }
 
-export interface BudgetFilter {
-  min: number;
-  max: number;
-}
-
-export interface DateRangeValue {
+export interface IDateRangeValue {
   readonly start: IsoDate | null;
   readonly end: IsoDate | null;
 }
@@ -55,17 +50,17 @@ export interface IFlightSearch {
   tripType: TTripType;
   origin: string;
   destination: string;
-  dates: DateRangeValue;
-  passengers: PassengerCount;
+  dates: IDateRangeValue;
+  passengers: IPassengerCount;
   cabin: TCabinClass[];
 }
 
-export interface PersistedFlightSearch {
+export interface IPersistedFlightSearch {
   readonly tripType: TTripType;
   readonly origin: string;
   readonly destination: string;
-  readonly dates: DateRangeValue;
-  readonly passengers: PassengerCount;
+  readonly dates: IDateRangeValue;
+  readonly passengers: IPassengerCount;
   readonly cabin: TCabinClass;
 }
 
@@ -73,21 +68,43 @@ export interface PersistedFlightSearch {
  * Search response
  * ========================================================================== */
 
-export interface FlightSearchResult {
-  readonly data: FlightSearchData;
+export interface IFlightSearchResult {
+  readonly data: IFlightSearchData;
 }
 
-export interface FlightSearchData {
-  readonly id: string;
-  readonly client_key: string;
-
+export interface IFlightSearchData {
   readonly airline_credit_ids: readonly string[];
-
   readonly cabin_class: TCabinClass;
-  readonly live_mode: boolean;
+  readonly client_key: string;
   readonly created_at: string;
 
-  readonly passengers: readonly SearchPassenger[];
-  readonly slices: FlightSearchSlices;
-  readonly offers: readonly FlightOffer[];
+  readonly live_mode: boolean;
+  readonly id: string;
+
+  readonly passengers: readonly ISearchPassenger[];
+  readonly slices: readonly [ISearchSlice] | readonly [ISearchSlice, ISearchSlice];
+  readonly offers: readonly IFlightOffer[];
+}
+
+export interface ISearchSlice {
+  readonly destination_type: TLocationType;
+  readonly origin_type: TLocationType;
+  readonly departure_date: string;
+
+  readonly origin: IFlightLocation;
+  readonly destination: IFlightLocation;
+}
+
+export interface ISearchPassenger {
+  readonly id: string;
+  readonly type: TPassengerType | null;
+
+  readonly fare_type: string | null;
+  readonly age: number | null;
+
+  readonly given_name: string | null;
+  readonly family_name: string | null;
+  readonly user_id: string | null;
+
+  readonly loyalty_programme_accounts: readonly string[] | readonly ILoyaltyProgrammeAccount[];
 }

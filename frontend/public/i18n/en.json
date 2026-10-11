@@ -1,19 +1,40 @@
 {
   "common": {
-    "bag": "Baggage",
+    "bag": "Bag",
+    "included": "Included",
     "clear": "Clear",
     "close": "Close",
+    "continue": "Continue",
     "editable": "Editable",
-    "no-element": "No element",
+    "no-element": "No items",
     "select": "Select an item",
     "choose": "Choose",
     "loading": "Loading",
+    "loading-in-progress": "Loading",
     "required-field": "This field is required",
     "radio": {
-      "no-option": "No options specified for radio group",
-      "min-option": "At least two options required for radio button group."
+      "no-option": "No options specified for the radio group.",
+      "min-option": "At least two options are required for the radio button group."
     },
-    "view-details": "See details"
+    "save": "Save",
+    "share": "Share",
+    "view-details": "View details",
+    "total": "Total",
+    "cancel": "Cancel",
+    "months": {
+      "1": "January",
+      "2": "February",
+      "3": "March",
+      "4": "April",
+      "5": "May",
+      "6": "June",
+      "7": "July",
+      "8": "August",
+      "9": "September",
+      "10": "October",
+      "11": "November",
+      "12": "December"
+    }
   },
   "picker": {
     "previous": "Previous month",
@@ -22,7 +43,7 @@
     "travel-one-way-placeholder": "Departure",
     "travel-round-trip-placeholder": "Departure - Return",
     "select": {
-      "one-way": "Select a Date",
+      "one-way": "Select a date",
       "inbound": "Select the departure date",
       "outbound": "Select the return date",
       "travel-date": "{count, plural, one {Your travel date} other {Your travel dates}}"
@@ -35,34 +56,35 @@
     "home": "Home",
     "flights": "Flights",
     "tourism": "Tourism",
-    "sport": "Sport",
-    "stays": "Stays",
+    "sport": "Sports",
+    "stays": "Accommodation",
     "uiKit": "Design system",
     "currency": "Currency",
     "language": "Language"
   },
   "footer": {
-    "tagline": "Book your flights, stays and activities in Senegal and beyond.",
+    "tagline": "Book your flights, stays, and activities in Senegal and beyond.",
     "legal": "All rights reserved.",
     "company": "Company",
     "help": "Help",
-    "legalTitle": "Legal",
+    "legalTitle": "Legal information",
     "about": "About",
     "contact": "Contact",
-    "faq": "FAQ",
+    "faq": "Frequently asked questions",
     "cgv": "Terms and conditions",
     "privacy": "Privacy"
   },
   "search": {
+    "loading-flight": "Récupération des informations de votre vol",
     "from": "From",
     "to": "To",
     "depart": "Departure",
     "return": "Return",
-    "travelers": "Travellers",
+    "travelers": "Travelers",
     "cabin": {
       "title": "Cabin class",
       "economy": "Economy",
-      "premium": "Premium Economy",
+      "premium_economy": "Premium Economy",
       "business": "Business",
       "first": "First"
     },
@@ -100,9 +122,9 @@
       "destination": "Where to ?",
       "all-airports": "All airports · {name}",
       "placeholder": "City, airport or code",
-      "min-typing": "{count, plural, =1 {Enter at least # character} other {Enter at least # characters}}",
-      "no-result": "No match found « {value} »}",
-      "similar-location": "The places of origin and destination must be different."
+      "min-typing": "{count, plural, one {Enter at least # character} other {Enter at least # characters}}",
+      "no-result": "No matches for «{value}»}",
+      "similar-location": "The origin and destination must be different."
     },
     "passenger": {
       "add-a": "Add a",
@@ -110,23 +132,130 @@
       "adult": {
         "label": "Adult",
         "detailed": "{count, plural, one {# adult} other {# adults}}",
-        "hint": "+12 years old"
+        "hint": "12 years and older"
       },
       "children": {
         "label": "Child",
         "detailed": "{count, plural, one {# child} other {# children}}",
-        "hint": "2 to 12 years"
+        "hint": "Ages 2 to 11"
       },
       "infant": {
         "label": "Infant",
         "detailed": "{count, plural, one {# infant} other {# infants}}",
         "hint": "Less than 2 years old",
-        "requirement": "Each adult can accompany up to two children, with a maximum of one baby per adult."
+        "requirement": "Each adult can accompany up to two children, with a maximum of one infant per adult."
+      }
+    },
+    "offer-summary": {
+      "title": "{slice, plural, one {One-way to {city}} other {Round-trip to {city}}}",
+      "flight-for": "Flight to {city}",
+      "stops": "{stops, plural, =0 {Direct flight} one {# stop} other {# stops}}",
+      "single-stop": "Stop",
+      "flight-duration": "Flight duration",
+      "baggage": {
+        "title": "Baggage included",
+        "subtitle": "This baggage is included in the price",
+        "carry-on": "{count, plural, =0 {No carry-on baggage} one {# carry-on bag} other {# carry-on bags}}",
+        "checked": "{count, plural, =0 {No checked baggage} one {# checked bag} other {# checked bags}}",
+        "carry-on-description": "Carry-on baggage details",
+        "checked-description": "Checked baggage details"
+      },
+      "fare": {
+        "title": "Fare rules",
+        "subtitle": "Information about the fare conditions",
+        "refundable": "{fee, plural, =0 {Cancellation available with no additional fees} other {Cancellation available for a fee}}",
+        "changeable": "{fee, plural, =0 {Changes allowed with no additional fees} other {Changes allowed for a fee}}",
+        "footer": "You can review the detailed fare rules before booking."
+      }
+    }
+  },
+  "flight": {
+    "unavailable": {
+      "title": "This flight is no longer available.",
+      "subtitle": "The last seats at this price have been booked. Restart your search.",
+      "newSearch": "New search"
+    },
+    "offer": {
+      "steps": {
+        "info": "Your details",
+        "ticket": "Ticket type",
+        "extras": "Extras",
+        "seat": "Choose your seat",
+        "pay": "Review and pay"
+      },
+      "passengers": "{count, plural, one {# passenger} other {# passengers}}",
+      "route": "{origin} to {destination}",
+      "details": {
+        "title": "Enter your details",
+        "subtitle": "Add traveler information and baggage."
+      },
+      "traveler": {
+        "adult": "Adult {index}",
+        "child": "Child {index}",
+        "infant_without_seat": "Infant {index}",
+        "add-info": "Add details for this traveler",
+        "every-flight": "Every flight",
+        "no-carry-on": "No cabin bag on this flight",
+        "no-checked": "No checked bag on this flight",
+        "edit-info": "Edit details for this traveler",
+        "born-on": "Born {date}"
+      },
+      "contact": {
+        "title": "Contact details",
+        "required": "Required",
+        "email": "Email address",
+        "email-hint": "We'll send your flight confirmation to this address.",
+        "email-invalid": "Invalid email address",
+        "phone": "Phone number",
+        "phone-hint": "Only used if something changes with your flight."
+      },
+      "fare": {
+        "title": "Price details",
+        "flight": "Flight ({count, plural, one {# passenger} other {# passengers}})",
+        "adult": "Adult ({count})",
+        "child": "Child ({count})",
+        "infant_without_seat": "Infant ({count})",
+        "base": "Base fare",
+        "taxes": "Taxes and fees",
+        "total": "Total",
+        "taxes-included": "Taxes and fees included",
+        "no-hidden-fees": "No hidden fees - check the price at every step"
+      },
+      "assistance": {
+        "title": "Request special assistance at the airport",
+        "body": "If you need special assistance or help getting around the airport, we can help arrange it. Please contact us once your booking is complete."
+      },
+      "traveler-form": {
+        "given-name": "First name(s)",
+        "family-name": "Last name(s)",
+        "document-hint": "Enter exactly what is shown on your travel document",
+        "gender": "Gender shown on your travel document",
+        "gender-placeholder": "Please select your gender.",
+        "gender-hint": "Airlines and suppliers currently require us to ask for this information.",
+        "genders": {
+          "m": "Male",
+          "f": "Female"
+        },
+        "born-on": "Date of birth",
+        "day": "Day",
+        "month": "Month",
+        "year": "Year",
+        "dd": "DD",
+        "yyyy": "YYYY",
+        "ok": "OK",
+        "errors": {
+          "name": "Use only letters, spaces, apostrophes or hyphens.",
+          "invalid-date": "This date doesn't exist.",
+          "future": "The date of birth can't be in the future.",
+          "age-adult": "An adult must be at least 12 on the date of the last flight.",
+          "age-child": "A child must be between 2 and 11 on the date of the last flight.",
+          "age-infant_without_seat": "An infant must be under 2 on the date of the last flight."
+        }
       }
     }
   },
   "home": {
-    "title": "One pass for every journey",
-    "subtitle": "Flights, stays, activities and local transport — paid in CFA francs, by card, Wave or Orange Money."
+    "title": "One pass for all your journeys",
+    "subtitle": "Flights, stays, activities, and local transportation — paid in CFA francs, by card, Wave, or Orange Money."
   }
 }

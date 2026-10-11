@@ -1,4 +1,4 @@
-export interface PassengerCount {
+export interface IPassengerCount {
   readonly adults: number;
   readonly children: number;
   readonly infants: number;
@@ -16,7 +16,7 @@ export interface PassengerCount {
  * - An adult can never accompany 2 infants.
  * - Total passengers cannot exceed maxTotal.
  */
-export function isValidPassengerCount(count: PassengerCount, maxTotal: number = MAX_PASSENGER): boolean {
+export function isValidPassengerCount(count: IPassengerCount, maxTotal: number = MAX_PASSENGER): boolean {
   const adults = Number(count.adults);
   const children = Number(count.children ?? 0);
   const infants = Number(count.infants ?? 0);

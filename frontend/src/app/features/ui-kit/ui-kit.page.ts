@@ -5,11 +5,11 @@ import { appError } from '@shared/models/app-error';
 import { CurrencyStore } from '@core/money/currency.store';
 import { formatXof } from '@core/money/money';
 import { SystemStatus } from '@shared/models/system-state';
-import { SelectOption } from '@shared/models/select.model';
-import { PlaceSelection } from '@shared/models/place.model';
-import { BadgeTone, ButtonSize, ButtonVariant, PassengerCount } from '@shared/ui';
+import { ISelectOption } from '@shared/models/select.model';
+import { IPlaceSelection } from '@shared/models/place.model';
+import { BadgeTone, ButtonSize, ButtonVariant, IPassengerCount } from '@shared/ui';
 import { disabled, form, minLength, required } from '@angular/forms/signals';
-import { DateRangeValue } from '@shared/models';
+import { IDateRangeValue } from '@shared/models';
 
 interface formModel {
   cabin: string[];
@@ -66,17 +66,17 @@ export class UiKitPage {
   protected readonly buttonSizes: readonly ButtonSize[] = ['sm', 'md', 'lg'];
   protected readonly buttonStates = ['normal', 'chargement', 'désactivé'] as const;
   protected readonly badgeTones: readonly BadgeTone[] = ['neutral', 'brand', 'accent', 'success', 'warning', 'error', 'info'];
-  protected readonly cabins: readonly SelectOption[] = [
+  protected readonly cabins: readonly ISelectOption[] = [
     { label: 'Économique', value: 'economy' },
-    { label: 'Premium', value: 'premium', hint: 'Plus d’espace' },
+    { label: 'Premium', value: 'premium_economy', hint: 'Plus d’espace' },
     { label: 'Affaires', value: 'business' },
     { label: 'Première', value: 'first', disabled: true },
   ];
-  protected readonly tripTypes: readonly SelectOption[] = [
+  protected readonly tripTypes: readonly ISelectOption[] = [
     { label: 'Aller-retour', value: 'round' },
     { label: 'Aller simple', value: 'oneway' },
   ];
-  protected readonly airlines: readonly SelectOption[] = [
+  protected readonly airlines: readonly ISelectOption[] = [
     { label: 'Air Sénégal', value: 'HC' },
     { label: 'Air France', value: 'AF' },
     { label: 'Brussels Airlines', value: 'SN' },
@@ -84,7 +84,7 @@ export class UiKitPage {
     { label: 'Turkish Airlines', value: 'TK' },
     { label: 'TAP Air Portugal', value: 'TP' },
   ];
-  protected readonly sortOptions: readonly SelectOption[] = [
+  protected readonly sortOptions: readonly ISelectOption[] = [
     { label: 'Prix croissant', value: 'price-asc' },
     { label: 'Durée la plus courte', value: 'duration' },
     { label: 'Départ le plus tôt', value: 'departure' },
@@ -103,11 +103,11 @@ export class UiKitPage {
   protected readonly blockedDates = ['2026-09-10', '2026-09-11', '2026-09-24'];
   protected readonly giftMessage = signal('');
   protected readonly sort = signal('price-asc');
-  protected readonly singleDate = signal<DateRangeValue>({ start: null, end: null });
-  protected readonly rangeDate = signal<DateRangeValue>({ start: null, end: null });
-  protected readonly passengers = signal<PassengerCount>({ adults: 2, children: 1, infants: 0 });
-  protected readonly from = signal<PlaceSelection | null>(null);
-  protected readonly to = signal<PlaceSelection | null>(null);
+  protected readonly singleDate = signal<IDateRangeValue>({ start: null, end: null });
+  protected readonly rangeDate = signal<IDateRangeValue>({ start: null, end: null });
+  protected readonly passengers = signal<IPassengerCount>({ adults: 2, children: 1, infants: 0 });
+  protected readonly from = signal<IPlaceSelection | null>(null);
+  protected readonly to = signal<IPlaceSelection | null>(null);
   protected readonly demoState = signal<SystemStatus>('success');
   protected readonly reactiveName = new FormControl('Aminata Diallo');
   private readonly data = signal<formModel>({ airline: [], cabin: [], oneWay: false, cgu: false, cdt: false, cabinRadio: null, tripType: 'round' });

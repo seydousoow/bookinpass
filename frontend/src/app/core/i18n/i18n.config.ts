@@ -47,13 +47,7 @@ const localeConfig: TranslocoLocaleConfig = {
   defaultLocale: DEFAULT_LOCALE,
   langToLocaleMapping: LANG_TO_LOCALE,
   defaultCurrency: CONTRACT_CURRENCY,
-  /**
-   * `localeToCurrencyMapping` l'emporte sur `defaultCurrency` : le service lit
-   * `mapping[locale] || defaultCurrency`. Or la table livrée par la librairie
-   * associe 'fr-SN' ET 'fr-FR' à EUR — sans cette correction, `translocoCurrency`
-   * affiche des euros. Book In Pass facture en francs CFA, quelle que soit la
-   * langue de lecture.
-   */
+
   localeToCurrencyMapping: LOCALE_TO_CURRENCY,
   localeConfig: {
     global: {

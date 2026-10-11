@@ -1,6 +1,6 @@
 import { Component, computed, effect, inject, signal } from '@angular/core';
 import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
-import { SelectOption } from '@shared/models/select.model';
+import { ISelectOption } from '@shared/models/select.model';
 import { CABIN_CLASSES, IFlightSearch, TCabinClass, TTripType } from '@shared/models/search.model';
 import { SearchStore } from '@core/search/search.store';
 import {
@@ -29,7 +29,7 @@ import { Router } from '@angular/router';
 })
 export class Home {
   protected readonly minSearchDate = todayIso();
-  protected readonly tripTypes: readonly SelectOption<TTripType>[] = [
+  protected readonly tripTypes: readonly ISelectOption<TTripType>[] = [
     { label: 'search.round-trip', value: 'round' },
     { label: 'search.one-way', value: 'oneway' },
   ];
@@ -108,9 +108,13 @@ export class Home {
     },
   );
   private readonly transloco = inject(TranslocoService);
-  protected readonly cabins: readonly SelectOption<TCabinClass>[] = CABIN_CLASSES.map((value) => ({
-    label: this.transloco.translate(`search.cabin.${value}`), value,
-  }));
+  private readonly lang = this.transloco.activeLang;
+  protected readonly cabins = computed(() => {
+    const lang = this.lang();
+    return CABIN_CLASSES.map((value) => ({
+      label: this.transloco.translate(`search.cabin.${value}`, {}, lang), value,
+    })) as readonly ISelectOption<TCabinClass>[];
+  });
   private readonly router = inject(Router);
   private readonly searchStore = inject(SearchStore);
   private readonly restoredFromStorage = signal(false);

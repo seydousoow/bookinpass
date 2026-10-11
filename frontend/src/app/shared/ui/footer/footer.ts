@@ -15,7 +15,7 @@ export interface FooterColumn {
 @Component({
   selector: 'bip-footer',
   imports: [RouterLink, TranslocoDirective],
-  host: { class: 'block' },
+  host: { class: 'block z-20' },
   template: `
     <footer *transloco="let t" class="border-border-subtle bg-surface-card border-t">
       <div class="mx-auto grid max-w-7xl gap-8 px-4 py-10 sm:grid-cols-2 lg:grid-cols-4">

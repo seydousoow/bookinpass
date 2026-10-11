@@ -1,5 +1,5 @@
 import { afterNextRender, Service, signal } from '@angular/core';
-import { PersistedFlightSearch } from '@shared/models';
+import { IPersistedFlightSearch } from '@shared/models';
 
 const STORAGE_KEY = 'bip.search';
 
@@ -10,13 +10,13 @@ const STORAGE_KEY = 'bip.search';
  */
 @Service()
 export class SearchStore {
-  readonly lastSearch = signal<PersistedFlightSearch | null>(null);
+  readonly lastSearch = signal<IPersistedFlightSearch | null>(null);
 
   constructor() {
     afterNextRender(() => this.restore());
   }
 
-  save(search: PersistedFlightSearch): void {
+  save(search: IPersistedFlightSearch): void {
     this.lastSearch.set(search);
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(search));
@@ -30,7 +30,7 @@ export class SearchStore {
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
       if (saved) {
-        this.lastSearch.set(JSON.parse(saved) as PersistedFlightSearch);
+        this.lastSearch.set(JSON.parse(saved) as IPersistedFlightSearch);
       }
     } catch {
       // JSON corrompu ou stockage inaccessible : pas de préremplissage.

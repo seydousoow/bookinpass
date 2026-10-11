@@ -3,14 +3,14 @@
  * dans le front (plan §12.3). `rates` exprime le prix d'UNE unité de `base`
  * dans chaque devise : 1 XOF = 0,00152449 EUR.
  */
-export interface ExchangeRates {
+export interface IExchangeRates {
   readonly base: string;
   /** Date du taux, affichable au client. */
   readonly updatedAt: string;
   readonly rates: Readonly<Record<string, number>>;
 }
 
-export interface CurrencyOption {
+export interface ICurrencyOption {
   readonly code: string;
   /** Libellé localisé, dérivé de `Intl.DisplayNames`. */
   readonly label: string;

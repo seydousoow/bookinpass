@@ -1,19 +1,40 @@
 {
   "common": {
     "bag": "Bagage",
+    "included": "Inclus",
     "clear": "Effacer",
     "close": "Fermer",
+    "continue": "Continuer",
     "editable": "Modifiable",
     "no-element": "Aucun élément",
     "select": "Sélectionner",
     "choose": "Choisir",
     "loading": "Chargement",
+    "loading-in-progress": "Chargement en cours",
     "required-field": "Ce champ est requis",
     "radio": {
       "no-option": "Aucune option spécifiée pour le groupe radio.",
       "min-option": "Au moins deux options sont requises pour le groupe de boutons radio."
     },
-    "view-details": "Voir les détails"
+    "save": "Enregistrer",
+    "share": "Partager",
+    "view-details": "Voir les détails",
+    "total": "Totale",
+    "cancel": "Annuler",
+    "months": {
+      "1": "Janvier",
+      "2": "Février",
+      "3": "Mars",
+      "4": "Avril",
+      "5": "Mai",
+      "6": "Juin",
+      "7": "Juillet",
+      "8": "Août",
+      "9": "Septembre",
+      "10": "Octobre",
+      "11": "Novembre",
+      "12": "Décembre"
+    }
   },
   "picker": {
     "previous": "Mois précédent",
@@ -54,6 +75,7 @@
     "privacy": "Confidentialité"
   },
   "search": {
+    "loading-flight": "Récupération des informations de votre vol",
     "from": "Départ",
     "to": "Destination",
     "depart": "Aller",
@@ -62,7 +84,7 @@
     "cabin": {
       "title": "Classe",
       "economy": "Économique",
-      "premium": "Éco Premium",
+      "premium_economy": "Éco Premium",
       "business": "Affaires",
       "first": "Première"
     },
@@ -73,7 +95,7 @@
       "title": "Filtrer les offres",
       "recommended": "Choix recommandé",
       "airlines": {
-        "title":  "Compagnies"
+        "title": "Compagnies"
       },
       "price": {
         "title": "Budget",
@@ -122,6 +144,113 @@
         "detailed": "{count, plural, one {# bébé} other {# bébés}}",
         "hint": "Moins de 2 ans",
         "requirement": "Chaque adulte peut accompagner jusqu’à deux enfants, avec au maximum un bébé par adulte."
+      }
+    },
+    "offer-summary": {
+      "title": "{slice, plural, one {Aller simple pour {city} } other {Aller-retour pour {city} } }",
+      "flight-for": "Vol pour {city}",
+      "stops": "{stops, plural, =0 {Vol Direct} one {# escale} other {# escales} }",
+      "single-stop": "Escale",
+      "flight-duration": "Durée de vol",
+      "baggage": {
+        "title": "Bagages inclus",
+        "subtitle": "Ces bagages sont inclus dans le prix",
+        "carry-on": "{count, plural, =0 {Aucun bagage cabine} one {# bagage cabine} other {# bagages cabine} }",
+        "checked": "{count, plural, =0 {Aucun bagage en soute} one {# bagage en soute} other {# bagages en soute} }",
+        "carry-on-description": "carry ioni desc",
+        "checked-description": "checked ioni desc"
+      },
+      "fare": {
+        "title": "Règles tarifaires",
+        "subtitle": "Informations sur les conditions",
+        "refundable": "{fee, plural, =0 {Annulation possible et sans frais ajoutés} other {Annulation possible moyennant des frais} }",
+        "changeable": "{fee, plural, =0 {Changement possible et sans frais ajoutés} other {Changement possible moyennant des frais} }",
+        "footer": "Vous pouvez consulter les règles tarifaires détaillées avant de réserver."
+      }
+    }
+  },
+  "flight": {
+    "unavailable": {
+      "title": "Ce vol n'est plus disponible.",
+      "subtitle": "Les derniers sièges à ce tarif ont été réservés. Relancer votre recherche.",
+      "newSearch": "Nouvelle recherche"
+    },
+    "offer": {
+      "steps": {
+        "info": "Vos informations",
+        "ticket": "Type de billet",
+        "extras": "Options supplémentaires",
+        "seat": "Sélectionnez votre siège",
+        "pay": "Vérifiez et payez"
+      },
+      "passengers": "{count, plural, one {# passager} other {# passagers}}",
+      "route": "{origin} vers {destination}",
+      "details": {
+        "title": "Saisissez vos coordonnées",
+        "subtitle": "Renseignez des informations sur les voyageurs et ajoutez des bagages."
+      },
+      "traveler": {
+        "adult": "Adulte n° {index}",
+        "child": "Enfant n° {index}",
+        "infant_without_seat": "Bébé n° {index}",
+        "add-info": "Ajouter des informations sur ce voyageur",
+        "every-flight": "Pour chaque vol",
+        "no-carry-on": "Pas de bagage cabine pour ce vol",
+        "no-checked": "Pas de bagage en soute pour ce vol",
+        "edit-info": "Modifier les informations sur ce voyageur",
+        "born-on": "Né(e) le {date}"
+      },
+      "contact": {
+        "title": "Coordonnées",
+        "required": "Obligatoire",
+        "email": "Adresse e-mail",
+        "email-hint": "Nous enverrons la confirmation de votre vol à cette adresse.",
+        "email-invalid": "Adresse e-mail invalide",
+        "phone": "Numéro de téléphone",
+        "phone-hint": "Utilisé uniquement en cas de changement concernant votre vol."
+      },
+      "fare": {
+        "title": "Détail du tarif",
+        "flight": "Vol ({count, plural, one {# passager} other {# passagers}})",
+        "adult": "Adulte ({count})",
+        "child": "Enfant ({count})",
+        "infant_without_seat": "Bébé ({count})",
+        "base": "Tarif de base",
+        "taxes": "Taxes et frais",
+        "total": "Total",
+        "taxes-included": "Taxes et frais compris",
+        "no-hidden-fees": "Pas de frais cachés - consultez le tarif à chaque étape"
+      },
+      "assistance": {
+        "title": "Demandez une assistance spéciale à l’aéroport",
+        "body": "Si vous avez besoin d’une assistance spéciale ou d’aide pour vous déplacer à l’aéroport, nous pouvons vous aider à organiser ce type de prise en charge. Pour ce faire, veuillez nous contacter une fois votre réservation effectuée."
+      },
+      "traveler-form": {
+        "given-name": "Prénom(s)",
+        "family-name": "Nom(s)",
+        "document-hint": "Saisissez exactement ce qui est indiqué sur votre document de voyage",
+        "gender": "Sexe mentionné sur votre document de voyage",
+        "gender-placeholder": "Veuillez sélectionner votre genre.",
+        "gender-hint": "Les compagnies aériennes et les fournisseurs nous imposent actuellement de demander cette information.",
+        "genders": {
+          "m": "Homme",
+          "f": "Femme"
+        },
+        "born-on": "Date de naissance",
+        "day": "Jour",
+        "month": "Mois",
+        "year": "Année",
+        "dd": "JJ",
+        "yyyy": "AAAA",
+        "ok": "OK",
+        "errors": {
+          "name": "Utilisez uniquement des lettres, espaces, apostrophes ou traits d’union.",
+          "invalid-date": "Cette date n’existe pas.",
+          "future": "La date de naissance ne peut pas être dans le futur.",
+          "age-adult": "Un adulte doit avoir au moins 12 ans à la date du dernier vol.",
+          "age-child": "Un enfant doit avoir entre 2 et 11 ans à la date du dernier vol.",
+          "age-infant_without_seat": "Un bébé doit avoir moins de 2 ans à la date du dernier vol."
+        }
       }
     }
   },

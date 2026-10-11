@@ -1,6 +1,6 @@
 import { booleanAttribute, Component, computed, effect, input, model, output } from '@angular/core';
 // noinspection ES6PreferShortImport
-import { SelectOption } from '../../models/select.model';
+import { ISelectOption } from '../../models/select.model';
 import { FormValueControl, ValidationError, WithOptionalFieldTree } from '@angular/forms/signals';
 import { translate, TranslocoDirective } from '@jsverse/transloco';
 import { NgIcon, provideIcons } from '@ng-icons/core';
@@ -14,7 +14,7 @@ import { heroExclamationCircleSolid } from '@ng-icons/heroicons/solid';
   providers: [provideIcons({ heroExclamationCircleSolid })],
 })
 export class RadioGroup<T = string> implements FormValueControl<T | null> {
-  readonly options = input.required<readonly SelectOption<T>[]>();
+  readonly options = input.required<readonly ISelectOption<T>[]>();
   readonly label = input.required<string>();
   readonly hideLabel = input(false, { transform: booleanAttribute });
   readonly appearance = input<'list' | 'segmented'>('list');

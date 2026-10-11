@@ -1,7 +1,7 @@
 import { Component, computed, input, model, signal } from '@angular/core';
 import { Combobox, ComboboxPopup, ComboboxWidget } from '@angular/aria/combobox';
 import { Listbox, Option } from '@angular/aria/listbox';
-import { CurrencyOption } from '@shared/models/money.model';
+import { ICurrencyOption } from '@shared/models/money.model';
 import { NgIcon, provideIcons } from '@ng-icons/core';
 import { heroCheckSolid, heroChevronDownSolid } from '@ng-icons/heroicons/solid';
 import { TranslocoPipe } from '@jsverse/transloco';
@@ -14,7 +14,7 @@ import { TranslocoPipe } from '@jsverse/transloco';
   templateUrl: './currency-selector.html',
 })
 export class CurrencySelector {
-  readonly currencies = input.required<readonly CurrencyOption[]>();
+  readonly currencies = input.required<readonly ICurrencyOption[]>();
   readonly selected = model.required<string>();
 
   readonly opened = signal(false);

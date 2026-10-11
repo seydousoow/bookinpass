@@ -1,0 +1,51 @@
+<ng-container *transloco="let t">
+  @if (invalid()) {
+    <bip-modal [backdropDismissible]="false" [dismissible]="false" [opened]="true" [title]="t('search.error.invalid-title')">
+      <p class="text-sm text-muted">{{ t('search.error.invalid-message') }}</p>
+      <div modalFooter>
+        <bip-button (clicked)="backToHome()" variant="primary">{{ t('search.error.back-home') }}</bip-button>
+      </div>
+    </bip-modal>
+  } @else if (loading()) {
+    <bip-search-skeleton/>
+  } @else if (!hasOffers()) {
+    no offers
+  } @else {
+    <div class="mx-auto max-w-6xl bg-surface-card/95 grid grid-cols-1 py-2 h-full">
+      @defer (on idle) {
+        <div class="flex flex-col md:flex-row justify-start items-baseline gap-2">
+          <bip-flight-search-filter #filter [loading]="loading()" [offers]="offers()" [querySelection]="airlineParam()"/>
+
+          <div class="not-md:w-full md:w-3/4 h-full flex flex-1 flex-col gap-2 not-md:px-2 md:pr-2">
+            <bip-search-summary (invalidChange)="onSearchInvalid($event)"
+                                [(value)]="search"
+                                [adults]="adults()"
+                                [cabin]="cabin()"
+                                [children]="children()"
+                                [destination]="destination()"
+                                [from]="from()"
+                                [infants]="infants()"
+                                [origin]="origin()"
+                                [to]="to()"
+                                [tripType]="tripType()"/>
+
+            <bip-button (clicked)="filter.toggle()" class="w-full flex justify-center items-center gap-3 text-base! font-bold! md:hidden" variant="outline">
+              <ng-icon name="heroFunnel"/>
+              <span>{{ t('search.filter.title') }}</span>
+            </bip-button>
+
+            <cdk-virtual-scroll-viewport [itemSize]="168" appendOnly class="h-full not-md:gap-y-2">
+              <ng-container *cdkVirtualFor="let offer of offers(); trackBy: trackOffer; let last = last">
+                <bip-flight-offer-card (selected)="openOfferSummary(offer)" [attr.data-offer-id]="offer.id" [class.mb-3]="!last" [offer]="offer"/>
+              </ng-container>
+            </cdk-virtual-scroll-viewport>
+          </div>
+        </div>
+      } @placeholder {
+        <bip-search-skeleton/>
+      }
+    </div>
+  }
+</ng-container>
+
+<bip-offer-summary (closed)="closeOfferSummary()" [offer]="selected()" (selected)="offerSelection()"/>
