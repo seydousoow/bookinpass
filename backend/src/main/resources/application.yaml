@@ -1,0 +1,93 @@
+spring:
+  application:
+    name: bookinpass-backend
+  threads:
+    virtual:
+      enabled: true
+  # Aucun identifiant ici : tout vient de l'environnement (compose.yaml, ou le profil dev pour l'IDE).
+  datasource:
+    url: ${DATABASE_URL}
+    username: ${DATABASE_USER}
+    password: ${DATABASE_PASSWORD}
+  jpa:
+    # Flyway possède le schéma ; Hibernate vérifie seulement que les entités y correspondent.
+    hibernate:
+      ddl-auto: validate
+    # Pas de session Hibernate ouverte pendant le rendu de la réponse : tout accès paresseux hors
+    # service échoue tout de suite au lieu de déclencher des requêtes cachées.
+    open-in-view: false
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: UTC
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+  cache:
+    type: redis
+  flyway:
+    locations: classpath:db/migration
+  web:
+    error:
+      include-message: never
+# Image native : le crochet d'arrêt de Logback n'y a pas sa place (Spring gère l'arrêt).
+logging:
+  register-shutdown-hook: false
+
+server:
+  port: ${PORT:8080}
+  # Les recherches Duffel pèsent jusqu'à ~17 Mo de JSON : la compression les ramène à ~1 Mo.
+  compression:
+    enabled: true
+    mime-types: application/json
+    min-response-size: 2KB
+  servlet:
+    context-path: /api
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      probes:
+        enabled: true
+
+# OpenAPI / Swagger UI (springdoc). Activés par défaut ; à couper en production publique si le contrat ne doit
+# pas être exposé : API_DOCS_ENABLED=false.
+springdoc:
+  api-docs:
+    enabled: ${API_DOCS_ENABLED:true}
+  swagger-ui:
+    enabled: ${API_DOCS_ENABLED:true}
+    operations-sorter: alpha
+    tags-sorter: alpha
+    try-it-out-enabled: true
+    syntax-highlight:
+      activated: false
+    display-request-duration: true
+  paths-to-match: /**
+  default-produces-media-type: application/json
+
+bookinpass:
+  duffel:
+    base-url: ${DUFFEL_BASE_URL:}
+    # Vide = mode démo : les réponses viennent des fixtures (fixtures-dir ci-dessous).
+    access-token: ${DUFFEL_ACCESS_TOKEN:}
+    api-version: v2
+    supplier-timeout: 20s
+    read-timeout: 40s
+    # Relatif au dossier de lancement (backend/) ; Docker monte le dossier sur /fixtures/duffel.
+    fixtures-dir: ${DUFFEL_FIXTURES_DIR:file:fixtures/duffel/}
+  expedia:
+    base-url: ${EXPEDIA_BASE_URL:}
+    api-key: ${EXPEDIA_API_KEY:}
+    secret: ${EXPEDIA_SECRET:}
+    read-timeout: 30s
+  cache:
+    flight-search-ttl: 10m
+    flight-offer-max-ttl: 15m
+    airports-ttl: 24h
+    rates-ttl: 1h

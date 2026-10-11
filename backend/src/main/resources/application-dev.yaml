@@ -1,0 +1,12 @@
+# Profil de développement local (IDE, `./mvnw spring-boot:run`) : `--spring.profiles.active=dev`.
+# Valeurs alignées sur les services publiés par compose.yaml (`docker compose up -d postgres redis`).
+# Identifiants de développement uniquement — jamais utilisés en dehors de la machine locale.
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/bookinpass
+    username: bookinpass
+    password: bookinpass
+  data:
+    redis:
+      # 6380 = port publié par compose.yaml (6379 est souvent déjà pris sur la machine).
+      port: 6380
