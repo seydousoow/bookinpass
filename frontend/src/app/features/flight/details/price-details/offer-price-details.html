@@ -1,0 +1,83 @@
+<ng-container *transloco="let t">
+  <section>
+    <h2 class="text-xl font-bold">{{ t('flight.offer.fare.title') }}</h2>
+
+    <p class="mt-4 font-semibold">{{ t('flight.offer.fare.flight', {count: offer().passengers.length}) }}</p>
+    <ul class="mt-2 space-y-1 text-sm">
+      @for (group of passengerGroups(); track group.type) {
+        <li>{{ t('flight.offer.fare.' + group.type, {count: group.count}) }}</li>
+      }
+    </ul>
+
+    <dl class="mt-3 space-y-2 border-b border-border-strong pb-3 text-sm">
+      <div class="flex justify-between gap-4">
+        <dt>{{ t('flight.offer.fare.base') }}</dt>
+        <dd>{{ offer().base_amount | bipMoney: offer().base_currency }}</dd>
+      </div>
+      @if (offer().tax_amount; as tax) {
+        <div class="flex justify-between gap-4">
+          <dt>
+            <button (click)="taxesOpened.set(!taxesOpened())" [attr.aria-expanded]="taxesOpened()" aria-controls="tax-breakdown" class="flex items-center gap-2 bip-focusable"
+                    type="button">
+              {{ t('flight.offer.fare.taxes') }}
+              <ng-icon [class.rotate-180]="taxesOpened()" class="transition-transform" name="heroChevronDown"/>
+            </button>
+          </dt>
+          <dd>{{ tax | bipMoney: offer().tax_currency ?? offer().total_currency }}</dd>
+        </div>
+        @if (taxesOpened()) {
+          <dd id="tax-breakdown">
+            <ul class="space-y-1 pl-3 text-xs text-muted">
+              @for (tax of offer().tax_breakdown; track tax.code + tax.name) {
+                <li class="flex justify-between gap-4">
+                  <span>{{ tax.name }}</span>
+                  <span>{{ tax.amount | bipMoney: tax.currency }}</span>
+                </li>
+              }
+            </ul>
+          </dd>
+        }
+      }
+      <div class="flex justify-between gap-4">
+        <dt>{{ t('flight.offer.fare.service-fees') }}</dt>
+        <dd>{{ serviceFee() | bipMoney: offer().total_currency }}</dd>
+      </div>
+      @let seatsTotal = seatsAmount();
+      @if (seatsTotal !== null) {
+        <div class="flex justify-between gap-4">
+          <dt>{{ t('flight.offer.fare.seats', {count: seats().length}) }}</dt>
+          <dd>{{ seatsTotal | bipMoney: offer().total_currency }}</dd>
+        </div>
+      }
+      @let bagsTotal = bagsAmount();
+      @if (bagsTotal !== null) {
+        <div class="flex justify-between gap-4">
+          <dt>{{ t('flight.offer.fare.extra-bags', {count: bagCount()}) }}</dt>
+          <dd>{{ bagsTotal | bipMoney: offer().total_currency }}</dd>
+        </div>
+      }
+    </dl>
+
+    <div class="mt-3 flex items-baseline justify-between gap-4">
+      <p class="text-2xl font-bold">{{ t('flight.offer.fare.total') }}</p>
+      <p class="text-2xl font-bold">
+        {{ total() | bipMoney: offer().total_currency }}
+      </p>
+    </div>
+    <p class="text-sm text-muted">{{ t('flight.offer.fare.taxes-included') }}</p>
+
+    <p class="mt-4 flex gap-2 text-sm">
+      <ng-icon class="mt-0.5 shrink-0" name="heroCheck"/>
+      {{ t('flight.offer.fare.no-hidden-fees') }}
+    </p>
+  </section>
+
+  <section class="rounded-card bg-state-info-soft p-4 text-xs">
+    <h2 class="flex gap-2 font-semibold text-state-info">
+      <ng-icon class="shrink-0" name="heroInformationCircle"/>
+      {{ t('flight.offer.assistance.title') }}
+    </h2>
+    <p class="mt-2 leading-relaxed">{{ t('flight.offer.assistance.body') }}</p>
+  </section>
+</ng-container>
+
