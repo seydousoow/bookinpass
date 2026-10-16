@@ -2,11 +2,15 @@ package com.bookinpass.backend.client;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.springframework.test.web.client.match.MockRestRequestMatchers.content;
+import static org.springframework.test.web.client.match.MockRestRequestMatchers.method;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.requestTo;
 import static org.springframework.test.web.client.response.MockRestResponseCreators.withStatus;
 import static org.springframework.test.web.client.response.MockRestResponseCreators.withSuccess;
 
 import com.bookinpass.backend.config.DuffelProperties;
+import com.bookinpass.backend.dto.duffel.DuffelCustomerUser;
+import com.bookinpass.backend.dto.duffel.DuffelOrderUpdate;
 import com.bookinpass.backend.dto.duffel.DuffelPassengerUpdate;
 import com.bookinpass.backend.dto.request.PassengerUpdateRequest;
 import com.bookinpass.backend.exception.DuffelException;
@@ -14,8 +18,10 @@ import java.time.Duration;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.client.MockRestServiceServer;
@@ -50,6 +56,21 @@ class HttpDuffelClientTest {
         DuffelProperties properties = new DuffelProperties("https://api.duffel.test", "", "v2",
                 Duration.ofSeconds(10), Duration.ofSeconds(30), "fixtures/duffel", false, 10, "");
         duffel = new HttpDuffelClient(builder.build(), properties, JsonMapper.builder().build());
+    }
+
+    @Test
+    void customerUserIsCreatedAndAttachedToTheOrder() {
+        server.expect(requestTo("https://api.duffel.test/identity/customer/users")).andExpect(method(HttpMethod.POST))
+                .andExpect(content().json("{\"data\":{\"email\":\"a@example.com\",\"given_name\":\"Aminata\",\"family_name\":\"Sow\",\"phone_number\":\"+221771234567\"}}"))
+                .andRespond(withSuccess("{\"data\":{\"id\":\"icu_1\"}}", MediaType.APPLICATION_JSON));
+        server.expect(requestTo("https://api.duffel.test/air/orders/ord_1")).andExpect(method(HttpMethod.PATCH))
+                .andExpect(content().json("{\"data\":{\"users\":[\"icu_1\"]}}"))
+                .andRespond(withSuccess("{\"data\":{\"id\":\"ord_1\"}}", MediaType.APPLICATION_JSON));
+
+        assertThat(duffel.createCustomerUser(new DuffelCustomerUser(new DuffelCustomerUser.Data("a@example.com", "Aminata", "Sow", "+221771234567"))))
+                .contains("icu_1");
+        duffel.updateOrder("ord_1", new DuffelOrderUpdate(new DuffelOrderUpdate.Data(List.of("icu_1"))));
+        server.verify();
     }
 
     @Test

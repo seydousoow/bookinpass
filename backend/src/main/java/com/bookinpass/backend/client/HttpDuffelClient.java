@@ -1,8 +1,10 @@
 package com.bookinpass.backend.client;
 
 import com.bookinpass.backend.config.DuffelProperties;
+import com.bookinpass.backend.dto.duffel.DuffelCustomerUser;
 import com.bookinpass.backend.dto.duffel.DuffelOfferRequest;
 import com.bookinpass.backend.dto.duffel.DuffelOrderRequest;
+import com.bookinpass.backend.dto.duffel.DuffelOrderUpdate;
 import com.bookinpass.backend.dto.duffel.DuffelPassengerUpdate;
 import com.bookinpass.backend.dto.duffel.DuffelPriceRequest;
 import org.springframework.http.HttpStatusCode;
@@ -135,6 +137,43 @@ public class HttpDuffelClient implements DuffelClient {
                 .retrieve()
                 .onStatus(HttpStatusCode::isError, (_, res) -> {
                     throw errors.failure(res, "orders of " + offerId);
+                })
+                .body(String.class);
+    }
+
+    @Override
+    public String createCustomerUser(DuffelCustomerUser user) {
+        return client.post()
+                .uri("/identity/customer/users")
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(user)
+                .retrieve()
+                .onStatus(HttpStatusCode::isError, (_, res) -> {
+                    throw errors.failure(res, "customer user creation");
+                })
+                .body(String.class);
+    }
+
+    @Override
+    public String findCustomerUsers(String email) {
+        return client.get()
+                .uri(uri -> uri.path("/identity/customer/users").queryParam("email", email).build())
+                .retrieve()
+                .onStatus(HttpStatusCode::isError, (_, res) -> {
+                    throw errors.failure(res, "customer user lookup");
+                })
+                .body(String.class);
+    }
+
+    @Override
+    public String updateOrder(String orderId, DuffelOrderUpdate update) {
+        return client.patch()
+                .uri("/air/orders/{id}", orderId)
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(update)
+                .retrieve()
+                .onStatus(HttpStatusCode::isError, (_, res) -> {
+                    throw errors.failure(res, "update of order " + orderId);
                 })
                 .body(String.class);
     }

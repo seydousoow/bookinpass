@@ -1,7 +1,9 @@
 package com.bookinpass.backend.client;
 
+import com.bookinpass.backend.dto.duffel.DuffelCustomerUser;
 import com.bookinpass.backend.dto.duffel.DuffelOfferRequest;
 import com.bookinpass.backend.dto.duffel.DuffelOrderRequest;
+import com.bookinpass.backend.dto.duffel.DuffelOrderUpdate;
 import com.bookinpass.backend.dto.duffel.DuffelPassengerUpdate;
 import com.bookinpass.backend.dto.duffel.DuffelPriceRequest;
 
@@ -58,4 +60,16 @@ public interface DuffelClient {
      * s'est perdue (délai dépassé, erreur 5xx).
      */
     String findOrders(String offerId);
+
+    /**
+     * {@code POST /identity/customer/users} — client Duffel, qui regroupe ses commandes. L'e-mail doit être unique :
+     * un doublon est refusé ({@code emails_not_unique}).
+     */
+    String createCustomerUser(DuffelCustomerUser user);
+
+    /** {@code GET /identity/customer/users?email=} — le client déjà créé pour cet e-mail, s'il existe. */
+    String findCustomerUsers(String email);
+
+    /** {@code PATCH /air/orders/{id}} — rattache des clients Duffel à une commande. */
+    String updateOrder(String orderId, DuffelOrderUpdate update);
 }

@@ -1,7 +1,9 @@
 package com.bookinpass.backend.client;
 
+import com.bookinpass.backend.dto.duffel.DuffelCustomerUser;
 import com.bookinpass.backend.dto.duffel.DuffelOfferRequest;
 import com.bookinpass.backend.dto.duffel.DuffelOrderRequest;
+import com.bookinpass.backend.dto.duffel.DuffelOrderUpdate;
 import com.bookinpass.backend.dto.duffel.DuffelPassengerUpdate;
 import com.bookinpass.backend.dto.duffel.DuffelPriceRequest;
 import com.bookinpass.backend.dto.request.PassengerUpdateRequest;
@@ -60,6 +62,8 @@ public class FixtureDuffelClient implements DuffelClient {
     /** Commandes passées, par offre : une offre ne se réserve qu'une fois, comme chez Duffel. */
     private final Map<String, String> orders = new ConcurrentHashMap<>();
     private final SecureRandom random = new SecureRandom();
+    /** Clients Duffel de démo, par e-mail (en minuscules) : un seul par e-mail, comme chez Duffel. */
+    private final Map<String, String> customerUsers = new ConcurrentHashMap<>();
 
     /**
      * @param location dossier, ex. {@code file:fixtures/duffel/} — la barre finale est ajoutée si besoin
@@ -188,6 +192,44 @@ public class FixtureDuffelClient implements DuffelClient {
     public String findOrders(String offerId) {
         String order = orders.get(offerId);
         return order == null ? HttpDuffelClient.EMPTY_LIST : "{\"data\":[" + order + "]}";
+    }
+
+    @Override
+    public String createCustomerUser(DuffelCustomerUser user) {
+        String email = user.data().email().toLowerCase();
+        ObjectNode created = json.createObjectNode();
+        created.put("id", "icu_demo" + Long.toUnsignedString(random.nextLong(), 36));
+        created.put("email", user.data().email());
+        created.put("given_name", user.data().givenName());
+        created.put("family_name", user.data().familyName());
+        if (customerUsers.putIfAbsent(email, json.writeValueAsString(created)) != null) {
+            throw new DuffelException(HttpStatus.UNPROCESSABLE_CONTENT, "Demo customer user email already used", "invalid_state_error",
+                    "emails_not_unique", null, null);
+        }
+        ObjectNode response = json.createObjectNode();
+        response.set("data", created);
+        return json.writeValueAsString(response);
+    }
+
+    @Override
+    public String findCustomerUsers(String email) {
+        String user = customerUsers.get(email.toLowerCase());
+        return user == null ? HttpDuffelClient.EMPTY_LIST : "{\"data\":[" + user + "]}";
+    }
+
+    @Override
+    public String updateOrder(String orderId, DuffelOrderUpdate update) {
+        for (Map.Entry<String, String> entry : orders.entrySet()) {
+            ObjectNode order = (ObjectNode) json.readTree(entry.getValue());
+            if (order.path("id").asString().equals(orderId)) {
+                order.set("users", json.valueToTree(update.data().users()));
+                entry.setValue(json.writeValueAsString(order));
+                ObjectNode response = json.createObjectNode();
+                response.set("data", order);
+                return json.writeValueAsString(response);
+            }
+        }
+        throw new DuffelException(HttpStatus.NOT_FOUND, "Unknown demo order " + orderId);
     }
 
     private String bookingReference() {

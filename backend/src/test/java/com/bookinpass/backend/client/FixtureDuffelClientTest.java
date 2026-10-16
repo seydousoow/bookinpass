@@ -3,7 +3,9 @@ package com.bookinpass.backend.client;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import com.bookinpass.backend.dto.duffel.DuffelCustomerUser;
 import com.bookinpass.backend.dto.duffel.DuffelOrderRequest;
+import com.bookinpass.backend.dto.duffel.DuffelOrderUpdate;
 import com.bookinpass.backend.dto.duffel.DuffelPassengerUpdate;
 import com.bookinpass.backend.dto.duffel.DuffelPriceRequest;
 import com.bookinpass.backend.dto.request.PassengerUpdateRequest;
@@ -88,6 +90,22 @@ class FixtureDuffelClientTest {
         assertThat(json.readTree(duffel.findOrders(OFFER)).path("data").get(0).path("metadata").path("checkout_session_id").asString()).isEqualTo("cs_1");
         assertThatThrownBy(() -> duffel.createOrder(request))
                 .isInstanceOf(DuffelException.class).hasFieldOrPropertyWithValue("code", "order_creation_already_attempted");
+    }
+
+    @Test
+    void demoCustomerUsersAreUniquePerEmailAndAttachToOrders() {
+        JsonNode offer = json.readTree(duffel.getOffer(OFFER)).path("data");
+        String orderId = json.readTree(duffel.createOrder(order(new DuffelOrderRequest.Payment("balance",
+                offer.path("total_currency").asString(), offer.path("total_amount").asString())))).path("data").path("id").asString();
+
+        String userId = json.readTree(duffel.createCustomerUser(new DuffelCustomerUser(new DuffelCustomerUser.Data("a@example.com", "Aminata", "Sow", null))))
+                .path("data").path("id").asString();
+        assertThatThrownBy(() -> duffel.createCustomerUser(new DuffelCustomerUser(new DuffelCustomerUser.Data("A@example.com", "Lou", "Sow", null))))
+                .isInstanceOf(DuffelException.class).hasFieldOrPropertyWithValue("code", "emails_not_unique");
+        assertThat(json.readTree(duffel.findCustomerUsers("a@EXAMPLE.com")).path("data").get(0).path("id").asString()).isEqualTo(userId);
+
+        JsonNode updated = json.readTree(duffel.updateOrder(orderId, new DuffelOrderUpdate(new DuffelOrderUpdate.Data(List.of(userId))))).path("data");
+        assertThat(updated.path("users").get(0).asString()).isEqualTo(userId);
     }
 
     private static DuffelOrderRequest order(DuffelOrderRequest.Payment payment) {

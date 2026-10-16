@@ -8,8 +8,10 @@ import com.bookinpass.backend.client.HttpDuffelClient;
 import com.bookinpass.backend.client.HttpStaysClient;
 import com.bookinpass.backend.client.StaysClient;
 import com.bookinpass.backend.client.StripeClient;
+import com.bookinpass.backend.dto.duffel.DuffelCustomerUser;
 import com.bookinpass.backend.dto.duffel.DuffelOfferRequest;
 import com.bookinpass.backend.dto.duffel.DuffelOrderRequest;
+import com.bookinpass.backend.dto.duffel.DuffelOrderUpdate;
 import com.bookinpass.backend.dto.duffel.DuffelPassengerUpdate;
 import com.bookinpass.backend.dto.duffel.DuffelPriceRequest;
 import com.bookinpass.backend.dto.duffel.DuffelQuoteRequest;
@@ -46,7 +48,7 @@ import java.util.zip.GZIPInputStream;
 @Configuration(proxyBeanMethods = false)
 // Image native : corps envoyés à Duffel, sérialisés par Jackson via réflexion.
 @RegisterReflectionForBinding({DuffelOfferRequest.class, DuffelPassengerUpdate.class, DuffelPriceRequest.class,
-        DuffelOrderRequest.class, DuffelStaySearch.class, DuffelQuoteRequest.class})
+        DuffelOrderRequest.class, DuffelOrderUpdate.class, DuffelCustomerUser.class, DuffelStaySearch.class, DuffelQuoteRequest.class})
 public class HttpClientConfig {
 
     /**
