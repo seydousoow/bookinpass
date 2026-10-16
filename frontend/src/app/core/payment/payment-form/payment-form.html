@@ -1,0 +1,35 @@
+<div *transloco="let t" class="rounded-card border-border-subtle bg-surface-card border p-4">
+  <h3 class="font-bold">{{ t('payment.title') }}</h3>
+  <p class="text-muted mt-1 text-xs">{{ t('payment.secure') }}</p>
+
+  @if (phase() === 'authorised') {
+    <p class="text-state-success mt-4 text-sm font-semibold" role="status">{{ t('payment.authorised', {amount: amount()}) }}</p>
+  } @else {
+    <div [class.min-h-40]="phase() === 'loading'" class="relative mt-4">
+      @if (phase() === 'loading') {
+        <div class="absolute inset-0 z-10 flex items-center justify-center bg-surface-card">
+          <bip-spinner label="payment.loading" showLabel size="md"/>
+        </div>
+      }
+      <!-- Formulaire Checkout (iframe Stripe, bouton « Payer » compris) : les données de paiement ne transitent jamais par notre application. -->
+      <div #element></div>
+    </div>
+
+    @if (error(); as e) {
+      <p class="text-state-error mt-3 text-sm" role="alert">
+        {{ e.text ?? t(e.key!) }}
+        @if (phase() === 'error') {
+          <button (click)="retry()" class="font-semibold underline" type="button">{{ t('payment.retry') }}</button>
+        }
+      </p>
+    }
+
+    @if (phase() === 'processing') {
+      <p class="text-muted mt-3 flex items-center gap-2 text-sm" role="status">
+        <bip-spinner size="xxs"/>
+        {{ t('payment.processing') }}
+      </p>
+    }
+    <p class="text-muted mt-2 text-center text-xs">{{ t('payment.charged-in', {amount: amount(), currency: session().currency}) }}</p>
+  }
+</div>
