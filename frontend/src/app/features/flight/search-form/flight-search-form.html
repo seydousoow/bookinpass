@@ -1,0 +1,25 @@
+<ng-container *transloco="let t">
+  <form [formRoot]="searchForm" class="grid grid-cols-1 gap-y-3 w-full">
+    <bip-radio-group [formField]="searchForm.tripType" [options]="tripTypes" appearance="segmented" hideLabel label/>
+
+    <div class="grid gap-2 md:grid-cols-2 xl:grid-cols-4">
+      <bip-location-field [formField]="searchForm.origin" label="search.location.origin" placeholder/>
+      <bip-location-field [formField]="searchForm.destination" label="search.location.destination" placeholder/>
+      <bip-date-picker [formField]="searchForm.dates"
+                       [label]="pickerLabel"
+                       [maxDate]="maxSearchDate()"
+                       [minDate]="minSearchDate"
+                       [mode]="pickerMode"
+                       [placeholder]="t('picker.select.travel-date', {count: searchForm().value().tripType === 'oneway' ? 1 : 2})"
+                       [visibleMonths]="visibleMonth"/>
+      <bip-passenger-selector [formField]="searchForm.passengers"/>
+    </div>
+
+    <div class="flex flex-wrap items-end gap-3">
+      <bip-select [formField]="searchForm.cabin" [options]="cabins()" class="w-full sm:w-56" label="search.cabin.title"/>
+      <button [disabled]="searchForm().invalid()" [loading]="searchForm().pending()" bipButton class="ml-auto w-full sm:w-auto" size="lg" type="submit" variant="accent">
+        {{ t('search.submit') }}
+      </button>
+    </div>
+  </form>
+</ng-container>

@@ -112,7 +112,7 @@
             <ng-icon class="cursor-pointer" color="var(--color-brand-accent)" name="heroQuestionMarkCircleSolid"></ng-icon>
           </bip-button>
         </div>
-        <p class="text-lg md:text-xl font-bold w-full text-center">{{ formatPrice(offer().total_amount, offer().total_currency) }}</p>
+        <p class="text-lg md:text-xl font-bold w-full text-center">{{ total() | bipMoney: offer().total_currency }}</p>
       </div>
     </div>
 

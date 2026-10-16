@@ -1,5 +1,5 @@
-import { Component, computed, effect, inject, input, output, PLATFORM_ID } from '@angular/core';
-import { DOCUMENT, isPlatformBrowser } from '@angular/common';
+import { Component, computed, effect, inject, input, output } from '@angular/core';
+import { DOCUMENT } from '@angular/common';
 import { CdkTrapFocus } from '@angular/cdk/a11y';
 import { NgIcon, provideIcons } from '@ng-icons/core';
 import { heroCheckCircle, heroHeart, heroPencilSquare, heroShare, heroXMark } from '@ng-icons/heroicons/outline';
@@ -8,8 +8,10 @@ import { TranslocoDirective } from '@jsverse/transloco';
 
 import { Button, formatDuration, Overlay } from '@shared/ui';
 import { IFlightOffer, IOfferSlice } from '@shared/models/flight.model';
-import { TranslocoCurrencyPipe } from '@jsverse/transloco-locale';
 import { FlightSegmentComponent } from '@features/flight/search/offer-summary/flight-segment';
+import { CabinAmenities } from '@features/flight/search/offer-summary/cabin-amenities/cabin-amenities';
+import { MoneyPipe } from '@core/money/money.pipe';
+import { sellingTotal } from '@core/money/pricing';
 
 interface TBaggageSummary {
   outbound: { checked: number; carryOn: number };
@@ -19,7 +21,7 @@ interface TBaggageSummary {
 @Component({
   selector: 'bip-offer-summary',
   templateUrl: './offer-summary.html',
-  imports: [TranslocoDirective, CdkTrapFocus, NgIcon, Button, Overlay, TranslocoCurrencyPipe, FlightSegmentComponent],
+  imports: [MoneyPipe, TranslocoDirective, CdkTrapFocus, NgIcon, Button, Overlay, FlightSegmentComponent, CabinAmenities],
   providers: [provideIcons({ heroCheckCircle, heroPencilSquare, heroHeart, heroShare, heroXMark })],
   host: { '(document:keydown.escape)': 'onEscape()' },
 })
@@ -59,13 +61,9 @@ export class FlightOfferDetails {
   });
 
   private readonly document = inject(DOCUMENT);
-  private readonly isBrowser = isPlatformBrowser(inject(PLATFORM_ID));
 
   constructor() {
     effect(() => {
-      if (!this.isBrowser) {
-        return;
-      }
       this.document.body.style.overflow = this.opened() ? 'hidden' : '';
     });
   }
@@ -85,8 +83,9 @@ export class FlightOfferDetails {
     return formatDuration(duration);
   }
 
-  protected getMaxDigit(total_currency: string | undefined): number {
-    return Object.is(total_currency?.toUpperCase(), 'XOF') ? 0 : 2;
+  /** Prix de vente : total Duffel + frais de service BIP. */
+  protected total(offer: IFlightOffer): number {
+    return sellingTotal(offer);
   }
 
   private toBaggage(slice: IOfferSlice) {

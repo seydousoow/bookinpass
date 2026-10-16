@@ -10,19 +10,22 @@ import {
 import { Button, Viewport } from '@shared/ui';
 import { IFlightOffer, IFlightSegment, IOfferSlice } from '@shared/models/flight.model';
 import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
-import { TranslocoLocaleService } from '@jsverse/transloco-locale';
+import { MoneyPipe } from '@core/money/money.pipe';
 import { NgOptimizedImage } from '@angular/common';
+import { sellingTotal } from '@core/money/pricing';
 
 @Component({
   selector: 'bip-flight-offer-card',
   templateUrl: './offer-card.html',
-  imports: [Button, TranslocoDirective, NgOptimizedImage, NgIcon, NgIconStack],
+  imports: [MoneyPipe, Button, TranslocoDirective, NgOptimizedImage, NgIcon, NgIconStack],
   providers: [provideIcons({ heroBriefcaseSolid, heroChevronRightSolid, heroQuestionMarkCircleSolid, heroShoppingBagSolid, heroLightBulbSolid })],
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'block w-full md:px-2' },
 })
 export class FlightOfferCard {
   readonly offer = input.required<IFlightOffer>();
+  /** Prix de vente : total Duffel + frais de service BIP. */
+  protected readonly total = computed(() => sellingTotal(this.offer()));
   readonly selected = output<void>();
 
   protected readonly outbound = computed(() => this.offer().slices[0]);
@@ -39,7 +42,6 @@ export class FlightOfferCard {
     return segments.at(-1)!;
   });
 
-  private readonly translocoLocale = inject(TranslocoLocaleService);
   private readonly transloco = inject(TranslocoService);
   private readonly locale = this.transloco.activeLang;
   private readonly viewport = inject(Viewport);
@@ -81,14 +83,6 @@ export class FlightOfferCard {
       parts.push(`${minutes} min`);
     }
     return parts.join(' ');
-  }
-
-  protected formatPrice(amount: string | number, currency: string): string {
-    return this.translocoLocale.localizeNumber(amount, 'currency', this.locale(), {
-      currency,
-      minimumFractionDigits: 0,
-      maximumFractionDigits: currency === 'XOF' ? 0 : 2,
-    });
   }
 
   protected hasCheckedBaggage(slice: IOfferSlice): boolean {

@@ -96,6 +96,8 @@
                     <p class="text-sm text-success">{{ t('common.included') }}</p>
                   </div>
                 </div>
+                <p class="mt-4 font-semibold">{{ t('search.offer-summary.cabin.title') }}</p>
+                <bip-cabin-amenities [segments]="outboundSlice()!.segments"/>
               </article>
 
               @if (inboundSlice(); as inbound) {
@@ -117,6 +119,9 @@
                       <p class="text-sm text-success">{{ t('common.included') }}</p>
                     </div>
                   </div>
+
+                  <p class="mt-4 font-semibold">{{ t('search.offer-summary.cabin.title') }}</p>
+                  <bip-cabin-amenities [segments]="inbound.segments"/>
                 </article>
               }
             </div>
@@ -157,7 +162,7 @@
            ============================================================ -->
       <footer class="flex shrink-0 items-center justify-between gap-2 border-t shadow-xl border-border-strong bg-surface-card px-4 py-2 md:rounded-b-xl md:px-6">
         <p class="mix-w-0 text-xl font-extrabold">
-          {{ offer.total_amount | translocoCurrency : 'narrowSymbol' : {currency: offer.total_currency, minimumFractionDigits: 0, maximumFractionDigits: getMaxDigit(offer.total_currency)} }}
+          {{ total(offer) | bipMoney: offer.total_currency }}
         </p>
         <div class="flex flex-1 justify-end gap-x-2">
           <bip-button (clicked)="close()" class="shrink-0" variant="secondary">{{ t('common.close') }}</bip-button>
