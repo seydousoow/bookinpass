@@ -1,0 +1,1264 @@
+{
+  "data": {
+    "results": [
+      {
+        "id": "srr_template",
+        "accommodation": {
+          "id": "acc_0000BdkrTerangaPlateau01",
+          "name": "Hôtel Corniche Océan",
+          "description": "Hôtel de bord de mer sur la corniche ouest, avec plage privée, casino et vue sur l'île de Gorée.",
+          "rating": 5,
+          "ratings": [
+            {
+              "source": "bookingcom",
+              "value": 5
+            },
+            {
+              "source": "expedia",
+              "value": 5
+            }
+          ],
+          "review_score": 9.1,
+          "review_count": 1284,
+          "chain": {
+            "id": "chn_0000BdkrTerangaHotels001",
+            "name": "Teranga Hôtels"
+          },
+          "brand": null,
+          "supported_loyalty_programme": null,
+          "amenities": [
+            {
+              "type": "wifi",
+              "description": "Wi-Fi"
+            },
+            {
+              "type": "pool",
+              "description": "Piscine"
+            },
+            {
+              "type": "spa",
+              "description": "Spa"
+            },
+            {
+              "type": "restaurant",
+              "description": "Restaurant"
+            },
+            {
+              "type": "parking",
+              "description": "Parking"
+            },
+            {
+              "type": "gym",
+              "description": "Salle de sport"
+            },
+            {
+              "type": "24_hour_front_desk",
+              "description": "Réception 24h/24"
+            },
+            {
+              "type": "room_service",
+              "description": "Service en chambre"
+            }
+          ],
+          "check_in_information": {
+            "check_in_after_time": "14:00",
+            "check_in_before_time": "23:59",
+            "check_out_before_time": "12:00"
+          },
+          "key_collection": null,
+          "location": {
+            "address": {
+              "line_one": "Boulevard Martin Luther King",
+              "city_name": "Dakar",
+              "postal_code": "10200",
+              "region": "Dakar",
+              "country_code": "SN"
+            },
+            "geographic_coordinates": {
+              "latitude": 14.6787,
+              "longitude": -17.4668
+            }
+          },
+          "photos": [],
+          "email": null,
+          "phone_number": null,
+          "payment_instruction_supported": false,
+          "rooms": [
+            {
+              "name": "Chambre Deluxe vue mer",
+              "beds": [
+                {
+                  "type": "king",
+                  "count": 1
+                }
+              ],
+              "photos": [],
+              "rates": [
+                {
+                  "id": "t1",
+                  "name": "Petit-déjeuner inclus",
+                  "code": null,
+                  "description": null,
+                  "total_amount": "210.00",
+                  "total_currency": "EUR",
+                  "base_amount": "187.10",
+                  "base_currency": "EUR",
+                  "tax_amount": "18.90",
+                  "tax_currency": "EUR",
+                  "fee_amount": "4.00",
+                  "fee_currency": "EUR",
+                  "public_amount": "245.00",
+                  "public_currency": "EUR",
+                  "due_at_accommodation_amount": "2000.00",
+                  "due_at_accommodation_currency": "XOF",
+                  "board_type": "breakfast",
+                  "payment_type": "pay_now",
+                  "available_payment_methods": [
+                    "balance",
+                    "card"
+                  ],
+                  "cancellation_timeline": [
+                    {
+                      "before": "P3D",
+                      "refund_amount": "210.00",
+                      "currency": "EUR"
+                    }
+                  ],
+                  "conditions": [
+                    {
+                      "title": "Taxe de séjour",
+                      "description": "Une taxe de séjour de 1 000 XOF par personne et par nuit est à régler sur place."
+                    }
+                  ],
+                  "benefits": [
+                    {
+                      "type": "breakfast_included",
+                      "title": "Petit-déjeuner",
+                      "description": "Buffet servi au restaurant de 6 h 30 à 10 h 30, pour deux personnes."
+                    }
+                  ],
+                  "deal_types": [],
+                  "quantity_available": 4,
+                  "loyalty_programme_required": false,
+                  "supported_loyalty_programme": null,
+                  "negotiated_rate_id": null,
+                  "payment_instruction_allowed": false,
+                  "estimated_commission_amount": null,
+                  "estimated_commission_currency": null,
+                  "source": "duffel_hotel_group",
+                  "expires_at": null
+                },
+                {
+                  "id": "t2",
+                  "name": "Tarif non remboursable",
+                  "code": null,
+                  "description": null,
+                  "total_amount": "182.00",
+                  "total_currency": "EUR",
+                  "base_amount": "161.60",
+                  "base_currency": "EUR",
+                  "tax_amount": "16.40",
+                  "tax_currency": "EUR",
+                  "fee_amount": "4.00",
+                  "fee_currency": "EUR",
+                  "public_amount": "245.00",
+                  "public_currency": "EUR",
+                  "due_at_accommodation_amount": "2000.00",
+                  "due_at_accommodation_currency": "XOF",
+                  "board_type": "room_only",
+                  "payment_type": "pay_now",
+                  "available_payment_methods": [
+                    "balance",
+                    "card"
+                  ],
+                  "cancellation_timeline": [],
+                  "conditions": [
+                    {
+                      "title": "Taxe de séjour",
+                      "description": "Une taxe de séjour de 1 000 XOF par personne et par nuit est à régler sur place."
+                    }
+                  ],
+                  "benefits": null,
+                  "deal_types": [],
+                  "quantity_available": 4,
+                  "loyalty_programme_required": false,
+                  "supported_loyalty_programme": null,
+                  "negotiated_rate_id": null,
+                  "payment_instruction_allowed": false,
+                  "estimated_commission_amount": null,
+                  "estimated_commission_currency": null,
+                  "source": "duffel_hotel_group",
+                  "expires_at": null
+                }
+              ]
+            },
+            {
+              "name": "Suite Junior",
+              "beds": [
+                {
+                  "type": "king",
+                  "count": 1
+                },
+                {
+                  "type": "sofabed",
+                  "count": 1
+                }
+              ],
+              "photos": [],
+              "rates": [
+                {
+                  "id": "t3",
+                  "name": "Demi-pension",
+                  "code": null,
+                  "description": null,
+                  "total_amount": "340.00",
+                  "total_currency": "EUR",
+                  "base_amount": "303.40",
+                  "base_currency": "EUR",
+                  "tax_amount": "30.60",
+                  "tax_currency": "EUR",
+                  "fee_amount": "6.00",
+                  "fee_currency": "EUR",
+                  "public_amount": null,
+                  "public_currency": "EUR",
+                  "due_at_accommodation_amount": "2000.00",
+                  "due_at_accommodation_currency": "XOF",
+                  "board_type": "half_board",
+                  "payment_type": "deposit",
+                  "available_payment_methods": [
+                    "balance",
+                    "card"
+                  ],
+                  "cancellation_timeline": [
+                    {
+                      "before": "P7D",
+                      "refund_amount": "340.00",
+                      "currency": "EUR"
+                    }
+                  ],
+                  "conditions": [
+                    {
+                      "title": "Taxe de séjour",
+                      "description": "Une taxe de séjour de 1 000 XOF par personne et par nuit est à régler sur place."
+                    },
+                    {
+                      "title": "Acompte",
+                      "description": "Un acompte de 30 % est prélevé à la réservation ; le solde est réglé à l'hôtel."
+                    }
+                  ],
+                  "benefits": null,
+                  "deal_types": [],
+                  "quantity_available": 2,
+                  "loyalty_programme_required": false,
+                  "supported_loyalty_programme": null,
+                  "negotiated_rate_id": null,
+                  "payment_instruction_allowed": false,
+                  "estimated_commission_amount": null,
+                  "estimated_commission_currency": null,
+                  "source": "duffel_hotel_group",
+                  "expires_at": null
+                }
+              ]
+            }
+          ]
+        }
+      },
+      {
+        "id": "srr_template",
+        "accommodation": {
+          "id": "acc_0000BdkrAlmadiesBeach002",
+          "name": "Almadies Bay Hotel",
+          "description": "Hôtel contemporain relié au centre commercial voisin, piscine à débordement face à l'océan.",
+          "rating": 4,
+          "ratings": [
+            {
+              "source": "priceline",
+              "value": 4
+            }
+          ],
+          "review_score": 8.6,
+          "review_count": 2310,
+          "chain": {
+            "id": "chn_0000DuffelGroup0000001",
+            "name": "Duffel Hotel Group"
+          },
+          "brand": {
+            "id": "bra_0000DuffelTest0000001",
+            "name": "Duffel Test"
+          },
+          "supported_loyalty_programme": null,
+          "amenities": [
+            {
+              "type": "wifi",
+              "description": "Wi-Fi"
+            },
+            {
+              "type": "pool",
+              "description": "Piscine"
+            },
+            {
+              "type": "restaurant",
+              "description": "Restaurant"
+            },
+            {
+              "type": "gym",
+              "description": "Salle de sport"
+            },
+            {
+              "type": "business_centre",
+              "description": "Centre d'affaires"
+            },
+            {
+              "type": "parking",
+              "description": "Parking"
+            },
+            {
+              "type": "laundry",
+              "description": "Blanchisserie"
+            }
+          ],
+          "check_in_information": {
+            "check_in_after_time": "15:00",
+            "check_in_before_time": null,
+            "check_out_before_time": "12:00"
+          },
+          "key_collection": null,
+          "location": {
+            "address": {
+              "line_one": "Route de la Corniche Ouest",
+              "city_name": "Dakar",
+              "postal_code": "10700",
+              "region": "Dakar",
+              "country_code": "SN"
+            },
+            "geographic_coordinates": {
+              "latitude": 14.6927,
+              "longitude": -17.4733
+            }
+          },
+          "photos": [],
+          "email": null,
+          "phone_number": null,
+          "payment_instruction_supported": false,
+          "rooms": [
+            {
+              "name": "Chambre Supérieure",
+              "beds": [
+                {
+                  "type": "queen",
+                  "count": 1
+                }
+              ],
+              "photos": [],
+              "rates": [
+                {
+                  "id": "t1",
+                  "name": "Tarif flexible",
+                  "code": null,
+                  "description": null,
+                  "total_amount": "158.00",
+                  "total_currency": "EUR",
+                  "base_amount": "140.80",
+                  "base_currency": "EUR",
+                  "tax_amount": "14.20",
+                  "tax_currency": "EUR",
+                  "fee_amount": "3.00",
+                  "fee_currency": "EUR",
+                  "public_amount": "158.00",
+                  "public_currency": "EUR",
+                  "due_at_accommodation_amount": null,
+                  "due_at_accommodation_currency": "EUR",
+                  "board_type": "room_only",
+                  "payment_type": "pay_now",
+                  "available_payment_methods": [
+                    "balance",
+                    "card"
+                  ],
+                  "cancellation_timeline": [
+                    {
+                      "before": "P1D",
+                      "refund_amount": "158.00",
+                      "currency": "EUR"
+                    }
+                  ],
+                  "conditions": [],
+                  "benefits": null,
+                  "deal_types": [],
+                  "quantity_available": 8,
+                  "loyalty_programme_required": false,
+                  "supported_loyalty_programme": null,
+                  "negotiated_rate_id": null,
+                  "payment_instruction_allowed": false,
+                  "estimated_commission_amount": null,
+                  "estimated_commission_currency": null,
+                  "source": "duffel_hotel_group",
+                  "expires_at": null
+                },
+                {
+                  "id": "t2",
+                  "name": "Avec petit-déjeuner",
+                  "code": null,
+                  "description": null,
+                  "total_amount": "171.00",
+                  "total_currency": "EUR",
+                  "base_amount": "152.60",
+                  "base_currency": "EUR",
+                  "tax_amount": "15.40",
+                  "tax_currency": "EUR",
+                  "fee_amount": "3.00",
+                  "fee_currency": "EUR",
+                  "public_amount": null,
+                  "public_currency": "EUR",
+                  "due_at_accommodation_amount": null,
+                  "due_at_accommodation_currency": "EUR",
+                  "board_type": "breakfast",
+                  "payment_type": "pay_now",
+                  "available_payment_methods": [
+                    "balance",
+                    "card"
+                  ],
+                  "cancellation_timeline": [
+                    {
+                      "before": "P1D",
+                      "refund_amount": "171.00",
+                      "currency": "EUR"
+                    }
+                  ],
+                  "conditions": [],
+                  "benefits": null,
+                  "deal_types": [],
+                  "quantity_available": 8,
+                  "loyalty_programme_required": false,
+                  "supported_loyalty_programme": null,
+                  "negotiated_rate_id": null,
+                  "payment_instruction_allowed": false,
+                  "estimated_commission_amount": null,
+                  "estimated_commission_currency": null,
+                  "source": "duffel_hotel_group",
+                  "expires_at": null
+                }
+              ]
+            },
+            {
+              "name": "Chambre Twin",
+              "beds": [
+                {
+                  "type": "single",
+                  "count": 2
+                }
+              ],
+              "photos": [],
+              "rates": [
+                {
+                  "id": "t3",
+                  "name": "Payer à l'hôtel",
+                  "code": null,
+                  "description": null,
+                  "total_amount": "149.00",
+                  "total_currency": "EUR",
+                  "base_amount": "132.60",
+                  "base_currency": "EUR",
+                  "tax_amount": "13.40",
+                  "tax_currency": "EUR",
+                  "fee_amount": "3.00",
+                  "fee_currency": "EUR",
+                  "public_amount": null,
+                  "public_currency": "EUR",
+                  "due_at_accommodation_amount": null,
+                  "due_at_accommodation_currency": "EUR",
+                  "board_type": "room_only",
+                  "payment_type": "guarantee",
+                  "available_payment_methods": [
+                    "card"
+                  ],
+                  "cancellation_timeline": [
+                    {
+                      "before": "P2D",
+                      "refund_amount": "149.00",
+                      "currency": "EUR"
+                    }
+                  ],
+                  "conditions": [
+                    {
+                      "title": "Garantie",
+                      "description": "La carte sert de garantie ; le séjour est réglé à l'hôtel. Une non-présentation est facturée une nuit."
+                    }
+                  ],
+                  "benefits": null,
+                  "deal_types": [],
+                  "quantity_available": 3,
+                  "loyalty_programme_required": false,
+                  "supported_loyalty_programme": null,
+                  "negotiated_rate_id": null,
+                  "payment_instruction_allowed": false,
+                  "estimated_commission_amount": null,
+                  "estimated_commission_currency": null,
+                  "source": "duffel_hotel_group",
+                  "expires_at": null
+                }
+              ]
+            }
+          ]
+        }
+      },
+      {
+        "id": "srr_template",
+        "accommodation": {
+          "id": "acc_0000BdkrNgorIsland00003",
+          "name": "Auberge de la Pointe",
+          "description": "Hôtel familial face à l'île de Ngor, à deux pas des spots de surf des Almadies.",
+          "rating": 3,
+          "ratings": [
+            {
+              "source": "bookingcom",
+              "value": 3
+            }
+          ],
+          "review_score": 7.9,
+          "review_count": 642,
+          "chain": null,
+          "brand": null,
+          "supported_loyalty_programme": null,
+          "amenities": [
+            {
+              "type": "wifi",
+              "description": "Wi-Fi"
+            },
+            {
+              "type": "restaurant",
+              "description": "Restaurant"
+            },
+            {
+              "type": "parking",
+              "description": "Parking"
+            },
+            {
+              "type": "pets_allowed",
+              "description": "Animaux acceptés"
+            }
+          ],
+          "check_in_information": {
+            "check_in_after_time": "13:00",
+            "check_in_before_time": "22:00",
+            "check_out_before_time": "11:00"
+          },
+          "key_collection": null,
+          "location": {
+            "address": {
+              "line_one": "Route de Ngor",
+              "city_name": "Dakar",
+              "postal_code": "12000",
+              "region": "Dakar",
+              "country_code": "SN"
+            },
+            "geographic_coordinates": {
+              "latitude": 14.7495,
+              "longitude": -17.5133
+            }
+          },
+          "photos": [],
+          "email": null,
+          "phone_number": null,
+          "payment_instruction_supported": false,
+          "rooms": [
+            {
+              "name": "Chambre Double Standard",
+              "beds": [
+                {
+                  "type": "double",
+                  "count": 1
+                }
+              ],
+              "photos": [],
+              "rates": [
+                {
+                  "id": "t1",
+                  "name": "Petit-déjeuner inclus",
+                  "code": null,
+                  "description": null,
+                  "total_amount": "74.00",
+                  "total_currency": "EUR",
+                  "base_amount": "65.80",
+                  "base_currency": "EUR",
+                  "tax_amount": "6.70",
+                  "tax_currency": "EUR",
+                  "fee_amount": "1.50",
+                  "fee_currency": "EUR",
+                  "public_amount": "82.00",
+                  "public_currency": "EUR",
+                  "due_at_accommodation_amount": "1000.00",
+                  "due_at_accommodation_currency": "XOF",
+                  "board_type": "breakfast",
+                  "payment_type": "pay_now",
+                  "available_payment_methods": [
+                    "balance",
+                    "card"
+                  ],
+                  "cancellation_timeline": [
+                    {
+                      "before": "P2D",
+                      "refund_amount": "74.00",
+                      "currency": "EUR"
+                    }
+                  ],
+                  "conditions": [
+                    {
+                      "title": "Taxe de séjour",
+                      "description": "Une taxe de séjour de 1 000 XOF par personne et par nuit est à régler sur place."
+                    }
+                  ],
+                  "benefits": [
+                    {
+                      "type": "breakfast_included",
+                      "title": "Petit-déjeuner",
+                      "description": "Petit-déjeuner continental servi en terrasse."
+                    }
+                  ],
+                  "deal_types": [],
+                  "quantity_available": 5,
+                  "loyalty_programme_required": false,
+                  "supported_loyalty_programme": null,
+                  "negotiated_rate_id": null,
+                  "payment_instruction_allowed": false,
+                  "estimated_commission_amount": null,
+                  "estimated_commission_currency": null,
+                  "source": "duffel_hotel_group",
+                  "expires_at": null
+                },
+                {
+                  "id": "t2",
+                  "name": "Non remboursable",
+                  "code": null,
+                  "description": null,
+                  "total_amount": "63.00",
+                  "total_currency": "EUR",
+                  "base_amount": "55.80",
+                  "base_currency": "EUR",
+                  "tax_amount": "5.70",
+                  "tax_currency": "EUR",
+                  "fee_amount": "1.50",
+                  "fee_currency": "EUR",
+                  "public_amount": null,
+                  "public_currency": "EUR",
+                  "due_at_accommodation_amount": "1000.00",
+                  "due_at_accommodation_currency": "XOF",
+                  "board_type": "room_only",
+                  "payment_type": "pay_now",
+                  "available_payment_methods": [
+                    "balance",
+                    "card"
+                  ],
+                  "cancellation_timeline": [],
+                  "conditions": [
+                    {
+                      "title": "Taxe de séjour",
+                      "description": "Une taxe de séjour de 1 000 XOF par personne et par nuit est à régler sur place."
+                    }
+                  ],
+                  "benefits": null,
+                  "deal_types": [],
+                  "quantity_available": 5,
+                  "loyalty_programme_required": false,
+                  "supported_loyalty_programme": null,
+                  "negotiated_rate_id": null,
+                  "payment_instruction_allowed": false,
+                  "estimated_commission_amount": null,
+                  "estimated_commission_currency": null,
+                  "source": "duffel_hotel_group",
+                  "expires_at": null
+                }
+              ]
+            },
+            {
+              "name": "Chambre Familiale",
+              "beds": [
+                {
+                  "type": "double",
+                  "count": 1
+                },
+                {
+                  "type": "bunk",
+                  "count": 1
+                }
+              ],
+              "photos": [],
+              "rates": [
+                {
+                  "id": "t3",
+                  "name": "Famille, petit-déjeuner inclus",
+                  "code": null,
+                  "description": null,
+                  "total_amount": "98.00",
+                  "total_currency": "EUR",
+                  "base_amount": "87.20",
+                  "base_currency": "EUR",
+                  "tax_amount": "8.80",
+                  "tax_currency": "EUR",
+                  "fee_amount": "2.00",
+                  "fee_currency": "EUR",
+                  "public_amount": null,
+                  "public_currency": "EUR",
+                  "due_at_accommodation_amount": "1000.00",
+                  "due_at_accommodation_currency": "XOF",
+                  "board_type": "breakfast",
+                  "payment_type": "pay_now",
+                  "available_payment_methods": [
+                    "balance",
+                    "card"
+                  ],
+                  "cancellation_timeline": [
+                    {
+                      "before": "P3D",
+                      "refund_amount": "98.00",
+                      "currency": "EUR"
+                    }
+                  ],
+                  "conditions": [
+                    {
+                      "title": "Taxe de séjour",
+                      "description": "Une taxe de séjour de 1 000 XOF par personne et par nuit est à régler sur place."
+                    }
+                  ],
+                  "benefits": null,
+                  "deal_types": [],
+                  "quantity_available": 2,
+                  "loyalty_programme_required": false,
+                  "supported_loyalty_programme": null,
+                  "negotiated_rate_id": null,
+                  "payment_instruction_allowed": false,
+                  "estimated_commission_amount": null,
+                  "estimated_commission_currency": null,
+                  "source": "duffel_hotel_group",
+                  "expires_at": null
+                }
+              ]
+            }
+          ]
+        }
+      },
+      {
+        "id": "srr_template",
+        "accommodation": {
+          "id": "acc_0000BdkrPlateauGrand0004",
+          "name": "Grand Hôtel du Plateau",
+          "description": "Au cœur du Plateau, face au port : chambres rénovées, piscine extérieure et restaurant panoramique.",
+          "rating": 5,
+          "ratings": [
+            {
+              "source": "expedia",
+              "value": 5
+            },
+            {
+              "source": "aaa",
+              "value": 4
+            }
+          ],
+          "review_score": 8.4,
+          "review_count": 1876,
+          "chain": {
+            "id": "chn_0000DuffelGroup0000001",
+            "name": "Duffel Hotel Group"
+          },
+          "brand": {
+            "id": "bra_0000DuffelCollection001",
+            "name": "Duffel Collection"
+          },
+          "supported_loyalty_programme": "duffel_hotel_group_rewards",
+          "amenities": [
+            {
+              "type": "wifi",
+              "description": "Wi-Fi"
+            },
+            {
+              "type": "pool",
+              "description": "Piscine"
+            },
+            {
+              "type": "spa",
+              "description": "Spa"
+            },
+            {
+              "type": "restaurant",
+              "description": "Restaurant"
+            },
+            {
+              "type": "gym",
+              "description": "Salle de sport"
+            },
+            {
+              "type": "concierge",
+              "description": "Conciergerie"
+            },
+            {
+              "type": "business_centre",
+              "description": "Centre d'affaires"
+            },
+            {
+              "type": "24_hour_front_desk",
+              "description": "Réception 24h/24"
+            },
+            {
+              "type": "accessibility_mobility",
+              "description": "Accès PMR"
+            }
+          ],
+          "check_in_information": {
+            "check_in_after_time": "15:00",
+            "check_in_before_time": null,
+            "check_out_before_time": "12:00"
+          },
+          "key_collection": null,
+          "location": {
+            "address": {
+              "line_one": "10 rue Colbert",
+              "city_name": "Dakar",
+              "postal_code": "10000",
+              "region": "Dakar",
+              "country_code": "SN"
+            },
+            "geographic_coordinates": {
+              "latitude": 14.6698,
+              "longitude": -17.4307
+            }
+          },
+          "photos": [],
+          "email": null,
+          "phone_number": null,
+          "payment_instruction_supported": false,
+          "rooms": [
+            {
+              "name": "Chambre Deluxe",
+              "beds": [
+                {
+                  "type": "king",
+                  "count": 1
+                }
+              ],
+              "photos": [],
+              "rates": [
+                {
+                  "id": "t1",
+                  "name": "Meilleur tarif disponible",
+                  "code": null,
+                  "description": null,
+                  "total_amount": "189.00",
+                  "total_currency": "EUR",
+                  "base_amount": "168.00",
+                  "base_currency": "EUR",
+                  "tax_amount": "17.00",
+                  "tax_currency": "EUR",
+                  "fee_amount": "4.00",
+                  "fee_currency": "EUR",
+                  "public_amount": "205.00",
+                  "public_currency": "EUR",
+                  "due_at_accommodation_amount": null,
+                  "due_at_accommodation_currency": "EUR",
+                  "board_type": "room_only",
+                  "payment_type": "pay_now",
+                  "available_payment_methods": [
+                    "balance",
+                    "card"
+                  ],
+                  "cancellation_timeline": [
+                    {
+                      "before": "P2D",
+                      "refund_amount": "189.00",
+                      "currency": "EUR"
+                    }
+                  ],
+                  "conditions": [],
+                  "benefits": null,
+                  "deal_types": [
+                    "mobile"
+                  ],
+                  "quantity_available": 6,
+                  "loyalty_programme_required": false,
+                  "supported_loyalty_programme": "duffel_hotel_group_rewards",
+                  "negotiated_rate_id": null,
+                  "payment_instruction_allowed": false,
+                  "estimated_commission_amount": null,
+                  "estimated_commission_currency": null,
+                  "source": "duffel_hotel_group",
+                  "expires_at": null
+                },
+                {
+                  "id": "t2",
+                  "name": "Petit-déjeuner inclus",
+                  "code": null,
+                  "description": null,
+                  "total_amount": "214.00",
+                  "total_currency": "EUR",
+                  "base_amount": "190.70",
+                  "base_currency": "EUR",
+                  "tax_amount": "19.30",
+                  "tax_currency": "EUR",
+                  "fee_amount": "4.00",
+                  "fee_currency": "EUR",
+                  "public_amount": null,
+                  "public_currency": "EUR",
+                  "due_at_accommodation_amount": null,
+                  "due_at_accommodation_currency": "EUR",
+                  "board_type": "breakfast",
+                  "payment_type": "pay_now",
+                  "available_payment_methods": [
+                    "balance",
+                    "card"
+                  ],
+                  "cancellation_timeline": [
+                    {
+                      "before": "P2D",
+                      "refund_amount": "214.00",
+                      "currency": "EUR"
+                    }
+                  ],
+                  "conditions": [],
+                  "benefits": [
+                    {
+                      "type": "breakfast_included",
+                      "title": "Petit-déjeuner",
+                      "description": "Buffet international pour deux personnes."
+                    },
+                    {
+                      "type": "late_check_out",
+                      "title": "Départ tardif",
+                      "description": "Départ jusqu'à 14 h, selon disponibilité."
+                    }
+                  ],
+                  "deal_types": [],
+                  "quantity_available": 6,
+                  "loyalty_programme_required": false,
+                  "supported_loyalty_programme": "duffel_hotel_group_rewards",
+                  "negotiated_rate_id": null,
+                  "payment_instruction_allowed": false,
+                  "estimated_commission_amount": null,
+                  "estimated_commission_currency": null,
+                  "source": "duffel_hotel_group",
+                  "expires_at": null
+                }
+              ]
+            }
+          ]
+        }
+      },
+      {
+        "id": "srr_template",
+        "accommodation": {
+          "id": "acc_0000BdkrMedinaGuest0005",
+          "name": "Maison d'hôtes Médina",
+          "description": "Maison d'hôtes au calme, patio arboré et cuisine sénégalaise maison.",
+          "rating": null,
+          "ratings": [],
+          "review_score": 9.4,
+          "review_count": 88,
+          "chain": null,
+          "brand": null,
+          "supported_loyalty_programme": null,
+          "amenities": null,
+          "check_in_information": {
+            "check_in_after_time": "12:00",
+            "check_in_before_time": "20:00",
+            "check_out_before_time": "10:30"
+          },
+          "key_collection": {
+            "instructions": "Les clés sont remises par l'hôte à votre arrivée ; prévenez-le de votre heure d'arrivée."
+          },
+          "location": {
+            "address": {
+              "line_one": "Rue 6, Médina",
+              "city_name": "Dakar",
+              "postal_code": "10300",
+              "region": "Dakar",
+              "country_code": "SN"
+            },
+            "geographic_coordinates": {
+              "latitude": 14.6851,
+              "longitude": -17.4512
+            }
+          },
+          "photos": [],
+          "email": null,
+          "phone_number": null,
+          "payment_instruction_supported": false,
+          "rooms": [
+            {
+              "name": "Chambre Baobab",
+              "beds": [
+                {
+                  "type": "double",
+                  "count": 1
+                }
+              ],
+              "photos": [],
+              "rates": [
+                {
+                  "id": "t1",
+                  "name": "Chambre et petit-déjeuner",
+                  "code": null,
+                  "description": null,
+                  "total_amount": "45.00",
+                  "total_currency": "EUR",
+                  "base_amount": "45.00",
+                  "base_currency": "EUR",
+                  "tax_amount": "0.00",
+                  "tax_currency": "EUR",
+                  "fee_amount": "0.00",
+                  "fee_currency": "EUR",
+                  "public_amount": null,
+                  "public_currency": "EUR",
+                  "due_at_accommodation_amount": null,
+                  "due_at_accommodation_currency": "EUR",
+                  "board_type": "breakfast",
+                  "payment_type": "pay_now",
+                  "available_payment_methods": [
+                    "balance",
+                    "card"
+                  ],
+                  "cancellation_timeline": [
+                    {
+                      "before": "P5D",
+                      "refund_amount": "45.00",
+                      "currency": "EUR"
+                    }
+                  ],
+                  "conditions": [],
+                  "benefits": null,
+                  "deal_types": [],
+                  "quantity_available": 1,
+                  "loyalty_programme_required": false,
+                  "supported_loyalty_programme": null,
+                  "negotiated_rate_id": null,
+                  "payment_instruction_allowed": false,
+                  "estimated_commission_amount": null,
+                  "estimated_commission_currency": null,
+                  "source": "duffel_hotel_group",
+                  "expires_at": null
+                }
+              ]
+            },
+            {
+              "name": "Chambre Fromager",
+              "beds": [
+                {
+                  "type": "single",
+                  "count": 2
+                }
+              ],
+              "photos": [],
+              "rates": [
+                {
+                  "id": "t2",
+                  "name": "Chambre et petit-déjeuner",
+                  "code": null,
+                  "description": null,
+                  "total_amount": "42.00",
+                  "total_currency": "EUR",
+                  "base_amount": "42.00",
+                  "base_currency": "EUR",
+                  "tax_amount": "0.00",
+                  "tax_currency": "EUR",
+                  "fee_amount": "0.00",
+                  "fee_currency": "EUR",
+                  "public_amount": null,
+                  "public_currency": "EUR",
+                  "due_at_accommodation_amount": null,
+                  "due_at_accommodation_currency": "EUR",
+                  "board_type": "breakfast",
+                  "payment_type": "pay_now",
+                  "available_payment_methods": [
+                    "balance",
+                    "card"
+                  ],
+                  "cancellation_timeline": [
+                    {
+                      "before": "P5D",
+                      "refund_amount": "42.00",
+                      "currency": "EUR"
+                    }
+                  ],
+                  "conditions": [],
+                  "benefits": null,
+                  "deal_types": [],
+                  "quantity_available": 1,
+                  "loyalty_programme_required": false,
+                  "supported_loyalty_programme": null,
+                  "negotiated_rate_id": null,
+                  "payment_instruction_allowed": false,
+                  "estimated_commission_amount": null,
+                  "estimated_commission_currency": null,
+                  "source": "duffel_hotel_group",
+                  "expires_at": null
+                }
+              ]
+            }
+          ]
+        }
+      },
+      {
+        "id": "srr_template",
+        "accommodation": {
+          "id": "acc_0000BdkrAirportHotel006",
+          "name": "Hôtel Yoff Escale",
+          "description": "Hôtel pratique à 5 minutes de l'ancien aéroport, navette gratuite et restaurant ouvert tard.",
+          "rating": 3,
+          "ratings": [
+            {
+              "source": "priceline",
+              "value": 3
+            }
+          ],
+          "review_score": 7.2,
+          "review_count": 954,
+          "chain": {
+            "id": "chn_0000DuffelGroup0000001",
+            "name": "Duffel Hotel Group"
+          },
+          "brand": {
+            "id": "bra_0000DuffelEssentials0001",
+            "name": "Duffel Essentials"
+          },
+          "supported_loyalty_programme": "duffel_hotel_group_rewards",
+          "amenities": [
+            {
+              "type": "wifi",
+              "description": "Wi-Fi"
+            },
+            {
+              "type": "restaurant",
+              "description": "Restaurant"
+            },
+            {
+              "type": "parking",
+              "description": "Parking"
+            },
+            {
+              "type": "24_hour_front_desk",
+              "description": "Réception 24h/24"
+            },
+            {
+              "type": "cash_machine",
+              "description": "Distributeur"
+            }
+          ],
+          "check_in_information": {
+            "check_in_after_time": "12:00",
+            "check_in_before_time": null,
+            "check_out_before_time": "12:00"
+          },
+          "key_collection": null,
+          "location": {
+            "address": {
+              "line_one": "Route de l'Aéroport",
+              "city_name": "Dakar",
+              "postal_code": "11000",
+              "region": "Dakar",
+              "country_code": "SN"
+            },
+            "geographic_coordinates": {
+              "latitude": 14.7386,
+              "longitude": -17.487
+            }
+          },
+          "photos": [],
+          "email": null,
+          "phone_number": null,
+          "payment_instruction_supported": false,
+          "rooms": [
+            {
+              "name": "Chambre Standard",
+              "beds": [
+                {
+                  "type": "double",
+                  "count": 1
+                }
+              ],
+              "photos": [],
+              "rates": [
+                {
+                  "id": "t1",
+                  "name": "Tarif flexible",
+                  "code": null,
+                  "description": null,
+                  "total_amount": "68.00",
+                  "total_currency": "EUR",
+                  "base_amount": "60.40",
+                  "base_currency": "EUR",
+                  "tax_amount": "6.10",
+                  "tax_currency": "EUR",
+                  "fee_amount": "1.50",
+                  "fee_currency": "EUR",
+                  "public_amount": "75.00",
+                  "public_currency": "EUR",
+                  "due_at_accommodation_amount": null,
+                  "due_at_accommodation_currency": "EUR",
+                  "board_type": "room_only",
+                  "payment_type": "pay_now",
+                  "available_payment_methods": [
+                    "balance",
+                    "card"
+                  ],
+                  "cancellation_timeline": [
+                    {
+                      "before": "P1D",
+                      "refund_amount": "68.00",
+                      "currency": "EUR"
+                    }
+                  ],
+                  "conditions": [],
+                  "benefits": null,
+                  "deal_types": [],
+                  "quantity_available": 10,
+                  "loyalty_programme_required": false,
+                  "supported_loyalty_programme": "duffel_hotel_group_rewards",
+                  "negotiated_rate_id": null,
+                  "payment_instruction_allowed": false,
+                  "estimated_commission_amount": null,
+                  "estimated_commission_currency": null,
+                  "source": "duffel_hotel_group",
+                  "expires_at": null
+                },
+                {
+                  "id": "t2",
+                  "name": "Prépayé non remboursable",
+                  "code": null,
+                  "description": null,
+                  "total_amount": "59.00",
+                  "total_currency": "EUR",
+                  "base_amount": "52.20",
+                  "base_currency": "EUR",
+                  "tax_amount": "5.30",
+                  "tax_currency": "EUR",
+                  "fee_amount": "1.50",
+                  "fee_currency": "EUR",
+                  "public_amount": null,
+                  "public_currency": "EUR",
+                  "due_at_accommodation_amount": null,
+                  "due_at_accommodation_currency": "EUR",
+                  "board_type": "room_only",
+                  "payment_type": "pay_now",
+                  "available_payment_methods": [
+                    "balance",
+                    "card"
+                  ],
+                  "cancellation_timeline": [],
+                  "conditions": [],
+                  "benefits": null,
+                  "deal_types": [],
+                  "quantity_available": 10,
+                  "loyalty_programme_required": false,
+                  "supported_loyalty_programme": "duffel_hotel_group_rewards",
+                  "negotiated_rate_id": null,
+                  "payment_instruction_allowed": false,
+                  "estimated_commission_amount": null,
+                  "estimated_commission_currency": null,
+                  "source": "duffel_hotel_group",
+                  "expires_at": null
+                }
+              ]
+            }
+          ]
+        }
+      }
+    ],
+    "created_at": null
+  }
+}

@@ -1,0 +1,470 @@
+{
+  "acc_0000BdkrTerangaPlateau01": [
+    {
+      "reviewer_name": "Claire M.",
+      "score": 8.9,
+      "text": "La piscine est superbe. Le Wi-Fi est un peu lent dans les chambres.",
+      "created_at": "2026-09-27"
+    },
+    {
+      "reviewer_name": "Anonymous",
+      "score": 7.8,
+      "text": "La piscine est superbe. Le Wi-Fi est un peu lent dans les chambres.",
+      "created_at": "2026-09-16"
+    },
+    {
+      "reviewer_name": "Jean-Pierre B.",
+      "score": 7.8,
+      "text": "Personnel très accueillant et chambre impeccable. Le petit-déjeuner mérite le détour.",
+      "created_at": "2026-09-07"
+    },
+    {
+      "reviewer_name": "Mark R.",
+      "score": 8.9,
+      "text": "Great location and friendly staff. Rooms could use some refreshing.",
+      "created_at": "2026-08-19"
+    },
+    {
+      "reviewer_name": "Mark R.",
+      "score": 9.1,
+      "text": "Personnel très accueillant et chambre impeccable. Le petit-déjeuner mérite le détour.",
+      "created_at": "2026-07-02"
+    },
+    {
+      "reviewer_name": "Mark R.",
+      "score": 8.0,
+      "text": "Correct pour une nuit de transit, literie confortable.",
+      "created_at": "2026-06-04"
+    },
+    {
+      "reviewer_name": "Anonymous",
+      "score": 7.7,
+      "text": "Excellent séjour, vue magnifique sur l'océan. Nous reviendrons !",
+      "created_at": "2026-05-14"
+    },
+    {
+      "reviewer_name": "Jean-Pierre B.",
+      "score": 9.3,
+      "text": "Personnel très accueillant et chambre impeccable. Le petit-déjeuner mérite le détour.",
+      "created_at": "2026-04-16"
+    },
+    {
+      "reviewer_name": "Fatou K.",
+      "score": 8.5,
+      "text": "Correct pour une nuit de transit, literie confortable.",
+      "created_at": "2026-03-23"
+    },
+    {
+      "reviewer_name": "Jean-Pierre B.",
+      "score": 8.6,
+      "text": "Great location and friendly staff. Rooms could use some refreshing.",
+      "created_at": "2026-03-16"
+    },
+    {
+      "reviewer_name": "Aminata D.",
+      "score": 7.8,
+      "text": "Calme, propre, et l'équipe a organisé notre transfert sans souci.",
+      "created_at": "2026-02-08"
+    },
+    {
+      "reviewer_name": "Moussa S.",
+      "score": 8.9,
+      "text": "Personnel très accueillant et chambre impeccable. Le petit-déjeuner mérite le détour.",
+      "created_at": "2026-02-08"
+    },
+    {
+      "reviewer_name": "Sophie L.",
+      "score": 9.4,
+      "text": "La piscine est superbe. Le Wi-Fi est un peu lent dans les chambres.",
+      "created_at": "2026-02-04"
+    },
+    {
+      "reviewer_name": "Sophie L.",
+      "score": 9.9,
+      "text": "Calme, propre, et l'équipe a organisé notre transfert sans souci.",
+      "created_at": "2026-01-03"
+    }
+  ],
+  "acc_0000BdkrAlmadiesBeach002": [
+    {
+      "reviewer_name": "Ousmane N.",
+      "score": 7.2,
+      "text": "Très bien situé, mais la climatisation était bruyante la nuit.",
+      "created_at": "2026-09-19"
+    },
+    {
+      "reviewer_name": "Sophie L.",
+      "score": 7.9,
+      "text": "Great location and friendly staff. Rooms could use some refreshing.",
+      "created_at": "2026-08-19"
+    },
+    {
+      "reviewer_name": "Sophie L.",
+      "score": 7.5,
+      "text": "Très bien situé, mais la climatisation était bruyante la nuit.",
+      "created_at": "2026-08-02"
+    },
+    {
+      "reviewer_name": "Ousmane N.",
+      "score": 9.2,
+      "text": "La piscine est superbe. Le Wi-Fi est un peu lent dans les chambres.",
+      "created_at": "2026-07-12"
+    },
+    {
+      "reviewer_name": "Awa T.",
+      "score": 9.5,
+      "text": "Le restaurant est délicieux, service un peu long le soir.",
+      "created_at": "2026-05-23"
+    },
+    {
+      "reviewer_name": "Khady G.",
+      "score": 8.7,
+      "text": "Personnel très accueillant et chambre impeccable. Le petit-déjeuner mérite le détour.",
+      "created_at": "2026-05-21"
+    },
+    {
+      "reviewer_name": "Fatou K.",
+      "score": 7.3,
+      "text": "Très bien situé, mais la climatisation était bruyante la nuit.",
+      "created_at": "2026-05-16"
+    },
+    {
+      "reviewer_name": "Anonymous",
+      "score": 8.9,
+      "text": "Excellent séjour, vue magnifique sur l'océan. Nous reviendrons !",
+      "created_at": "2026-04-13"
+    },
+    {
+      "reviewer_name": "Fatou K.",
+      "score": 8.1,
+      "text": "La piscine est superbe. Le Wi-Fi est un peu lent dans les chambres.",
+      "created_at": "2026-03-27"
+    },
+    {
+      "reviewer_name": "Mark R.",
+      "score": 9.2,
+      "text": "Correct pour une nuit de transit, literie confortable.",
+      "created_at": "2026-03-03"
+    },
+    {
+      "reviewer_name": "Ousmane N.",
+      "score": 9.3,
+      "text": "Le restaurant est délicieux, service un peu long le soir.",
+      "created_at": "2026-02-06"
+    },
+    {
+      "reviewer_name": "Claire M.",
+      "score": 7.5,
+      "text": "Correct pour une nuit de transit, literie confortable.",
+      "created_at": "2026-01-16"
+    },
+    {
+      "reviewer_name": "Ousmane N.",
+      "score": 9.2,
+      "text": "Great location and friendly staff. Rooms could use some refreshing.",
+      "created_at": "2026-01-15"
+    },
+    {
+      "reviewer_name": "Awa T.",
+      "score": 7.5,
+      "text": "La piscine est superbe. Le Wi-Fi est un peu lent dans les chambres.",
+      "created_at": "2026-01-05"
+    }
+  ],
+  "acc_0000BdkrNgorIsland00003": [
+    {
+      "reviewer_name": "Ibrahima F.",
+      "score": 7.5,
+      "text": "Excellent séjour, vue magnifique sur l'océan. Nous reviendrons !",
+      "created_at": "2026-09-01"
+    },
+    {
+      "reviewer_name": "Jean-Pierre B.",
+      "score": 8.7,
+      "text": "Personnel très accueillant et chambre impeccable. Le petit-déjeuner mérite le détour.",
+      "created_at": "2026-08-28"
+    },
+    {
+      "reviewer_name": "Fatou K.",
+      "score": 8.8,
+      "text": "Le restaurant est délicieux, service un peu long le soir.",
+      "created_at": "2026-08-16"
+    },
+    {
+      "reviewer_name": "Mark R.",
+      "score": 8.3,
+      "text": "Calme, propre, et l'équipe a organisé notre transfert sans souci.",
+      "created_at": "2026-07-13"
+    },
+    {
+      "reviewer_name": "Ibrahima F.",
+      "score": 6.6,
+      "text": "Très bien situé, mais la climatisation était bruyante la nuit.",
+      "created_at": "2026-06-24"
+    },
+    {
+      "reviewer_name": "Anonymous",
+      "score": 7.9,
+      "text": "Excellent séjour, vue magnifique sur l'océan. Nous reviendrons !",
+      "created_at": "2026-05-12"
+    },
+    {
+      "reviewer_name": "Ousmane N.",
+      "score": 7.7,
+      "text": "Great location and friendly staff. Rooms could use some refreshing.",
+      "created_at": "2026-03-23"
+    },
+    {
+      "reviewer_name": "Anonymous",
+      "score": 8.7,
+      "text": "Great location and friendly staff. Rooms could use some refreshing.",
+      "created_at": "2026-03-23"
+    },
+    {
+      "reviewer_name": "Moussa S.",
+      "score": 8.8,
+      "text": "Le restaurant est délicieux, service un peu long le soir.",
+      "created_at": "2026-03-04"
+    },
+    {
+      "reviewer_name": "Awa T.",
+      "score": 7.3,
+      "text": "Très bien situé, mais la climatisation était bruyante la nuit.",
+      "created_at": "2026-02-28"
+    },
+    {
+      "reviewer_name": "Jean-Pierre B.",
+      "score": 8.6,
+      "text": "La piscine est superbe. Le Wi-Fi est un peu lent dans les chambres.",
+      "created_at": "2026-02-23"
+    },
+    {
+      "reviewer_name": "Sophie L.",
+      "score": 7.8,
+      "text": "Très bien situé, mais la climatisation était bruyante la nuit.",
+      "created_at": "2026-01-19"
+    },
+    {
+      "reviewer_name": "Ousmane N.",
+      "score": 6.6,
+      "text": "Calme, propre, et l'équipe a organisé notre transfert sans souci.",
+      "created_at": "2026-01-07"
+    },
+    {
+      "reviewer_name": "Claire M.",
+      "score": 7.7,
+      "text": "Great location and friendly staff. Rooms could use some refreshing.",
+      "created_at": "2026-01-03"
+    }
+  ],
+  "acc_0000BdkrPlateauGrand0004": [
+    {
+      "reviewer_name": "Fatou K.",
+      "score": 8.4,
+      "text": "Personnel très accueillant et chambre impeccable. Le petit-déjeuner mérite le détour.",
+      "created_at": "2026-08-21"
+    },
+    {
+      "reviewer_name": "Mark R.",
+      "score": 7.7,
+      "text": "Calme, propre, et l'équipe a organisé notre transfert sans souci.",
+      "created_at": "2026-08-13"
+    },
+    {
+      "reviewer_name": "Ibrahima F.",
+      "score": 8.1,
+      "text": "Excellent séjour, vue magnifique sur l'océan. Nous reviendrons !",
+      "created_at": "2026-06-25"
+    },
+    {
+      "reviewer_name": "Ibrahima F.",
+      "score": 8.0,
+      "text": "Correct pour une nuit de transit, literie confortable.",
+      "created_at": "2026-06-15"
+    },
+    {
+      "reviewer_name": "Moussa S.",
+      "score": 7.4,
+      "text": "Correct pour une nuit de transit, literie confortable.",
+      "created_at": "2026-06-07"
+    },
+    {
+      "reviewer_name": "Anonymous",
+      "score": 8.2,
+      "text": "Great location and friendly staff. Rooms could use some refreshing.",
+      "created_at": "2026-04-20"
+    },
+    {
+      "reviewer_name": "Anonymous",
+      "score": 8.8,
+      "text": "Calme, propre, et l'équipe a organisé notre transfert sans souci.",
+      "created_at": "2026-04-07"
+    },
+    {
+      "reviewer_name": "Aminata D.",
+      "score": 7.3,
+      "text": "Le restaurant est délicieux, service un peu long le soir.",
+      "created_at": "2026-03-20"
+    },
+    {
+      "reviewer_name": "Awa T.",
+      "score": 9.3,
+      "text": "Great location and friendly staff. Rooms could use some refreshing.",
+      "created_at": "2026-03-18"
+    },
+    {
+      "reviewer_name": "Khady G.",
+      "score": 8.7,
+      "text": "Le restaurant est délicieux, service un peu long le soir.",
+      "created_at": "2026-03-14"
+    },
+    {
+      "reviewer_name": "Khady G.",
+      "score": 9.2,
+      "text": "Excellent séjour, vue magnifique sur l'océan. Nous reviendrons !",
+      "created_at": "2026-03-05"
+    },
+    {
+      "reviewer_name": "Sophie L.",
+      "score": 8.8,
+      "text": "Très bien situé, mais la climatisation était bruyante la nuit.",
+      "created_at": "2026-02-13"
+    },
+    {
+      "reviewer_name": "Khady G.",
+      "score": 9.3,
+      "text": "Great location and friendly staff. Rooms could use some refreshing.",
+      "created_at": "2026-02-08"
+    },
+    {
+      "reviewer_name": "Jean-Pierre B.",
+      "score": 8.1,
+      "text": "Personnel très accueillant et chambre impeccable. Le petit-déjeuner mérite le détour.",
+      "created_at": "2026-01-26"
+    }
+  ],
+  "acc_0000BdkrMedinaGuest0005": [
+    {
+      "reviewer_name": "Mark R.",
+      "score": 9.3,
+      "text": "Calme, propre, et l'équipe a organisé notre transfert sans souci.",
+      "created_at": "2026-09-05"
+    },
+    {
+      "reviewer_name": "Ousmane N.",
+      "score": 9.9,
+      "text": "Personnel très accueillant et chambre impeccable. Le petit-déjeuner mérite le détour.",
+      "created_at": "2026-06-15"
+    },
+    {
+      "reviewer_name": "Anonymous",
+      "score": 9.7,
+      "text": "Great location and friendly staff. Rooms could use some refreshing.",
+      "created_at": "2026-05-18"
+    },
+    {
+      "reviewer_name": "Anonymous",
+      "score": 8.0,
+      "text": "Correct pour une nuit de transit, literie confortable.",
+      "created_at": "2026-05-17"
+    },
+    {
+      "reviewer_name": "Khady G.",
+      "score": 10,
+      "text": "Calme, propre, et l'équipe a organisé notre transfert sans souci.",
+      "created_at": "2026-04-27"
+    },
+    {
+      "reviewer_name": "Jean-Pierre B.",
+      "score": 8.2,
+      "text": "Personnel très accueillant et chambre impeccable. Le petit-déjeuner mérite le détour.",
+      "created_at": "2026-02-17"
+    }
+  ],
+  "acc_0000BdkrAirportHotel006": [
+    {
+      "reviewer_name": "Jean-Pierre B.",
+      "score": 7.0,
+      "text": "Le restaurant est délicieux, service un peu long le soir.",
+      "created_at": "2026-09-08"
+    },
+    {
+      "reviewer_name": "Khady G.",
+      "score": 7.0,
+      "text": "La piscine est superbe. Le Wi-Fi est un peu lent dans les chambres.",
+      "created_at": "2026-09-07"
+    },
+    {
+      "reviewer_name": "Fatou K.",
+      "score": 7.2,
+      "text": "Très bien situé, mais la climatisation était bruyante la nuit.",
+      "created_at": "2026-09-02"
+    },
+    {
+      "reviewer_name": "Jean-Pierre B.",
+      "score": 6.1,
+      "text": "Personnel très accueillant et chambre impeccable. Le petit-déjeuner mérite le détour.",
+      "created_at": "2026-08-25"
+    },
+    {
+      "reviewer_name": "Fatou K.",
+      "score": 6.2,
+      "text": "Très bien situé, mais la climatisation était bruyante la nuit.",
+      "created_at": "2026-07-16"
+    },
+    {
+      "reviewer_name": "Fatou K.",
+      "score": 6.0,
+      "text": "Très bien situé, mais la climatisation était bruyante la nuit.",
+      "created_at": "2026-07-15"
+    },
+    {
+      "reviewer_name": "Sophie L.",
+      "score": 5.9,
+      "text": "Correct pour une nuit de transit, literie confortable.",
+      "created_at": "2026-07-03"
+    },
+    {
+      "reviewer_name": "Sophie L.",
+      "score": 7.2,
+      "text": "Correct pour une nuit de transit, literie confortable.",
+      "created_at": "2026-05-15"
+    },
+    {
+      "reviewer_name": "Mark R.",
+      "score": 7.3,
+      "text": "Excellent séjour, vue magnifique sur l'océan. Nous reviendrons !",
+      "created_at": "2026-05-05"
+    },
+    {
+      "reviewer_name": "Anonymous",
+      "score": 7.3,
+      "text": "Très bien situé, mais la climatisation était bruyante la nuit.",
+      "created_at": "2026-03-23"
+    },
+    {
+      "reviewer_name": "Claire M.",
+      "score": 7.2,
+      "text": "Excellent séjour, vue magnifique sur l'océan. Nous reviendrons !",
+      "created_at": "2026-03-05"
+    },
+    {
+      "reviewer_name": "Sophie L.",
+      "score": 7.3,
+      "text": "Le restaurant est délicieux, service un peu long le soir.",
+      "created_at": "2026-02-18"
+    },
+    {
+      "reviewer_name": "Moussa S.",
+      "score": 6.9,
+      "text": "Personnel très accueillant et chambre impeccable. Le petit-déjeuner mérite le détour.",
+      "created_at": "2026-02-15"
+    },
+    {
+      "reviewer_name": "Aminata D.",
+      "score": 6.3,
+      "text": "La piscine est superbe. Le Wi-Fi est un peu lent dans les chambres.",
+      "created_at": "2026-01-25"
+    }
+  ]
+}
