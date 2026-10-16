@@ -47,14 +47,76 @@ La coloration syntaxique de Swagger UI est coupée : une réponse Duffel de 17 M
 | Méthode et chemin | Rôle | Source | Cache Redis |
 |---|---|---|---|
 | `GET /api/flights/search?t&o&d&from&to&adt&chd&inf&cabin` | Recherche de vols | Duffel `POST /air/offer_requests` | 10 min |
-| `GET /api/flights/offers/{id}` | Détail d'une offre | Duffel `GET /air/offers/{id}` | jusqu'à `expires_at` (15 min max) |
+| `GET /api/flights/offers/{id}` | Détail d'une offre | Duffel `GET /air/offers/{id}` | aucun |
+| `PATCH /api/flights/offers/{id}/passengers/{pid}` | Nom et fidélité d'un voyageur — rend l'offre relue | Duffel `PATCH /air/offers/{id}/passengers/{pid}` puis `GET /air/offers/{id}` | aucun |
+| `GET /api/flights/offers/{id}/upsells` | Montées en gamme (vide si la compagnie n'en propose pas) | Duffel `POST /air/offers/{id}/upsell_offers` | jusqu'à `expires_at` (15 min max) |
+| `GET /api/flights/offers/{id}/seat-maps` | Plans de cabine (sièges et prix par voyageur) | Duffel `GET /air/seat_maps?offer_id=` | 10 min |
+| `POST /api/flights/offers/{id}/price` | Prix avec les services choisis | Duffel `POST /air/offers/{id}/actions/price` | aucun |
+| `GET /api/stays/search?l&in&out&adt&chd&rooms` | Hébergements autour d'une ville (tarif le moins cher) | Duffel `POST /stays/search` | 10 min |
+| `GET /api/stays/results/{id}/rates` | Chambres et tarifs d'un résultat | Duffel `POST /stays/search_results/{id}/actions/fetch_all_rates` | jusqu'à `expires_at` (5 min max) |
+| `POST /api/stays/quotes` | Vérification finale d'un tarif (prix, acompte) | Duffel `POST /stays/quotes` | aucun |
+| `GET /api/stays/quotes/{id}` | Relire un devis | Duffel `GET /stays/quotes/{id}` | aucun |
+| `GET /api/stays/accommodations/{id}/reviews?after&limit` | Avis clients, paginés | Duffel `GET /stays/accommodation/{id}/reviews` | 24 h |
 | `GET /api/airports` | Aéroports pour la saisie | Postgres | 24 h |
+| `GET /api/airlines` | Compagnies (nom et logos d'un code IATA) | Postgres | 24 h |
 | `GET /api/rates` | Taux de change depuis XOF | Postgres | 1 h |
 | `GET /actuator/health/readiness` | Sonde | — | — |
 
-Les paramètres de recherche reprennent ceux de l'URL du front (`/search?t=round&o=DSS…`).
+Les paramètres de recherche reprennent ceux de l'URL du front (`/search?t=round&o=DSS…`, `/stays/search?l=DKR&in=…`).
+
+**Paiement.** Stripe Checkout, formulaire intégré (`ui_mode=form`, iframe Stripe : aucune donnée de carte sur ce serveur).
+`POST /payments/flights/{offerId}/checkout-session` (`{"services":[{"id","quantity"}]}`) relit l'offre et les plans de
+cabine chez Duffel, recalcule le prix de vente (billet + frais de service BIP 3 % même pays / 5 % sinon + bagages et
+sièges +20 %, `FlightPricing`, mêmes règles que le front) et crée une session Checkout en autorisation seule
+(`payment_intent_data[capture_method]=manual`, réglages Checkout Studio, clé d'idempotence, API `2026-03-25.dahlia`).
+Clés : `STRIPE_SECRET_KEY`, `STRIPE_PUBLISHABLE_KEY` ; vides = 503 `payments-unavailable`. `FRONTEND_URL` : base du
+retour après un moyen à redirection. Webhook signé : `POST /payments/webhooks/stripe` (`STRIPE_WEBHOOK_SECRET`,
+en-tête `Stripe-Signature` vérifié). Reste à faire : voir [STRIPE_INTEGRATION_TODO.md](../STRIPE_INTEGRATION_TODO.md).
+
+**Webhooks Duffel.** `POST /webhooks/duffel` (déclaré chez Duffel : `https://bip.dicortex.com/api/webhooks/duffel`) reçoit les événements Duffel (commandes, changements de vol décidés
+par la compagnie, paiements, `ping.triggered`), vérifie `X-Duffel-Signature` avec `DUFFEL_WEBHOOK_SECRET` et répond
+`{"success": true}`. Pour l'instant ils sont journalisés (changement de vol en WARN : le voyageur devra être prévenu).
+Un seul webhook par mode (test / production), en HTTPS, jamais `localhost` (en développement : tunnel ngrok).
+Le secret n'est rendu **qu'une fois**, à la création :
+
+```bash
+curl -X POST https://api.duffel.com/air/webhooks \
+  -H "Authorization: Bearer $DUFFEL_ACCESS_TOKEN" -H "Duffel-Version: v2" -H "Content-Type: application/json" \
+  -d '{"data":{"url":"https://<domaine>/api/webhooks/duffel","events":["order.created","order.creation_failed",
+       "order.airline_initiated_change_detected","air.order.changed","order_cancellation.created",
+       "order_cancellation.confirmed","air.payment.succeeded","air.payment.failed"]}}'
+# → data.secret dans DUFFEL_WEBHOOK_SECRET, puis test : POST /air/webhooks/{id}/actions/ping
+```
+
+**Hébergements.** Duffel Stays cherche autour de coordonnées : `l` est l'identifiant GeoNames d'une ville
+(`2253354` = Dakar), dont les coordonnées viennent de la table `city` ; rayon `stays-radius-km` (10 km).
+`GET /stays/destinations?q=dak` propose les villes (nom ou variante en alphabet latin, sans accents ni casse, les plus
+peuplées d'abord) et `GET /stays/destinations/{id}` en relit une. La table vient de la migration V6, générée depuis
+l'export GeoNames `cities5000.txt` (villes de plus de 5 000 habitants, licence CC BY 4.0) :
+
+```bash
+python3 scripts/generate_cities_migration.py ~/Downloads/cities5000.txt src/main/resources/db/migration/V6__cities.sql
+```
+
+Pour une mise à jour des données, générer une nouvelle migration (V7…) plutôt que réécrire V6, déjà appliquée. Avec un jeton, l'API appelle Duffel Stays (produit à faire
+activer par Duffel, sinon 403). `DUFFEL_STAYS_ENABLED=false` (ou l'absence de jeton) sert à la place les hébergements
+de démo de `fixtures/duffel/stays/` (six établissements fictifs à Dakar, prix rapportés aux nuits et chambres demandées).
 Les réponses Duffel sont relayées telles quelles : le front lit déjà ce format.
 Toutes les erreurs sortent en RFC 7807 (`application/problem+json`) avec un `code` stable, sans détail fournisseur.
+
+Erreurs Duffel (lues dans `errors[0].type/code`, journalisées avec `request_id` à citer au support Duffel) :
+
+| Duffel | API | `code` |
+|---|---|---|
+| 404 | 404 | `offer-not-found` |
+| 422 `offer_expired`, `offer_no_longer_available`, `rate_unavailable`, `result_no_longer_available`… (ou sans code connu) | 422 | `offer-unavailable` |
+| 422 `price_changed`, `ancillary_service_not_available` | 409 | `offer-changed` |
+| 422 `validation_error`, `invalid_*`, `loyalty_programme_*` (nom refusé…) | 400 | `provider-rejected` |
+| 429, 503, 504 | 503 + `Retry-After` (`ratelimit-reset`) | `provider-unavailable` |
+| 500, 502, 400/401/403 (notre intégration, en ERROR) | 502 | `provider-error` |
+| 422 `unsupported_action` (montées en gamme), `seat_map_unavailable` | 200 `{"data":[]}` | — |
+
+Le corps de chaque erreur porte aussi `providerRequestId` (le `x-request-id` Duffel).
 
 ## Organisation
 
@@ -70,7 +132,8 @@ src/main/java/com/bookinpass/backend/
     request/    FlightSearchRequest — paramètres de recherche validés (Bean Validation)
     response/   AirportResponse, ExchangeRatesResponse — ce que l'API expose et ce que Redis met en cache
     duffel/     DuffelOfferRequest — corps envoyé à Duffel
-  client/       DuffelClient : HttpDuffelClient (RestClient) ou FixtureDuffelClient (mode démo)
+  client/       DuffelClient (vols) et StaysClient (hébergements) : Http… (RestClient) ou Fixture… (démo) ;
+                DuffelErrors lit les erreurs Duffel pour les deux
   config/       CacheConfig, DuffelConfig, *Properties — câblage et configuration typée
   exception/    ApiExceptionHandler (→ ProblemDetail), DuffelException
 src/main/resources/db/migration/   Flyway — schéma + données (générées depuis les anciens JSON du front)
@@ -91,6 +154,8 @@ Les entités ne sortent jamais du `service` : il les convertit en DTO de `dto/re
   Il faut tester le binaire natif lui-même.
 - **Jedis plutôt que Lettuce.** Client bloquant, adapté aux threads virtuels. Sans Netty, l'analyse native
   a nettement moins de code à parcourir.
+- **Compression.** Le client JDK ne décompresse pas seul : `HttpClientConfig` envoie `Accept-Encoding: gzip`
+  et décompresse la réponse.
 - **TTL d'une offre.** `CacheConfig.untilOfferExpiry` lit `expires_at` : une offre n'est jamais servie depuis
   le cache après son expiration. Une offre déjà expirée reçoit 1 s, car 0 voudrait dire « sans expiration ».
 - **`@Validated` absent du contrôleur.** Spring MVC valide lui-même `@Pattern` sur `@PathVariable` (400).
@@ -112,7 +177,8 @@ Les entités ne sortent jamais du `service` : il les convertit en DTO de `dto/re
 
 ## Pistes
 
-- Demander la compression à Duffel : le client JDK ne décompresse pas seul. Passer à Apache HttpClient 5 ou Jetty.
+- Commande (`POST /air/orders`) : délai de lecture d'au moins 130 s (Duffel), contre 40 s aujourd'hui ;
+  en-têtes `x-duffel-device-ip` / `x-duffel-device-user-agent` (anti-fraude) ; ne jamais réessayer une 500/502/202.
 - Test d'intégration complet (`@SpringBootTest`) avec Redis en Testcontainers : le cache n'est testé
   aujourd'hui que par sa fonction de durée de vie.
 - Avant toute mise en ligne (revue `springboot-security`) : Spring Security, avec refus par défaut, et en-têtes de
