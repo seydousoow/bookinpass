@@ -234,7 +234,15 @@
       "best": "Best",
       "fastest": "Fastest",
       "best-info": "We look at the fare, travel time, number of stops and baggage options to pick the options you are most likely to prefer.",
-      "duration": "{hours}h {minutes}m"
+      "duration": "{hours}h {minutes}m",
+      "how": {
+        "title": "How we rank",
+        "price": "Price (fees included)",
+        "duration": "Travel time",
+        "stops": "Number of stops",
+        "baggage": "Checked bag included",
+        "scale": "Each criterion is compared with the other flights shown: the best gets the top mark, the worst the lowest. On equal scores, the cheaper flight comes first."
+      }
     }
   },
   "flight": {

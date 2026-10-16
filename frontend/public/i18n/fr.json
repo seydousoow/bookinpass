@@ -234,7 +234,15 @@
       "best": "Le meilleur choix",
       "fastest": "Le plus rapide",
       "best-info": "Nous étudions le tarif, le temps de trajet, le nombre d'escales et les options relatives aux bagages pour sélectionner les options les plus susceptibles de vous plaire.",
-      "duration": "{hours} h {minutes} min"
+      "duration": "{hours} h {minutes} min",
+      "how": {
+        "title": "Comment nous classons",
+        "price": "Prix (frais compris)",
+        "duration": "Temps de trajet",
+        "stops": "Nombre d'escales",
+        "baggage": "Bagage en soute inclus",
+        "scale": "Chaque critère est comparé aux autres vols affichés : le meilleur obtient la note maximale, le moins bon la minimale. À score égal, le moins cher passe devant."
+      }
     }
   },
   "flight": {
