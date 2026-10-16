@@ -227,6 +227,14 @@
     "summary": {
       "edit": "Edit search",
       "travelers": "{count, plural, one {# traveler} other {# travelers}}"
+    },
+    "sort": {
+      "label": "Sort flights",
+      "cheapest": "Cheapest",
+      "best": "Best",
+      "fastest": "Fastest",
+      "best-info": "We look at the fare, travel time, number of stops and baggage options to pick the options you are most likely to prefer.",
+      "duration": "{hours}h {minutes}m"
     }
   },
   "flight": {

@@ -21,6 +21,8 @@ import { SearchStore } from '@core/search/search.store';
 import { parseSearchParams } from './search-params';
 import { CurrencyStore } from '@core/money/currency.store';
 import { applyFlightFilter, IFlightFilter, NO_FLIGHT_FILTER, resetFlightFilter } from './filter/flight-filter.util';
+import { FlightSort } from './sort/flight-sort';
+import { FLIGHT_SORTS, sortFlights, TFlightSort } from './sort/flight-sort.util';
 
 const FILTER_DEBOUNCE_MS = 500;
 const FILTER_LOADER_MS = 1_500;
@@ -38,6 +40,7 @@ const PAGE_SIZE = 15;
     SearchSummary,
     FlightSearchFilter,
     FlightOfferCard,
+    FlightSort,
     Pagination,
     NgIcon,
     FlightOfferDetails,
@@ -92,12 +95,21 @@ export class FlightSearch {
     const target = this.currencyStore.selected();
     return applyFlightFilter(this.offers() ?? [], this.appliedFilter(), (amount, currency) => this.currencyStore.convert(amount, currency, target));
   });
+  /** Tri choisi au-dessus de la liste ; « le meilleur choix » par défaut. */
+  protected readonly sort = signal<TFlightSort>('best');
+  /** Offres affichées triées de chaque façon : la liste suit le tri choisi, les onglets montrent la tête de chacun. */
+  protected readonly sortedOffers = computed(() => {
+    const target = this.currencyStore.selected();
+    const toDisplay = (amount: number, currency: string) => this.currencyStore.convert(amount, currency, target);
+    const offers = this.shownOffers();
+    return Object.fromEntries(FLIGHT_SORTS.map((sort) => [sort, sortFlights(offers, sort, toDisplay)])) as Record<TFlightSort, IFlightOffer[]>;
+  });
   protected readonly pageSize = PAGE_SIZE;
   /** Page courante, à partir de 1 ; revient à la première dès que la liste filtrée change. */
   protected readonly page = signal(1);
   protected readonly pageOffers = computed(() => {
     const start = (this.page() - 1) * PAGE_SIZE;
-    return this.shownOffers().slice(start, start + PAGE_SIZE);
+    return this.sortedOffers()[this.sort()].slice(start, start + PAGE_SIZE);
   });
   private readonly offerList = viewChild<ElementRef<HTMLElement>>('offerList');
   private readonly viewportScroller = inject(ViewportScroller);
@@ -131,6 +143,7 @@ export class FlightSearch {
   constructor() {
     effect(() => {
       this.shownOffers();
+      this.sort();
       this.page.set(1);
     });
 
@@ -189,6 +202,12 @@ export class FlightSearch {
 
   private isRejected(error: unknown): boolean {
     return error instanceof HttpErrorResponse && error.status === HttpStatusCode.BadRequest;
+  }
+
+  /** Nouveau tri : retour en tête de liste (la page revient à la première). */
+  protected changeSort(sort: TFlightSort): void {
+    this.sort.set(sort);
+    this.offerList()?.nativeElement.scrollTo({ top: 0 });
   }
 
   /** Changement de page : la page et la liste repartent du haut. */

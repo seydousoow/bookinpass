@@ -227,6 +227,14 @@
     "summary": {
       "edit": "Modifier la recherche",
       "travelers": "{count, plural, one {# voyageur} other {# voyageurs}}"
+    },
+    "sort": {
+      "label": "Trier les vols",
+      "cheapest": "Le moins cher",
+      "best": "Le meilleur choix",
+      "fastest": "Le plus rapide",
+      "best-info": "Nous étudions le tarif, le temps de trajet, le nombre d'escales et les options relatives aux bagages pour sélectionner les options les plus susceptibles de vous plaire.",
+      "duration": "{hours} h {minutes} min"
     }
   },
   "flight": {

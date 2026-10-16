@@ -52,6 +52,8 @@
                 <p class="text-sm text-muted">{{ t('search.filter.no-match') }}</p>
                 <bip-button (clicked)="filterPanel.reset()" size="sm" variant="outline">{{ t('search.filter.reset') }}</bip-button>
               </div>
+            } @else {
+              <bip-flight-sort (valueChange)="changeSort($event)" [sorted]="sortedOffers()" [value]="sort()" class="shrink-0"/>
             }
             <div #offerList class="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto">
               @for (offer of pageOffers(); track offer.id) {
