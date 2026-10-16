@@ -69,12 +69,13 @@ public class StripeClient {
     }
 
     /**
-     * {@code GET /v1/checkout/sessions/{id}}, avec la PaymentIntent dépliée ({@code expand[]=payment_intent}) : statut
-     * de la session, montant, métadonnées et état de l'autorisation, relus chez Stripe plutôt que crus du navigateur.
+     * {@code GET /v1/checkout/sessions/{id}}, avec la PaymentIntent et son moyen de paiement dépliés : statut de la
+     * session, montant, métadonnées, état de l'autorisation et carte (marque, 4 derniers chiffres), relus chez Stripe
+     * plutôt que crus du navigateur.
      */
     public JsonNode retrieveCheckoutSession(String sessionId) {
         String body = client.get()
-                .uri(uri -> uri.path("/v1/checkout/sessions/{id}").queryParam("expand[]", "payment_intent").build(sessionId))
+                .uri(uri -> uri.path("/v1/checkout/sessions/{id}").queryParam("expand[]", "payment_intent", "payment_intent.payment_method").build(sessionId))
                 .retrieve()
                 .onStatus(HttpStatusCode::isError, (_, res) -> {
                     throw failure(res, "checkout session retrieval");

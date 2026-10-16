@@ -47,7 +47,9 @@ class FlightOrderServiceTest {
     private final PaymentService payments = new PaymentService(
             new StripeProperties("https://api.stripe.com", "sk_test_x", "pk_test_x", "2026-03-25.dahlia", "", "http://localhost:4200"),
             stripe, flights, json, Clock.systemUTC());
-    private final FlightOrderService orders = new FlightOrderService(payments, stripe, duffel, json);
+    private final BookingRecorder recorder = mock(BookingRecorder.class);
+    private final DuffelCustomerService customers = mock(DuffelCustomerService.class);
+    private final FlightOrderService orders = new FlightOrderService(payments, stripe, duffel, json, recorder, customers);
 
     private static FlightOrderRequest request() {
         return new FlightOrderRequest("off_1", "cs_1", "amelia@example.com", "+221771234567", List.of(
@@ -89,6 +91,20 @@ class FlightOrderServiceTest {
         assertThat(response.bookingReference()).isEqualTo("RZPNX8");
         assertThat(response.amount()).isEqualTo("217.69");
         assertThat(response.operatingCarriers()).containsExactly("Air Sénégal", "Air France");
+        // Trace en base : autorisation, commande et voyageurs, encaissement.
+        verify(recorder).recordAuthorisation(any());
+        verify(recorder).recordOrder(any(), any(), any());
+        verify(recorder).recordCapture("cs_1", 21769);
+    }
+
+    @Test
+    void recordingFailureNeverBreaksABooking() {
+        session("complete", "requires_capture", 21769);
+        given(duffel.createOrder(any())).willReturn(ORDER);
+        org.mockito.BDDMockito.willThrow(new IllegalStateException("db down")).given(recorder).recordOrder(any(), any(), any());
+
+        assertThat(orders.book(request()).bookingReference()).isEqualTo("RZPNX8");
+        verify(stripe).capturePaymentIntent("pi_1", "bip-capture-pi_1");
     }
 
     @Test
@@ -99,6 +115,7 @@ class FlightOrderServiceTest {
                 .isInstanceOf(PaymentException.class).hasFieldOrPropertyWithValue("code", "price-changed");
         verify(stripe).cancelPaymentIntent(anyString(), anyString(), anyString());
         verify(duffel, never()).createOrder(any());
+        verify(recorder).recordRelease("cs_1", "price changed");
     }
 
     @Test
@@ -109,6 +126,7 @@ class FlightOrderServiceTest {
         assertThatThrownBy(() -> orders.book(request())).isInstanceOf(DuffelException.class);
         verify(stripe).cancelPaymentIntent("pi_1", "abandoned", "bip-cancel-pi_1");
         verify(stripe, never()).capturePaymentIntent(anyString(), anyString());
+        verify(recorder).recordRelease("cs_1", "order failed: offer_no_longer_available");
     }
 
     @Test

@@ -20,6 +20,7 @@ import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.time.Clock;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HexFormat;
@@ -60,23 +61,51 @@ public class PaymentService {
     }
 
     /**
-     * Prix d'une offre et de ses services, relus chez Duffel : ce que Duffel facture (payé sur notre solde) et ce que
-     * le client paie (frais BIP et marges compris).
+     * Prix d'une offre et de ses services, relus chez Duffel : ce que Duffel facture (payé sur notre solde), ce que
+     * le client paie (frais BIP et marges compris), et le détail ligne par ligne.
+     *
+     * @param ticket   billet au prix Duffel ; {@code serviceFee} : nos frais BIP dessus, au taux {@code feeRate}
+     * @param services une ligne par service choisi
      */
-    public record FlightQuote(JsonNode offer, String currency, BigDecimal duffelTotal, BigDecimal sellingTotal, long sellingMinorUnits) {
+    public record FlightQuote(JsonNode offer, String currency, BigDecimal duffelTotal, BigDecimal sellingTotal, long sellingMinorUnits,
+                              BigDecimal ticket, BigDecimal serviceFee, BigDecimal feeRate, List<ServiceLine> services) {
+    }
+
+    /**
+     * @param type     {@code baggage} ou {@code seat}
+     * @param price    prix Duffel de la ligne (unitaire × quantité)
+     * @param markup   notre marge sur la ligne
+     */
+    public record ServiceLine(String id, String type, int quantity, BigDecimal price, BigDecimal markup) {
     }
 
     FlightQuote quote(String offerId, List<IntendedService> services) {
         JsonNode offer = json.readTree(flights.offer(offerId)).path("data");
-        Map<String, BigDecimal> prices = servicePrices(offerId, offer, services);
+        Map<String, ServicePrice> prices = servicePrices(offerId, offer, services);
         String currency = offer.path("total_currency").asString();
-        BigDecimal duffel = new BigDecimal(offer.path("total_amount").asString());
+        int scale = FlightPricing.decimals(currency);
+        BigDecimal ticket = new BigDecimal(offer.path("total_amount").asString());
+        BigDecimal duffel = ticket;
+        List<ServiceLine> lines = new ArrayList<>();
         for (IntendedService service : services) {
-            duffel = duffel.add(prices.get(service.id()).multiply(BigDecimal.valueOf(service.quantity())));
+            ServicePrice unit = prices.get(service.id());
+            BigDecimal quantity = BigDecimal.valueOf(service.quantity());
+            BigDecimal price = unit.price().multiply(quantity);
+            BigDecimal markup = FlightPricing.ancillaryUnitPrice(unit.price(), currency).subtract(unit.price()).multiply(quantity);
+            duffel = duffel.add(price);
+            lines.add(new ServiceLine(service.id(), unit.type(), service.quantity(), price.setScale(scale, RoundingMode.HALF_UP),
+                    markup.setScale(scale, RoundingMode.HALF_UP)));
         }
-        BigDecimal selling = FlightPricing.sellingTotal(offer, prices, services);
-        return new FlightQuote(offer, currency, duffel.setScale(FlightPricing.decimals(currency), RoundingMode.HALF_UP),
-                selling, selling.movePointRight(FlightPricing.decimals(currency)).longValueExact());
+        Map<String, BigDecimal> unitPrices = new HashMap<>();
+        prices.forEach((id, price) -> unitPrices.put(id, price.price()));
+        BigDecimal selling = FlightPricing.sellingTotal(offer, unitPrices, services);
+        return new FlightQuote(offer, currency, duffel.setScale(scale, RoundingMode.HALF_UP), selling,
+                selling.movePointRight(scale).longValueExact(), ticket, FlightPricing.serviceFee(offer), FlightPricing.serviceFeeRate(offer),
+                List.copyOf(lines));
+    }
+
+    /** Prix Duffel unitaire d'un service, son type et la quantité maximale autorisée. */
+    private record ServicePrice(BigDecimal price, String type, int maximum) {
     }
 
     void requireEnabled() {
@@ -149,12 +178,11 @@ public class PaymentService {
      * Prix Duffel unitaire de chaque service demandé : bagages dans l'offre, sièges dans les plans de cabine.
      * Un service inconnu ou une quantité au-delà du maximum est refusé.
      */
-    private Map<String, BigDecimal> servicePrices(String offerId, JsonNode offer, List<IntendedService> services) {
-        Map<String, BigDecimal> prices = new HashMap<>();
-        Map<String, Integer> maxima = new HashMap<>();
+    private Map<String, ServicePrice> servicePrices(String offerId, JsonNode offer, List<IntendedService> services) {
+        Map<String, ServicePrice> prices = new HashMap<>();
         for (JsonNode service : offer.path("available_services")) {
-            prices.put(service.path("id").asString(), new BigDecimal(service.path("total_amount").asString()));
-            maxima.put(service.path("id").asString(), service.path("maximum_quantity").asInt(1));
+            prices.put(service.path("id").asString(), new ServicePrice(new BigDecimal(service.path("total_amount").asString()),
+                    service.path("type").asString("baggage"), service.path("maximum_quantity").asInt(1)));
         }
         if (services.stream().anyMatch(s -> !prices.containsKey(s.id()))) {
             for (JsonNode seatMap : json.readTree(flights.seatMaps(offerId)).path("data")) {
@@ -163,8 +191,7 @@ public class PaymentService {
                         for (JsonNode section : row.path("sections")) {
                             for (JsonNode element : section.path("elements")) {
                                 for (JsonNode service : element.path("available_services")) {
-                                    prices.put(service.path("id").asString(), new BigDecimal(service.path("total_amount").asString()));
-                                    maxima.put(service.path("id").asString(), 1);
+                                    prices.put(service.path("id").asString(), new ServicePrice(new BigDecimal(service.path("total_amount").asString()), "seat", 1));
                                 }
                             }
                         }
@@ -173,7 +200,8 @@ public class PaymentService {
             }
         }
         for (IntendedService service : services) {
-            if (!prices.containsKey(service.id()) || service.quantity() > maxima.get(service.id())) {
+            ServicePrice price = prices.get(service.id());
+            if (price == null || service.quantity() > price.maximum()) {
                 throw new PaymentException(HttpStatus.CONFLICT, "service-unavailable", "A chosen service is no longer available.");
             }
         }

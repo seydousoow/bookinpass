@@ -6,6 +6,7 @@ import com.bookinpass.backend.dto.duffel.DuffelOrderRequest;
 import com.bookinpass.backend.dto.request.FlightOrderRequest;
 import com.bookinpass.backend.dto.request.PriceOfferRequest.IntendedService;
 import com.bookinpass.backend.dto.response.FlightOrderResponse;
+import com.bookinpass.backend.entity.User;
 import com.bookinpass.backend.exception.DuffelException;
 import com.bookinpass.backend.exception.PaymentException;
 import com.bookinpass.backend.service.PaymentService.FlightQuote;
@@ -39,6 +40,10 @@ import java.util.concurrent.ConcurrentHashMap;
  *   <li>l'autorisation est capturée — ou annulée si la commande échoue : le client n'est débité que s'il a son billet.</li>
  * </ol>
  * Rejouable : une commande déjà passée avec cette session est retrouvée chez Duffel au lieu d'être recréée.
+ *
+ * <p>Chaque étape est enregistrée en base ({@link BookingRecorder}) : paiement dès l'autorisation, puis commande,
+ * voyageurs et client Duffel du titulaire de l'e-mail. L'enregistrement ne bloque jamais la réservation : un billet
+ * émis reste émis, une erreur de base est journalisée.
  */
 @Slf4j
 @Service
@@ -53,6 +58,8 @@ public class FlightOrderService {
     private final StripeClient stripe;
     private final DuffelClient duffel;
     private final JsonMapper json;
+    private final BookingRecorder recorder;
+    private final DuffelCustomerService customers;
     /** Une réservation à la fois par session (double clic, onglet dupliqué) ; une seule instance aujourd'hui. */
     private final Set<String> inProgress = ConcurrentHashMap.newKeySet();
 
@@ -79,10 +86,17 @@ public class FlightOrderService {
             throw new PaymentException(HttpStatus.CONFLICT, "payment-not-authorised", "The payment has not been authorised.");
         }
 
-        Optional<JsonNode> existing = findOrder(request.offerId(), request.checkoutSessionId());
+        String sessionId = request.checkoutSessionId();
+        if (CAPTURABLE.equals(intentStatus)) {
+            safely("payment authorisation of " + sessionId, () -> recorder.recordAuthorisation(session));
+        }
+        List<IntendedService> services = PaymentService.parseSummary(session.path("metadata").path("services").asString(""));
+
+        Optional<JsonNode> existing = findOrder(request.offerId(), sessionId);
         if (existing.isPresent()) {
             if (CAPTURABLE.equals(intentStatus)) {
-                capture(intentId, existing.get());
+                // Réservation interrompue après la commande : elle est enregistrée si besoin, puis le paiement encaissé.
+                placed(existing.get(), request, payments.quote(request.offerId(), services), intentId, session);
             }
             return response(existing.get(), session);
         }
@@ -90,11 +104,10 @@ public class FlightOrderService {
             throw new PaymentException(HttpStatus.CONFLICT, "payment-not-authorised", "The payment authorisation is no longer valid.");
         }
 
-        List<IntendedService> services = PaymentService.parseSummary(session.path("metadata").path("services").asString(""));
         FlightQuote quote = payments.quote(request.offerId(), services);
         if (quote.sellingMinorUnits() != session.path("amount_total").asLong(-1)
                 || !quote.currency().equalsIgnoreCase(session.path("currency").asString(""))) {
-            cancel(intentId, "price changed");
+            cancel(intentId, sessionId, "price changed");
             throw new PaymentException(HttpStatus.CONFLICT, "price-changed", "The price changed since the payment; nothing was charged.");
         }
 
@@ -105,13 +118,35 @@ public class FlightOrderService {
             // Délai dépassé ou 5xx : la commande a pu passer quand même — on vérifie avant de libérer le paiement.
             Optional<JsonNode> placed = isUncertain(e) ? findOrder(request.offerId(), request.checkoutSessionId()) : Optional.empty();
             if (placed.isEmpty()) {
-                cancel(intentId, "order failed");
+                String code = e instanceof DuffelException d && d.code() != null ? d.code() : e.getClass().getSimpleName();
+                cancel(intentId, sessionId, "order failed: " + code);
                 throw e;
             }
             order = placed.get();
         }
-        capture(intentId, order);
+        placed(order, request, quote, intentId, session);
         return response(order, session);
+    }
+
+    /** Commande passée : enregistrée avec ses voyageurs, rattachée au client Duffel du titulaire, puis paiement encaissé. */
+    private void placed(JsonNode order, FlightOrderRequest request, FlightQuote quote, String intentId, JsonNode session) {
+        String orderId = order.path("id").asString();
+        safely("order " + orderId, () -> {
+            User booker = recorder.recordOrder(order, request, quote);
+            if (booker != null) {
+                customers.attach(booker, orderId);
+            }
+        });
+        capture(intentId, request.checkoutSessionId(), session.path("amount_total").asLong(), order);
+    }
+
+    /** Écriture en base qui ne doit pas faire échouer une réservation déjà passée. */
+    private static void safely(String what, Runnable write) {
+        try {
+            write.run();
+        } catch (RuntimeException e) {
+            log.error("Booking record failed for {}: the booking itself is unaffected", what, e);
+        }
     }
 
     private DuffelOrderRequest orderRequest(FlightOrderRequest request, FlightQuote quote, List<IntendedService> services, String intentId) {
@@ -160,18 +195,21 @@ public class FlightOrderService {
      * Commande passée : on encaisse. Un échec ici ne défait pas la réservation (le billet est émis) — il est journalisé
      * pour être repris à la main, et l'autorisation reste capturable plusieurs jours.
      */
-    private void capture(String intentId, JsonNode order) {
+    private void capture(String intentId, String sessionId, long amount, JsonNode order) {
         try {
             stripe.capturePaymentIntent(intentId, "bip-capture-" + intentId);
+            safely("capture of " + sessionId, () -> recorder.recordCapture(sessionId, amount));
         } catch (RuntimeException e) {
             log.error("Order {} created but payment {} could not be captured: capture it manually", order.path("id").asString(), intentId, e);
+            safely("capture failure of " + sessionId, () -> recorder.recordCaptureFailure(sessionId, e.getMessage()));
         }
     }
 
-    private void cancel(String intentId, String why) {
+    private void cancel(String intentId, String sessionId, String why) {
         try {
             stripe.cancelPaymentIntent(intentId, "abandoned", "bip-cancel-" + intentId);
             log.info("Payment {} released: {}", intentId, why);
+            safely("release of " + sessionId, () -> recorder.recordRelease(sessionId, why));
         } catch (RuntimeException e) {
             log.error("Payment {} could not be released ({}): it will expire on its own", intentId, why, e);
         }

@@ -46,20 +46,28 @@ public final class FlightPricing {
         return countries.size() == 1 && !countries.contains("") ? SAME_COUNTRY_FEE : OTHER_FEE;
     }
 
+    /** Frais de service BIP sur le billet ({@code total_amount} de l'offre), arrondis à la devise. */
+    public static BigDecimal serviceFee(JsonNode offer) {
+        String currency = offer.path("total_currency").asString();
+        BigDecimal ticket = new BigDecimal(offer.path("total_amount").asString());
+        return ticket.multiply(serviceFeeRate(offer)).setScale(decimals(currency), RoundingMode.HALF_UP);
+    }
+
+    /** Prix de vente unitaire d'un service : prix Duffel +20 %, arrondi à la devise. */
+    public static BigDecimal ancillaryUnitPrice(BigDecimal duffelUnitPrice, String currency) {
+        return duffelUnitPrice.multiply(BigDecimal.ONE.add(ANCILLARY_MARKUP)).setScale(decimals(currency), RoundingMode.HALF_UP);
+    }
+
     /**
      * @param offer         offre Duffel relue (sans services prévus : {@code total_amount} = le billet seul)
      * @param servicePrices prix Duffel unitaire de chaque service choisi, par identifiant
      */
     public static BigDecimal sellingTotal(JsonNode offer, Map<String, BigDecimal> servicePrices, List<IntendedService> services) {
         String currency = offer.path("total_currency").asString();
-        int scale = decimals(currency);
-        BigDecimal ticket = new BigDecimal(offer.path("total_amount").asString());
-        BigDecimal fee = ticket.multiply(serviceFeeRate(offer)).setScale(scale, RoundingMode.HALF_UP);
-        BigDecimal total = ticket.add(fee);
+        BigDecimal total = new BigDecimal(offer.path("total_amount").asString()).add(serviceFee(offer));
         for (IntendedService service : services) {
-            BigDecimal unit = servicePrices.get(service.id()).multiply(BigDecimal.ONE.add(ANCILLARY_MARKUP)).setScale(scale, RoundingMode.HALF_UP);
-            total = total.add(unit.multiply(BigDecimal.valueOf(service.quantity())));
+            total = total.add(ancillaryUnitPrice(servicePrices.get(service.id()), currency).multiply(BigDecimal.valueOf(service.quantity())));
         }
-        return total.setScale(scale, RoundingMode.HALF_UP);
+        return total.setScale(decimals(currency), RoundingMode.HALF_UP);
     }
 }
