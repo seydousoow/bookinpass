@@ -1,6 +1,7 @@
 // noinspection ES6PreferShortImport
 
-import { booleanAttribute, Component, computed, input, model, output } from '@angular/core';
+import { booleanAttribute, Component, computed, inject, input, model, output } from '@angular/core';
+import { TranslocoService } from '@jsverse/transloco';
 import { FormValueControl, ValidationError, WithOptionalFieldTree } from '@angular/forms/signals';
 import { Field } from '../field/field';
 
@@ -53,13 +54,23 @@ export class Textarea implements FormValueControl<string> {
   readonly hidden = input(false, { transform: booleanAttribute });
   readonly value = model<string>('');
 
+  private readonly transloco = inject(TranslocoService);
+  private readonly lang = this.transloco.activeLang;
+
+  /**
+   * Indication suivie du compteur. L'indication est traduite ici : la clé collée au compteur
+   * (« stay.…-hint — 0/500 ») ne correspondrait plus à aucune traduction dans `bip-field`.
+   */
   protected readonly counterHint = computed(() => {
     const max = this.maxLength();
+    const key = this.hint();
     if (!max) {
-      return this.hint();
+      return key;
     }
+    this.lang();
+    const hint = key ? this.transloco.translate(key) : '';
     const used = this.value().length;
-    return this.hint() ? `${this.hint()} — ${used}/${max}` : `${used}/${max}`;
+    return hint ? `${hint} — ${used}/${max}` : `${used}/${max}`;
   });
 
   protected readonly controlClass = computed(() => {

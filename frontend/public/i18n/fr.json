@@ -622,7 +622,6 @@
       "from": "À partir de {time}",
       "until": "Jusqu'à {time}",
       "late-arrival": "Arrivée tardive ? Signalez-la dans vos demandes à l'établissement, pour ne pas être considéré comme absent.",
-      "keys": "Remise des clés :",
       "amenities": "Équipements",
       "no-amenities": "L'établissement n'a pas communiqué ses équipements."
     },
@@ -730,6 +729,12 @@
       "title": "Session expirée",
       "message": "Vous êtes resté inactif plus de 15 minutes. Les prix et la disponibilité ont pu changer : relancez votre recherche pour réserver.",
       "back": "Retour à la recherche"
+    },
+    "pay": {
+      "title": "Vérifiez et payez",
+      "authorised": "Paiement de {amount} autorisé : rien n'est encore débité. La réservation auprès de l'établissement sera confirmée à la prochaine étape.",
+      "quote-needed": "Le tarif doit être vérifié avant le paiement.",
+      "failed": "Le paiement n'a pas pu être préparé."
     }
   },
   "payment": {

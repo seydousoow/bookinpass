@@ -1,9 +1,10 @@
 import { Component, input, model } from '@angular/core';
-import { applyEach, email, form, FormField, maxLength, pattern, required } from '@angular/forms/signals';
+import { applyEach, email, form, FormField, maxLength, pattern, required, validate } from '@angular/forms/signals';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { NgIcon, provideIcons } from '@ng-icons/core';
 import { heroUser } from '@ng-icons/heroicons/outline';
 import { Textarea, TextInput } from '@shared/ui';
+import { isValidPhone, PhoneInput } from '@shared/ui/phone-input/phone-input';
 import { IGuestName, IStayGuestDetails } from '../stay-draft';
 
 /** Libellé d'un voyageur : « Adulte n° 1 », « Enfant n° 1 · 7 ans ». */
@@ -15,7 +16,6 @@ export interface IGuestSlot {
 
 /** Lettres (accents compris), espaces, apostrophes et traits d'union. */
 const NAME_PATTERN = /^[\p{L}' -]+$/u;
-const PHONE_PATTERN = /^\+?[0-9 ().-]{6,20}$/;
 
 /**
  * Noms des voyageurs, tels qu'ils figurent sur leur pièce d'identité, et coordonnées de contact.
@@ -23,7 +23,9 @@ const PHONE_PATTERN = /^\+?[0-9 ().-]{6,20}$/;
  */
 @Component({
   selector: 'bip-guest-form',
-  imports: [TranslocoDirective, NgIcon, TextInput, Textarea, FormField],
+  imports: [TranslocoDirective, NgIcon, TextInput, Textarea, FormField, PhoneInput],
+  // Bloc : en ligne, le `space-y` de la page ne s'appliquerait pas (pas d'écart avant Retour / Continuer).
+  host: { class: 'block' },
   providers: [provideIcons({ heroUser })],
   templateUrl: './guest-form.html',
 })
@@ -43,7 +45,8 @@ export class GuestForm {
     required(path.email, { message: 'common.required-field' });
     email(path.email, { message: 'stay.guest-form.errors.email' });
     required(path.phone, { message: 'common.required-field' });
-    pattern(path.phone, PHONE_PATTERN, { message: 'stay.guest-form.errors.phone' });
+    // Numéro international (E.164) rendu par `bip-phone-input`.
+    validate(path.phone, ({ value }) => (!value() || isValidPhone(value()) ? null : { kind: 'phone', message: 'stay.guest-form.errors.phone' }));
     maxLength(path.requests, 500);
   });
 

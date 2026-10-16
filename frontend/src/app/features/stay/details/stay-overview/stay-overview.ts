@@ -1,7 +1,7 @@
 import { Component, input } from '@angular/core';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { NgIcon, provideIcons } from '@ng-icons/core';
-import { heroClock, heroKey } from '@ng-icons/heroicons/outline';
+import { heroClock } from '@ng-icons/heroicons/outline';
 import { IAccommodation } from '@shared/models';
 import { AmenityList } from '../../ui/amenity-list';
 
@@ -9,7 +9,7 @@ import { AmenityList } from '../../ui/amenity-list';
 @Component({
   selector: 'bip-stay-overview',
   imports: [TranslocoDirective, NgIcon, AmenityList],
-  providers: [provideIcons({ heroClock, heroKey })],
+  providers: [provideIcons({ heroClock })],
   template: `
     <section *transloco="let t; prefix: 'stay.overview'" class="space-y-4">
       <h2 class="text-xl font-bold">{{ t('title') }}</h2>
@@ -47,15 +47,6 @@ import { AmenityList } from '../../ui/amenity-list';
         @if (info.check_in_before_time) {
           <p class="text-muted text-xs">{{ t('late-arrival') }}</p>
         }
-      }
-
-      @if (accommodation().key_collection; as keys) {
-        <p class="rounded-card bg-surface-muted flex items-start gap-2 p-3 text-sm">
-          <ng-icon aria-hidden="true" class="mt-0.5 shrink-0" name="heroKey" />
-          <span
-            ><span class="font-semibold">{{ t('keys') }}</span> {{ keys.instructions }}</span
-          >
-        </p>
       }
 
       <div>

@@ -622,7 +622,6 @@
       "from": "From {time}",
       "until": "Until {time}",
       "late-arrival": "Arriving late? Mention it in your requests to the property, so you're not marked as a no-show.",
-      "keys": "Key collection:",
       "amenities": "Amenities",
       "no-amenities": "The property hasn't shared its amenities."
     },
@@ -730,6 +729,12 @@
       "title": "Session expired",
       "message": "You've been inactive for more than 15 minutes. Prices and availability may have changed: search again to book.",
       "back": "Back to search"
+    },
+    "pay": {
+      "title": "Review and pay",
+      "authorised": "Payment of {amount} authorised: nothing has been charged yet. The booking with the property will be confirmed at the next step.",
+      "quote-needed": "The rate must be checked before payment.",
+      "failed": "The payment could not be prepared."
     }
   },
   "payment": {

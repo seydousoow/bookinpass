@@ -37,4 +37,12 @@ export class PaymentService {
       attempt,
     });
   }
+
+  /** Séjour : devis Duffel + frais de service BIP, montant recalculé par le serveur. */
+  stayCheckout(quoteId: string, returnPath: string, attempt: number): Observable<ICheckoutSession> {
+    return this.http.post<ICheckoutSession>(`${this.url}/stays/${encodeURIComponent(quoteId)}/checkout-session`, {
+      return_path: returnPath,
+      attempt,
+    });
+  }
 }

@@ -8,6 +8,7 @@ import { TranslocoDirective } from '@jsverse/transloco';
 import { APP_CONFIG } from '@core/config/app-config.token';
 import { StaySearchStore } from '@core/search/stay-search.store';
 import { deadline, inactivity, REVALIDATE_MS } from '@core/session/booking-timers';
+import { loadContact, saveContact } from '@core/session/contact';
 import { IStayQuote, IStayRate, IStayResult, IStayResultResponse } from '@shared/models';
 import { Button, Modal, Spinner } from '@shared/ui';
 import { toStayQueryParams } from '../search/stay-search-params';
@@ -22,6 +23,10 @@ import { StayOverview } from './stay-overview/stay-overview';
 import { RoomCard } from './room-card/room-card';
 import { StayReviews } from './stay-reviews/stay-reviews';
 import { StayPriceSummary } from './price-summary/stay-price-summary';
+import { IPaymentAuthorisation, PaymentForm } from '@core/payment/payment-form/payment-form';
+import { ICheckoutSession, PaymentService } from '@core/payment/payment.service';
+import { formatMoney } from '@core/money/money';
+import { TranslocoLocaleService } from '@jsverse/transloco-locale';
 
 /** Résultat ou tarif retiré chez Duffel (404, 422) ; une coupure réseau, elle, ne prouve rien. */
 const isGone = (error: unknown): boolean =>
@@ -54,6 +59,7 @@ const EMPTY_DETAILS: IStayGuestDetails = { guests: [], email: '', phone: '', req
     StayReviews,
     GuestForm,
     StayPriceSummary,
+    PaymentForm,
   ],
 })
 export class StayDetails {
@@ -100,6 +106,22 @@ export class StayDetails {
   /** Brouillon relu (ou absent) : avant, rien n'est enregistré, pour ne pas écraser celui d'avant le rechargement. */
   private readonly restored = signal(false);
 
+  private readonly payments = inject(PaymentService);
+  private readonly document = inject(DOCUMENT);
+  private readonly localeService = inject(TranslocoLocaleService);
+  /** Session Stripe de l'étape « Vérifiez et payez », au montant recalculé par le serveur (devis + frais BIP). */
+  protected readonly checkoutSession = signal<ICheckoutSession | null>(null);
+  /** Clé de traduction de l'échec de préparation du paiement. */
+  protected readonly checkoutError = signal<string | null>(null);
+  /** Paiement autorisé (rien n'est débité) ; la réservation Duffel Stays viendra le confirmer puis l'encaisser. */
+  protected readonly authorisation = signal<IPaymentAuthorisation | null>(null);
+  protected readonly authorisedAmount = computed(() => {
+    const session = this.checkoutSession();
+    return session ? formatMoney(Number(session.amount), session.currency, this.localeService.getLocale()) : '';
+  });
+  /** Devis de la session courante : une nouvelle n'est demandée que s'il change. */
+  private checkoutQuoteId = '';
+
   private readonly router = inject(Router);
   private readonly scroller = inject(ViewportScroller);
   private readonly destroyRef = inject(DestroyRef);
@@ -117,6 +139,20 @@ export class StayDetails {
         saveStayDraft(this.resultId(), { step: this.step(), rateId: this.rateId(), details: this.details() });
       }
     });
+    // Étape « Vérifiez et payez » : session Stripe pour le devis vérifié (une par devis).
+    effect(() => {
+      const quote = this.quote();
+      if (this.step() === 'pay' && quote && quote.id !== this.checkoutQuoteId) {
+        untracked(() => this.preparePayment(quote.id));
+      }
+    });
+    // Coordonnées reprises pour les réservations suivantes de l'onglet.
+    effect(() => {
+      if (this.restored()) {
+        const { email, phone } = this.details();
+        saveContact({ email, phone });
+      }
+    });
 
     interval(REVALIDATE_MS)
       .pipe(
@@ -130,7 +166,7 @@ export class StayDetails {
     deadline(computed(() => this.result()?.expires_at))
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe(() => this.expired.set(true));
-    inactivity(inject(DOCUMENT))
+    inactivity(this.document)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe(() => this.expireSession());
   }
@@ -144,6 +180,30 @@ export class StayDetails {
     this.quoteFailed.set(null);
     this.rateLost.set(false);
     this.missingRate.set(false);
+  }
+
+  protected preparePayment(quoteId: string): void {
+    this.checkoutQuoteId = quoteId;
+    this.checkoutSession.set(null);
+    this.checkoutError.set(null);
+    this.payments
+      .stayCheckout(quoteId, this.document.location.pathname, 0)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (session) => this.checkoutSession.set(session),
+        error: (error: unknown) => {
+          this.checkoutQuoteId = '';
+          const code = error instanceof HttpErrorResponse ? (error.error as { code?: string } | null)?.code : undefined;
+          this.checkoutError.set(code === 'payments-unavailable' ? 'payment.errors.payments-unavailable' : 'stay.pay.failed');
+        },
+      });
+  }
+
+  protected retryPayment(): void {
+    const quote = this.quote();
+    if (quote) {
+      this.preparePayment(quote.id);
+    }
   }
 
   protected next(): void {
@@ -256,7 +316,14 @@ export class StayDetails {
   private restore(result: IStayResult): void {
     const draft = loadStayDraft(this.resultId());
     const details = draft?.details ?? EMPTY_DETAILS;
-    this.details.set({ ...details, guests: fitGuests(details.guests, this.slots().length) });
+    // Coordonnées : celles du brouillon, sinon celles d'une réservation précédente dans l'onglet (vol ou séjour).
+    const known = loadContact();
+    this.details.set({
+      ...details,
+      email: details.email || known?.email || '',
+      phone: details.phone || known?.phone || '',
+      guests: fitGuests(details.guests, this.slots().length),
+    });
     if (!draft) {
       this.restored.set(true);
       return;

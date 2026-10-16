@@ -56,9 +56,24 @@
             <bip-guest-form [(value)]="details" [slots]="slots()"/>
           }
           @default {
-            <section class="rounded-card border-border-strong border border-dashed p-8 text-center">
-              <h2 class="text-xl font-bold">{{ t('stay.steps.pay') }}</h2>
-              <p class="text-muted mt-2 text-sm">{{ t('stay.details.coming-soon') }}</p>
+            <section>
+              <h2 class="text-2xl font-bold">{{ t('stay.pay.title') }}</h2>
+              @if (authorisation()) {
+                <p class="text-state-success mt-4 text-sm font-semibold" role="status">{{ t('stay.pay.authorised', {amount: authorisedAmount()}) }}</p>
+              } @else if (!quote()) {
+                <p class="text-muted mt-4 text-sm">{{ t('stay.pay.quote-needed') }}</p>
+              } @else if (checkoutSession(); as session) {
+                <bip-payment-form (authorised)="authorisation.set($event)" [session]="session" class="mt-4"/>
+              } @else if (checkoutError(); as error) {
+                <p class="text-state-error mt-4 text-sm" role="alert">
+                  {{ t(error) }}
+                  <button (click)="retryPayment()" class="font-semibold underline" type="button">{{ t('stay.search.retry') }}</button>
+                </p>
+              } @else {
+                <div class="flex min-h-24 items-center justify-center">
+                  <bip-spinner label="payment.loading" showLabel size="md"/>
+                </div>
+              }
             </section>
           }
         }
@@ -72,8 +87,8 @@
         @if (quoteFailed() === 'error') {
           <p class="text-state-error text-sm" role="alert">{{ t('stay.details.quote-failed') }}</p>
         }
-        <div class="flex items-center justify-between gap-4">
-          @if (stepIndex() > 0) {
+        <div class="flex items-center justify-between gap-4 pt-2">
+          @if (stepIndex() > 0 && !authorisation()) {
             <bip-button (clicked)="previous()" [disabled]="quoting()" variant="outline">{{ t('stay.details.back') }}</bip-button>
           } @else {
             <bip-button (clicked)="returnToSearch()" variant="ghost">{{ t('stay.details.back-to-results') }}</bip-button>
