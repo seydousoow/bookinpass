@@ -46,7 +46,7 @@ const variants = {
   },
   template: `
     @if (loading()) {
-      <bip-spinner [label]="loadingLabel()" [size]="size() === 'sm' ? 'xs' : 'sm'" />
+      <bip-spinner [label]="loadingLabel()" [size]="size() === 'sm' ? 'xxs' : 'xs'" />
     }
     <ng-content />
   `,

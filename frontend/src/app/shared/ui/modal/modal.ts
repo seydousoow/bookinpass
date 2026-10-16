@@ -1,7 +1,7 @@
 // noinspection ES6PreferShortImport
 
-import { DOCUMENT, isPlatformBrowser } from '@angular/common';
-import { booleanAttribute, Component, DestroyRef, effect, inject, input, model, output, PLATFORM_ID } from '@angular/core';
+import { DOCUMENT } from '@angular/common';
+import { booleanAttribute, Component, DestroyRef, effect, inject, input, model, output } from '@angular/core';
 import { CdkTrapFocus } from '@angular/cdk/a11y';
 import { Overlay } from '../overlay/overlay';
 import { Button } from '../button/button';
@@ -29,16 +29,12 @@ export class Modal {
   readonly closed = output<void>();
 
   private readonly document = inject(DOCUMENT);
-  private readonly isBrowser = isPlatformBrowser(inject(PLATFORM_ID));
   /** Vrai tant que cette modale tient le verrou de défilement du body. */
   private locked = false;
 
   constructor() {
-    // Verrou de défilement — navigateur uniquement (plan §10.3).
+    // Verrou de défilement du body tant que la modale est ouverte.
     effect(() => {
-      if (!this.isBrowser) {
-        return;
-      }
       this.locked = this.opened();
       this.document.body.style.overflow = this.locked ? 'hidden' : '';
     });

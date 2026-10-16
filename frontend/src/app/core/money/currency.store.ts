@@ -1,4 +1,4 @@
-import { afterNextRender, computed, inject, Service, signal } from '@angular/core';
+import { computed, inject, Service, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { CONTRACT_CURRENCY, ICurrencyOption, IExchangeRates } from '@shared/models/money.model';
 import { TranslocoService } from '@jsverse/transloco';
@@ -32,11 +32,8 @@ export class CurrencyStore {
   private readonly http = inject(HttpClient);
 
   constructor() {
-    // Ni `localStorage` ni le réseau au rendu serveur (plan §10.3).
-    afterNextRender(() => {
-      this.restore();
-      this.loadRates();
-    });
+    this.restore();
+    this.loadRates();
   }
 
   select(code: string): void {

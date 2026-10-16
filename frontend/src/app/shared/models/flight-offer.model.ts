@@ -1,6 +1,7 @@
 import {
   IAirline,
   IIntendedService,
+  ILoyaltyProgrammeAccount,
   IOfferConditions,
   IOfferPassenger,
   IOfferSlice,
@@ -13,6 +14,18 @@ import {
 
 export interface IFlightOfferResponse {
   data: IFlightOfferDetails;
+}
+
+/** Montées en gamme d'une offre, triées par prix croissant. Vide si la compagnie n'en propose pas. */
+export interface IUpsellOffersResponse {
+  data: readonly IFlightOfferDetails[];
+}
+
+/** Corps de `PATCH /flights/offers/{id}/passengers/{id}` — format Duffel. */
+export interface IPassengerUpdate {
+  readonly given_name: string;
+  readonly family_name: string;
+  readonly loyalty_programme_accounts: readonly ILoyaltyProgrammeAccount[];
 }
 
 export interface IFlightOfferDetails {

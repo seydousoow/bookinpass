@@ -1,19 +1,18 @@
-import { afterNextRender, Service, signal } from '@angular/core';
+import { Service, signal } from '@angular/core';
 import { IPersistedFlightSearch } from '@shared/models';
 
 const STORAGE_KEY = 'bip.search';
 
 /**
  * Dernière recherche vol validée, mémorisée pour préremplir l'accueil au
- * retour. Restauration différée à `afterNextRender` : ni `localStorage` ni
- * un rendu dépendant de lui au rendu serveur (plan §10.3).
+ * retour.
  */
 @Service()
 export class SearchStore {
   readonly lastSearch = signal<IPersistedFlightSearch | null>(null);
 
   constructor() {
-    afterNextRender(() => this.restore());
+    this.restore();
   }
 
   save(search: IPersistedFlightSearch): void {

@@ -52,7 +52,7 @@
   />
 </div>
 
-<div class="mt-2 flex justify-between text-sm">
+<div class="mt-2 flex justify-between text-xs">
   <span>{{ value().min | translocoCurrency : 'narrowSymbol' : {currency: currency(), minimumFractionDigits: 0, maximumFractionDigits: 2} }}</span>
   <span>{{ value().max | translocoCurrency : 'narrowSymbol' : {currency: currency(), minimumFractionDigits: 0, maximumFractionDigits: 2} }}</span>
 </div>
