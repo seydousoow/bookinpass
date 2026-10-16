@@ -1,6 +1,9 @@
 package com.bookinpass.backend.client;
 
 import com.bookinpass.backend.dto.duffel.DuffelOfferRequest;
+import com.bookinpass.backend.dto.duffel.DuffelOrderRequest;
+import com.bookinpass.backend.dto.duffel.DuffelPassengerUpdate;
+import com.bookinpass.backend.dto.duffel.DuffelPriceRequest;
 
 /**
  * Accès à l'API vol de Duffel. Les réponses sont rendues telles quelles (texte JSON) :
@@ -20,4 +23,39 @@ public interface DuffelClient {
      * {@code GET /air/offers/{id}} — une offre à jour, avec ses services disponibles.
      */
     String getOffer(String offerId);
+
+    /**
+     * {@code PATCH /air/offers/{offer_id}/passengers/{passenger_id}} — nom et programmes de fidélité d'un voyageur.
+     * Duffel rend le seul passager : le prix pouvant changer, l'offre est à relire ensuite.
+     */
+    String updatePassenger(String offerId, String passengerId, DuffelPassengerUpdate update);
+
+    /**
+     * {@code POST /air/offers/{id}/upsell_offers} — offres plus riches (marque tarifaire, cabine) pour le même trajet,
+     * triées par prix. Une compagnie qui ne propose pas de montée en gamme donne une liste vide, pas une erreur.
+     */
+    String getUpsellOffers(String offerId);
+
+    /**
+     * {@code POST /air/offers/{id}/actions/price} — l'offre tarifée avec les services choisis.
+     */
+    String priceOffer(String offerId, DuffelPriceRequest request);
+
+    /**
+     * {@code GET /air/seat_maps?offer_id=} — un plan de cabine par segment, avec les sièges réservables et leur prix.
+     * Pas toujours disponible : une compagnie sans plan de cabine donne une liste vide.
+     */
+    String getSeatMaps(String offerId);
+
+    /**
+     * {@code POST /air/orders} — réservation chez la compagnie, payée sur le solde Duffel. Une offre ne se réserve
+     * qu'une fois : une seconde tentative est refusée ({@code order_creation_already_attempted}).
+     */
+    String createOrder(DuffelOrderRequest request);
+
+    /**
+     * {@code GET /air/orders?offer_id=} — commandes passées sur une offre : retrouve une réservation dont la réponse
+     * s'est perdue (délai dépassé, erreur 5xx).
+     */
+    String findOrders(String offerId);
 }
