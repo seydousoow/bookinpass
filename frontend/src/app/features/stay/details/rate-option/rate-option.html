@@ -41,7 +41,7 @@
       @if (publicPrice(); as pub) {
         <span class="text-muted block text-sm line-through">{{ pub | bipMoney: rate().public_currency }}</span>
       }
-      <span class="block text-lg font-bold">{{ rate().total_amount | bipMoney: rate().total_currency }}</span>
+      <span class="block text-lg font-bold">{{ total() | bipMoney: rate().total_currency }}</span>
       <span class="text-muted block text-xs">{{ t('taxes-included') }}</span>
       @if (rate().due_at_accommodation_amount; as due) {
         <span class="text-muted block text-xs">{{ t('due-at-accommodation', {amount: (due | bipMoney: rate().due_at_accommodation_currency)}) }}</span>

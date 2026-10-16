@@ -6,6 +6,7 @@ import { heroCheck, heroChevronDown } from '@ng-icons/heroicons/outline';
 import { IStayRate } from '@shared/models';
 import { cancellationPolicy } from '../rate.util';
 import { MoneyPipe } from '@core/money/money.pipe';
+import { staySellingTotal } from '@core/money/pricing';
 
 /** Stock affiché à partir de ce seuil : « Plus que 2 chambres ». */
 const LOW_STOCK = 3;
@@ -34,9 +35,11 @@ export class RateOption {
     const quantity = this.rate().quantity_available;
     return quantity !== null && quantity <= LOW_STOCK ? quantity : null;
   });
+  /** Prix de vente du tarif : prix Duffel + frais de service BIP. */
+  protected readonly total = computed(() => staySellingTotal(this.rate().total_amount, this.rate().total_currency));
   protected readonly publicPrice = computed(() => {
-    const { public_amount: pub, total_amount: total } = this.rate();
-    return pub && Number(pub) > Number(total) ? pub : null;
+    const pub = this.rate().public_amount;
+    return pub && Number(pub) > this.total() ? pub : null;
   });
 
   protected plain(text: string): string {

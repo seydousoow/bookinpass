@@ -675,7 +675,7 @@
       "phone": "Téléphone",
       "phone-hint": "L'établissement peut vous joindre avant votre arrivée.",
       "requests": "Demandes à l'établissement (facultatif)",
-      "requests-hint": "Arrivée tardive, lit bébé… Transmis sans garantie.",
+      "requests-hint": "Arrivée tardive, lit bébé… Transmises à l'établissement, sans garantie.",
       "errors": {
         "name": "Utilisez uniquement des lettres, espaces, apostrophes ou traits d'union.",
         "name-length": "50 caractères maximum.",
@@ -691,7 +691,8 @@
       "lines": {
         "base": "Hébergement",
         "tax": "Taxes",
-        "fee": "Frais"
+        "fee": "Frais",
+        "service": "BIP Service Fees"
       },
       "total": "Total",
       "deposit": "Acompte de {amount} payé à la réservation ; le solde est réglé à l'établissement.",

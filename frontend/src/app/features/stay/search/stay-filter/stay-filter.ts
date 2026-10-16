@@ -9,6 +9,7 @@ import { Badge, Button, Checkbox, Overlay, Viewport } from '@shared/ui';
 import { PriceRange, Slider } from '@shared/ui/slider/slider';
 import { CurrencyStore } from '@core/money/currency.store';
 import { isFiltering, IStayFilter, NO_STAY_FILTER, REVIEW_THRESHOLDS } from './stay-filter.util';
+import { staySellingTotal } from '@core/money/pricing';
 
 const STARS = [5, 4, 3, 2, 1] as const;
 
@@ -37,7 +38,7 @@ export class StayFilter {
   protected readonly step = computed(() => (this.currencyStore.isContractCurrency() ? 1_000 : 10));
   protected readonly maxPrice = computed(() => {
     const prices = this.results()
-      .map((r) => this.currencyStore.convert(Number(r.cheapest_rate_total_amount), r.cheapest_rate_currency))
+      .map((r) => this.currencyStore.convert(staySellingTotal(r.cheapest_rate_total_amount, r.cheapest_rate_currency), r.cheapest_rate_currency))
       .filter((price): price is number => price !== null);
     const step = this.step();
     return prices.length ? Math.ceil(Math.max(...prices) / step) * step : 0;

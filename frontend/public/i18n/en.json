@@ -691,7 +691,8 @@
       "lines": {
         "base": "Accommodation",
         "tax": "Taxes",
-        "fee": "Fees"
+        "fee": "Fees",
+        "service": "BIP Service Fees"
       },
       "total": "Total",
       "deposit": "{amount} deposit paid when booking; the balance is paid at the property.",

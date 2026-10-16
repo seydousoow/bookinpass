@@ -5,10 +5,11 @@ import { IStayQuote, IStayResult } from '@shared/models';
 import { nightsBetween } from '../../search/stay-search-params';
 import { IRateChoice } from '../rate.util';
 import { MoneyPipe } from '@core/money/money.pipe';
+import { staySellingTotal, stayServiceFee } from '@core/money/pricing';
 
 interface IPriceLine {
-  readonly key: 'base' | 'tax' | 'fee';
-  readonly amount: string;
+  readonly key: 'base' | 'tax' | 'fee' | 'service';
+  readonly amount: string | number;
 }
 
 /**
@@ -47,9 +48,11 @@ export class StayPriceSummary {
         lines.push({ key, amount });
       }
     }
+    // Frais de service BIP, sous les taxes et frais de l'établissement ; le total les comprend.
+    lines.push({ key: 'service', amount: stayServiceFee(source.total_amount, source.total_currency) });
     return {
       lines,
-      total: source.total_amount,
+      total: staySellingTotal(source.total_amount, source.total_currency),
       currency: source.total_currency,
       due: source.due_at_accommodation_amount,
       dueCurrency: source.due_at_accommodation_currency,

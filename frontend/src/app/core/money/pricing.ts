@@ -7,6 +7,8 @@ import { fractionDigits } from '@shared/models/money.model';
  */
 export const SERVICE_FEE_RATES = { sameCountry: 0.03, other: 0.05 } as const;
 export const ANCILLARY_MARKUP = 0.2;
+/** Hébergement : frais de service BIP sur le prix Duffel du séjour (mêmes règles côté serveur, `StayPricing`). */
+export const STAY_SERVICE_FEE_RATE = 0.05;
 
 interface IPlace {
   readonly iata_country_code?: string | null;
@@ -60,4 +62,14 @@ export function sellingTotal(offer: IPricedOffer): number {
 /** Prix de vente d'un service annexe : prix Duffel + 20 %. */
 export function ancillaryPrice(amount: string | number, currency: string): number {
   return roundMoney(Number(amount) * (1 + ANCILLARY_MARKUP), currency);
+}
+
+/** Frais de service BIP d'un séjour : 5 % du prix Duffel, dans sa devise. */
+export function stayServiceFee(amount: string | number, currency: string): number {
+  return roundMoney(Number(amount) * STAY_SERVICE_FEE_RATE, currency);
+}
+
+/** Prix de vente d'un séjour : prix Duffel + frais de service BIP (le montant réglé sur place reste à part). */
+export function staySellingTotal(amount: string | number, currency: string): number {
+  return roundMoney(Number(amount) + stayServiceFee(amount, currency), currency);
 }

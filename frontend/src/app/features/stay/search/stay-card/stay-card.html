@@ -23,7 +23,7 @@
     @if (publicPrice(); as pub) {
       <p class="text-muted text-sm line-through">{{ pub | bipMoney: result().cheapest_rate_currency }}</p>
     }
-    <p class="text-2xl font-bold">{{ result().cheapest_rate_total_amount | bipMoney: result().cheapest_rate_currency }}</p>
+    <p class="text-2xl font-bold">{{ total() | bipMoney: result().cheapest_rate_currency }}</p>
     <p class="text-muted text-xs">{{ t('stay-length', {nights: nights(), rooms: result().rooms}) }}</p>
     <p class="text-xs">{{ t('per-night', {price: (perNight() | bipMoney: result().cheapest_rate_currency)}) }}</p>
     @if (result().cheapest_rate_due_at_accommodation_amount; as due) {

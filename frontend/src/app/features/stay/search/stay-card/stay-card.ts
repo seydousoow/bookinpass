@@ -10,6 +10,7 @@ import { ReviewScore } from '../../ui/review-score';
 import { StayPhoto } from '../../ui/stay-photo';
 import { AmenityList } from '../../ui/amenity-list';
 import { MoneyPipe } from '@core/money/money.pipe';
+import { staySellingTotal } from '@core/money/pricing';
 
 /** Un établissement de la liste : photo, classement, avis, adresse, équipements et prix le plus bas du séjour. */
 @Component({
@@ -26,10 +27,12 @@ export class StayCard {
 
   protected readonly accommodation = computed(() => this.result().accommodation);
   protected readonly nights = computed(() => nightsBetween(this.result().check_in_date, this.result().check_out_date));
-  protected readonly perNight = computed(() => Number(this.result().cheapest_rate_total_amount) / Math.max(1, this.nights()));
-  /** Prix public plus élevé : la remise est montrée, prix barré. */
+  /** Prix de vente : tarif Duffel le moins cher + frais de service BIP. */
+  protected readonly total = computed(() => staySellingTotal(this.result().cheapest_rate_total_amount, this.result().cheapest_rate_currency));
+  protected readonly perNight = computed(() => this.total() / Math.max(1, this.nights()));
+  /** Prix public plus élevé que notre prix de vente : la remise est montrée, prix barré. */
   protected readonly publicPrice = computed(() => {
-    const { cheapest_rate_public_amount: pub, cheapest_rate_total_amount: total } = this.result();
-    return pub && Number(pub) > Number(total) ? pub : null;
+    const pub = this.result().cheapest_rate_public_amount;
+    return pub && Number(pub) > this.total() ? pub : null;
   });
 }

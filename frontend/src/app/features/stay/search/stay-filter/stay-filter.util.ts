@@ -1,4 +1,5 @@
 import { IStayResult, TStayAmenity } from '@shared/models';
+import { staySellingTotal } from '@core/money/pricing';
 
 export type TStaySort = 'price' | 'rating' | 'reviews';
 export const STAY_SORTS: readonly TStaySort[] = ['price', 'rating', 'reviews'];
@@ -31,7 +32,7 @@ export function applyStayFilter(
   toDisplay: TPriceInDisplayCurrency = (amount) => amount,
 ): IStayResult[] {
   return results.filter(({ accommodation, cheapest_rate_total_amount, cheapest_rate_currency }) => {
-    const price = toDisplay(Number(cheapest_rate_total_amount), cheapest_rate_currency);
+    const price = toDisplay(staySellingTotal(cheapest_rate_total_amount, cheapest_rate_currency), cheapest_rate_currency);
     if (filter.maxPrice !== null && price !== null && price > filter.maxPrice) {
       return false;
     }
