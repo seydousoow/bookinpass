@@ -5,6 +5,7 @@ const result = (id: string, price: string, rating: number | null, score: number 
   ({
     id,
     cheapest_rate_total_amount: price,
+    cheapest_rate_currency: 'EUR',
     accommodation: { rating, review_score: score, amenities: amenities.map((type) => ({ type, description: type })) },
   }) as unknown as IStayResult;
 
@@ -23,6 +24,12 @@ describe('applyStayFilter', () => {
 
   it('plafonne le prix total', () => {
     expect(ids(applyStayFilter(results, { ...NO_STAY_FILTER, maxPrice: 150 }))).toEqual(['b', 'c']);
+  });
+
+  it('compare le budget au prix affiché, frais de service BIP (5 %) compris', () => {
+    // 145 € Duffel = 152,25 € affichés : au-dessus d'un budget de 150 €.
+    expect(ids(applyStayFilter([result('e', '145.00', 3, 8)], { ...NO_STAY_FILTER, maxPrice: 150 }))).toEqual([]);
+    expect(ids(applyStayFilter([result('e', '142.00', 3, 8)], { ...NO_STAY_FILTER, maxPrice: 150 }))).toEqual(['e']);
   });
 
   it('filtre les étoiles ; un établissement non classé compte zéro étoile', () => {
