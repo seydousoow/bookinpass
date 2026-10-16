@@ -1,0 +1,70 @@
+<ng-container *transloco="let t">
+  <div class="mx-auto grid max-w-6xl grid-cols-1 gap-3 px-2 py-3">
+    <!-- Critères -->
+    @if (search(); as criteria) {
+      <section class="rounded-card border-border-subtle bg-surface-card border p-3">
+        <div class="flex flex-wrap items-center justify-between gap-2">
+          <p class="text-sm">
+            <span class="font-bold">{{ placeName() }}</span>
+            · {{ criteria.dates.start! | bipDate: dateFormat }} – {{ criteria.dates.end! | bipDate: dateFormat }}
+            · {{ t('stay.search.summary', {nights: nights(), adults: criteria.guests.adults, children: criteria.guests.childAges.length, rooms: criteria.guests.rooms}) }}
+          </p>
+          <bip-button (clicked)="editing.set(!editing())" [expanded]="editing()" size="sm" variant="outline">
+            {{ t(editing() && !isMobile() ? 'common.close' : 'stay.search.edit') }}
+          </bip-button>
+        </div>
+        @if (editing()) {
+          @if (isMobile()) {
+            <bip-modal (closed)="editing.set(false)" [opened]="true" [title]="t('stay.search.edit')" showFooter="false" size="lg">
+              <bip-stay-search-form [initial]="criteria"/>
+            </bip-modal>
+          } @else {
+            <div class="mt-3">
+              <bip-stay-search-form [initial]="criteria"/>
+            </div>
+          }
+        }
+      </section>
+    }
+
+    @if (loading()) {
+      <bip-stay-results-skeleton/>
+    } @else if (failed()) {
+      <div class="mx-auto flex max-w-md flex-col items-center gap-4 px-4 py-16 text-center" role="alert">
+        <p class="text-lg font-semibold">{{ t('stay.search.failed-title') }}</p>
+        <p class="text-muted text-sm">{{ t('stay.search.failed-message') }}</p>
+        <bip-button (clicked)="retry()" variant="primary">{{ t('stay.search.retry') }}</bip-button>
+      </div>
+    } @else if (!total()) {
+      <div class="mx-auto flex max-w-md flex-col items-center gap-4 px-4 py-16 text-center">
+        <ng-icon class="text-muted text-4xl" name="heroMagnifyingGlass"/>
+        <p class="text-lg font-semibold">{{ t('stay.search.empty-title') }}</p>
+        <p class="text-muted text-sm">{{ t('stay.search.empty-message') }}</p>
+        <bip-button (clicked)="editing.set(true)" variant="primary">{{ t('stay.search.edit') }}</bip-button>
+      </div>
+    } @else {
+      <div class="flex flex-col gap-3 md:flex-row md:items-start">
+        <bip-stay-filter #filters [(value)]="filter" [results]="results()" class="md:w-64 md:shrink-0"/>
+
+        <div class="flex min-w-0 flex-1 flex-col gap-3">
+          <div class="flex flex-wrap items-end justify-between gap-2">
+            <p aria-live="polite" class="text-sm font-semibold">{{ t('stay.search.count', {shown: shown().length, total: total()}) }}</p>
+            <div class="flex items-end gap-2">
+              <bip-button (clicked)="filters.toggle()" class="md:hidden" variant="outline">
+                <ng-icon aria-hidden="true" name="heroAdjustmentsHorizontal"/>
+                {{ t('stay.filter.title') }}
+              </bip-button>
+              <bip-select [(value)]="sort" [options]="sortOptions()" class="w-48" label="stay.sort.label"/>
+            </div>
+          </div>
+
+          @for (result of shown(); track result.id) {
+            <bip-stay-card (selected)="open(result)" [result]="result"/>
+          } @empty {
+            <p class="text-muted rounded-card border-border-strong border border-dashed p-8 text-center text-sm">{{ t('stay.search.filtered-out') }}</p>
+          }
+        </div>
+      </div>
+    }
+  </div>
+</ng-container>

@@ -1,0 +1,69 @@
+<div *transloco="let t; prefix: 'stay.rate'"
+     [class]="selected() ? 'border-brand-primary ring-brand-primary ring-1' : 'border-border-subtle'"
+     class="rounded-card bg-surface-card border p-3">
+  <label class="flex cursor-pointer items-start gap-3">
+    <input (change)="chosen.emit()" [checked]="selected()" [name]="name()" class="accent-brand-primary mt-1 size-4 shrink-0" type="radio">
+    <span class="min-w-0 flex-1 space-y-1">
+      <span class="block font-semibold">{{ rate().name ?? t('board.' + (rate().board_type ?? 'room_only')) }}</span>
+      <span class="text-muted block text-sm">{{ t('board.' + (rate().board_type ?? 'room_only')) }}</span>
+
+      @let policy = cancellation();
+      @if (policy.kind === 'free') {
+        <span class="text-state-success flex items-center gap-1 text-sm">
+          <ng-icon aria-hidden="true" name="heroCheck"/>
+          {{ t('free-cancellation', {date: (policy.until | bipDate: deadlineFormat)}) }}
+        </span>
+      } @else if (policy.kind === 'partial') {
+        <span class="block text-sm">
+          {{ t('partial-refund', {amount: (policy.amount | bipMoney: policy.currency), date: (policy.until | bipDate: deadlineFormat)}) }}
+        </span>
+      } @else {
+        <span class="text-muted block text-sm">{{ t('non-refundable') }}</span>
+      }
+
+      <span class="block text-sm">{{ t('payment.' + rate().payment_type) }}</span>
+
+      @for (benefit of rate().benefits ?? []; track benefit.type + benefit.title) {
+        <span [title]="benefit.description" class="text-state-success flex items-center gap-1 text-sm">
+          <ng-icon aria-hidden="true" name="heroCheck"/>
+          {{ benefit.title }}
+        </span>
+      }
+      @if (rate().loyalty_programme_required) {
+        <span class="text-state-warning block text-xs font-semibold">{{ t('loyalty-required') }}</span>
+      }
+      @if (lowStock(); as left) {
+        <span class="text-state-error block text-xs font-semibold">{{ t('low-stock', {count: left}) }}</span>
+      }
+    </span>
+
+    <span class="shrink-0 text-right">
+      @if (publicPrice(); as pub) {
+        <span class="text-muted block text-sm line-through">{{ pub | bipMoney: rate().public_currency }}</span>
+      }
+      <span class="block text-lg font-bold">{{ rate().total_amount | bipMoney: rate().total_currency }}</span>
+      <span class="text-muted block text-xs">{{ t('taxes-included') }}</span>
+      @if (rate().due_at_accommodation_amount; as due) {
+        <span class="text-muted block text-xs">{{ t('due-at-accommodation', {amount: (due | bipMoney: rate().due_at_accommodation_currency)}) }}</span>
+      }
+    </span>
+  </label>
+
+  @if (rate().conditions.length) {
+    <button (click)="conditionsOpen.set(!conditionsOpen())" [attr.aria-expanded]="conditionsOpen()"
+            class="text-brand-primary bip-focusable mt-2 flex items-center gap-1 text-xs font-semibold" type="button">
+      {{ t('conditions', {count: rate().conditions.length}) }}
+      <ng-icon [class.rotate-180]="conditionsOpen()" aria-hidden="true" class="transition-transform" name="heroChevronDown"/>
+    </button>
+    @if (conditionsOpen()) {
+      <dl class="mt-2 space-y-2 text-xs">
+        @for (condition of rate().conditions; track condition.title) {
+          <div>
+            <dt class="font-semibold">{{ condition.title }}</dt>
+            <dd class="text-muted">{{ plain(condition.description) }}</dd>
+          </div>
+        }
+      </dl>
+    }
+  }
+</div>

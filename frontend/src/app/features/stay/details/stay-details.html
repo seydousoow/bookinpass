@@ -1,0 +1,101 @@
+@if (loading()) {
+  <div class="flex min-h-96 items-center justify-center">
+    <bip-spinner label="stay.details.loading" showLabel size="md"/>
+  </div>
+} @else if (unavailable()) {
+  <bip-modal #modal (closed)="returnToSearch()" *transloco="let t" [opened]="true" showFooter="false" showTitle="false" title>
+    <p class="text-brand-primary text-center text-2xl font-bold">{{ t('stay.unavailable.title') }}</p>
+    <p class="my-3 text-base font-semibold">{{ t('stay.unavailable.subtitle') }}</p>
+    <div class="flex items-center justify-center">
+      <bip-button (clicked)="modal.close()" size="lg" variant="primary">{{ t('stay.unavailable.new-search') }}</bip-button>
+    </div>
+  </bip-modal>
+} @else if (failed()) {
+  <div *transloco="let t" class="mx-auto flex max-w-md flex-col items-center gap-4 px-4 py-16 text-center" role="alert">
+    <p class="text-lg font-semibold">{{ t('stay.details.failed-title') }}</p>
+    <p class="text-muted text-sm">{{ t('stay.details.failed-message') }}</p>
+    <div class="flex gap-2">
+      <bip-button (clicked)="retry()" variant="primary">{{ t('stay.search.retry') }}</bip-button>
+      <bip-button (clicked)="returnToSearch()" variant="outline">{{ t('stay.details.back-to-results') }}</bip-button>
+    </div>
+  </div>
+} @else if (result(); as result) {
+  <ng-container *transloco="let t">
+    <bip-stay-stepper [active]="stepIndex()" [steps]="steps"/>
+    <bip-stay-header [accommodation]="result.accommodation" class="mb-4 block"/>
+
+    <div class="grid grid-cols-1 gap-8 lg:grid-cols-3">
+      <div class="space-y-8 lg:col-span-2">
+        @switch (activeStep()) {
+          @case ('room') {
+            @if (result.accommodation.photos.length) {
+              <bip-stay-gallery [name]="result.accommodation.name" [photos]="result.accommodation.photos"/>
+            }
+
+            <section class="space-y-3">
+              <h2 class="text-xl font-bold">{{ t('stay.details.rooms') }}</h2>
+              @if (rateLost()) {
+                <p class="bg-state-warning-soft rounded-card p-3 text-sm" role="alert">{{ t('stay.details.rate-lost') }}</p>
+              }
+              @if (quoteFailed() === 'gone') {
+                <p class="bg-state-warning-soft rounded-card p-3 text-sm" role="alert">{{ t('stay.details.rate-gone') }}</p>
+              }
+              @for (room of rooms(); track room.name; let i = $index) {
+                <bip-room-card (chosen)="chooseRate($event)" [index]="i" [room]="room" [selectedId]="selectedRateId()"/>
+              } @empty {
+                <p class="text-muted rounded-card border-border-strong border border-dashed p-6 text-center text-sm">{{ t('stay.details.no-rooms') }}</p>
+              }
+            </section>
+
+            <bip-stay-overview [accommodation]="result.accommodation"/>
+            <bip-stay-reviews [accommodationId]="result.accommodation.id"
+                              [count]="result.accommodation.review_count"
+                              [score]="result.accommodation.review_score"/>
+          }
+          @case ('guests') {
+            <bip-guest-form [(value)]="details" [slots]="slots()"/>
+          }
+          @default {
+            <section class="rounded-card border-border-strong border border-dashed p-8 text-center">
+              <h2 class="text-xl font-bold">{{ t('stay.steps.pay') }}</h2>
+              <p class="text-muted mt-2 text-sm">{{ t('stay.details.coming-soon') }}</p>
+            </section>
+          }
+        }
+
+        @if (missingRate()) {
+          <p class="text-state-error text-sm" role="alert">{{ t('stay.details.missing-rate') }}</p>
+        }
+        @if (incomplete()) {
+          <p class="text-state-error text-sm" role="alert">{{ t('stay.details.incomplete') }}</p>
+        }
+        @if (quoteFailed() === 'error') {
+          <p class="text-state-error text-sm" role="alert">{{ t('stay.details.quote-failed') }}</p>
+        }
+        <div class="flex items-center justify-between gap-4">
+          @if (stepIndex() > 0) {
+            <bip-button (clicked)="previous()" [disabled]="quoting()" variant="outline">{{ t('stay.details.back') }}</bip-button>
+          } @else {
+            <bip-button (clicked)="returnToSearch()" variant="ghost">{{ t('stay.details.back-to-results') }}</bip-button>
+          }
+          @if (stepIndex() < steps.length - 1) {
+            <bip-button (clicked)="next()" [loading]="quoting()" variant="primary">{{ t('common.continue') }}</bip-button>
+          }
+        </div>
+      </div>
+
+      <aside class="lg:sticky lg:top-20 lg:self-start">
+        <bip-stay-price-summary [choice]="choice()" [quote]="quote()" [result]="result"/>
+      </aside>
+    </div>
+  </ng-container>
+}
+
+@if (idle()) {
+  <bip-modal *transloco="let t" [backdropDismissible]="false" [dismissible]="false" [opened]="true" [title]="t('stay.idle.title')">
+    <p class="text-sm">{{ t('stay.idle.message') }}</p>
+    <div modalFooter>
+      <bip-button (clicked)="returnToSearch()" variant="primary">{{ t('stay.idle.back') }}</bip-button>
+    </div>
+  </bip-modal>
+}

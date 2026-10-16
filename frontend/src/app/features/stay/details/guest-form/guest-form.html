@@ -1,0 +1,33 @@
+<form *transloco="let t; prefix: 'stay.guest-form'" class="space-y-6" novalidate>
+  <section>
+    <h2 class="text-xl font-bold">{{ t('title') }}</h2>
+    <p class="text-muted mt-1 text-xs">{{ t('subtitle') }}</p>
+
+    <div class="mt-4 grid grid-cols-1 gap-4">
+      @for (slot of slots(); track $index; let i = $index) {
+        <fieldset class="rounded-card border-border-subtle bg-surface-card border p-4">
+          <legend class="flex items-center gap-2 px-1 font-bold">
+            <ng-icon aria-hidden="true" name="heroUser" size="1.25rem"/>
+            {{ t('slot.' + slot.type, {index: slot.index}) }}
+            @if (slot.age !== null) {
+              <span class="text-muted text-sm font-normal">· {{ t('age', {count: slot.age}) }}</span>
+            }
+          </legend>
+          <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+            <bip-input [formField]="guestForm.guests[i].given_name" autocomplete="given-name" label="stay.guest-form.given-name"/>
+            <bip-input [formField]="guestForm.guests[i].family_name" autocomplete="family-name" label="stay.guest-form.family-name"/>
+          </div>
+        </fieldset>
+      }
+    </div>
+  </section>
+
+  <section>
+    <h2 class="text-xl font-bold">{{ t('contact') }}</h2>
+    <div class="rounded-card border-border-subtle bg-surface-card mt-4 grid grid-cols-1 gap-4 border p-4 md:grid-cols-2">
+      <bip-input [formField]="guestForm.email" autocomplete="email" hint="stay.guest-form.email-hint" label="stay.guest-form.email" type="email"/>
+      <bip-input [formField]="guestForm.phone" autocomplete="tel" hint="stay.guest-form.phone-hint" label="stay.guest-form.phone" type="tel"/>
+      <bip-textarea [formField]="guestForm.requests" [rows]="3" class="md:col-span-2" hint="stay.guest-form.requests-hint" label="stay.guest-form.requests"/>
+    </div>
+  </section>
+</form>
