@@ -67,14 +67,14 @@ same session (reload, return from a redirect). The front increments `attempt` wh
 
    ⚠️ A test secret key was pasted into a chat on 2026-10-16. **Roll it** (Dashboard → Developers → API keys) and
    update `.env`.
-2. **Webhook.** Endpoint: `POST {API}/payments/webhooks/stripe`. Subscribe to these events:
-   - `checkout.session.completed`
-   - `checkout.session.async_payment_succeeded`
-   - `checkout.session.async_payment_failed`
-   - `checkout.session.expired`
+2. **Webhook.** Endpoint: `POST {API}/payments/webhooks/stripe`. Subscribe to these events (they update
+   `stripe_payment`):
+   - `checkout.session.completed`: authorisation recorded, even if the customer closes the tab before the booking
+   - `checkout.session.async_payment_succeeded` and `checkout.session.async_payment_failed`
+   - `payment_intent.succeeded` (captured), `payment_intent.canceled` (released), `payment_intent.payment_failed`
+   - `charge.refunded` (refunded or partially refunded)
 
-   The invoice and subscription events Stripe suggests don't apply. Locally:
-   `stripe listen --forward-to localhost:8080/api/payments/webhooks/stripe`, then copy the `whsec_…` it prints.
+   Locally: `stripe listen --forward-to localhost:8080/api/payments/webhooks/stripe`, then copy the `whsec_…` it prints.
 3. **Payment methods.** The Dashboard settings decide what the form shows. Redirect-based methods come back to `return_url`.
 4. **Dependencies.** None added. The backend calls the REST API directly (no Java SDK, because of the GraalVM native
    image). The frontend uses `@stripe/stripe-js` 10.1, whose `loadStripe` loads Stripe.js from `js.stripe.com`
@@ -121,9 +121,14 @@ same session (reload, return from a redirect). The front increments `attempt` wh
 - [ ] **Check in Duffel test mode** that `GET /air/offers/{id}` after the price action still gives the ticket alone in
       `total_amount`. The Duffel amount (`balance`) is that total + services. If the services are already included,
       Duffel rejects the amount: the payment is released, but nobody can book.
-- [ ] Authorisation without an order (tab closed between payment and booking): it expires on its own (about 7 days,
-      nothing is charged). Cancel it earlier, for example from `checkout.session.completed` plus a delay when no order
-      exists.
+- [x] Bookings stored after each order (`users`, `flight_order`, passengers, history, `stripe_payment`), statuses
+      updated by the Stripe and Duffel webhooks.
+- [ ] Authorisation without an order (tab closed between payment and booking): now traced in `stripe_payment`
+      (`authorised`, no `order_id`), but it still expires on its own (about 7 days, nothing is charged). Cancel it
+      earlier with a scheduled job.
+- [ ] Refunds: a Duffel cancellation stores its refund (`flight_order_event.refund_*`), but the customer is not yet
+      refunded on Stripe. Decide the policy (BIP fees and markups refunded or not), then refund via
+      `POST /v1/refunds`.
 - [ ] Capture failed after the order was created: logged as ERROR ("capture it manually"). Add an alert.
 - [ ] Concurrent bookings are only locked within a single instance: use Redis (`SET NX`) once there are several.
 - [ ] Confirmation email: the contact-field hint promises "Nous enverrons la confirmation…", but nothing sends it

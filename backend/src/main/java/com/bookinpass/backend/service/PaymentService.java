@@ -42,6 +42,7 @@ public class PaymentService {
     private final FlightService flights;
     private final JsonMapper json;
     private final Clock clock;
+    private final BookingRecorder recorder;
 
     /**
      * @param returnPath page du site où revenir après un moyen à redirection (déjà validée : un chemin, pas d'origine)
@@ -145,6 +146,8 @@ public class PaymentService {
         }
         WebhookSignature.verify(payload, signature, stripeProperties.webhookSecret(), clock.instant(), WebhookSignature.STRIPE_TOLERANCE);
         JsonNode event = json.readTree(payload);
+        // Statut du paiement enregistré ; une erreur de base fait répondre 500 et Stripe renvoie l'événement.
+        recorder.recordStripeEvent(event);
         String type = event.path("type").asString("");
         JsonNode session = event.path("data").path("object");
         switch (type) {

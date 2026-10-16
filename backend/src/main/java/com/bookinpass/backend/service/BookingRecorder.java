@@ -5,6 +5,7 @@ import com.bookinpass.backend.entity.FlightOrder;
 import com.bookinpass.backend.entity.FlightOrderEvent;
 import com.bookinpass.backend.entity.StripePayment;
 import com.bookinpass.backend.entity.StripePaymentEvent;
+import com.bookinpass.backend.entity.StripePaymentStatus;
 import com.bookinpass.backend.entity.User;
 import com.bookinpass.backend.repository.FlightOrderEventRepository;
 import com.bookinpass.backend.repository.FlightOrderRepository;
@@ -21,8 +22,10 @@ import tools.jackson.databind.json.JsonMapper;
 import tools.jackson.databind.node.ArrayNode;
 import tools.jackson.databind.node.ObjectNode;
 
+import java.math.BigDecimal;
 import java.time.Clock;
 import java.time.Instant;
+import java.time.OffsetDateTime;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -44,7 +47,10 @@ public class BookingRecorder {
     private final JsonMapper json;
     private final Clock clock;
 
-    /** Session Checkout relue chez Stripe, autorisation obtenue : le paiement est enregistré (une seule fois). */
+    /**
+     * Autorisation obtenue : le paiement est enregistré (une seule fois). Session relue chez Stripe (PaymentIntent
+     * dépliée) ou reçue par webhook (PaymentIntent réduite à son identifiant).
+     */
     @Transactional
     public void recordAuthorisation(JsonNode session) {
         String sessionId = session.path("id").asString();
@@ -52,8 +58,9 @@ public class BookingRecorder {
             return;
         }
         JsonNode intent = session.path("payment_intent");
+        String intentId = intent.isString() ? intent.asString() : intent.path("id").asString();
         JsonNode method = intent.path("payment_method");
-        StripePayment payment = new StripePayment(sessionId, intent.path("id").asString(), session.path("currency").asString("").toUpperCase(),
+        StripePayment payment = new StripePayment(sessionId, intentId, session.path("currency").asString("").toUpperCase(),
                 session.path("amount_total").asLong(), session.path("livemode").asBoolean(false), clock.instant());
         payment.describe(text(method.path("type")), text(method.path("card").path("brand")), text(method.path("card").path("last4")),
                 text(session.path("customer_details").path("email")), text(session.path("customer_details").path("name")));
@@ -123,6 +130,120 @@ public class BookingRecorder {
         }
         payments.findByCheckoutSessionId(request.checkoutSessionId()).ifPresent(payment -> payment.attachTo(order));
         return booker;
+    }
+
+    /**
+     * Webhook Stripe : met le paiement à jour (encaissé, libéré, échoué, remboursé). Livraison répétée ignorée.
+     *
+     * @return {@code false} si l'événement ne concerne aucun paiement connu, ou a déjà été traité
+     */
+    @Transactional
+    public boolean recordStripeEvent(JsonNode event) {
+        String eventId = event.path("id").asString();
+        if (paymentEvents.existsByStripeEventId(eventId)) {
+            return false;
+        }
+        String type = event.path("type").asString("");
+        JsonNode object = event.path("data").path("object");
+        Instant at = Instant.ofEpochSecond(event.path("created").asLong(clock.instant().getEpochSecond()));
+        if ("checkout.session.completed".equals(type) && "complete".equals(object.path("status").asString())) {
+            recordAuthorisation(object);
+        }
+        Optional<StripePayment> found = switch (type) {
+            case "checkout.session.completed", "checkout.session.async_payment_succeeded", "checkout.session.async_payment_failed" ->
+                    payments.findByCheckoutSessionId(object.path("id").asString());
+            case "charge.refunded" -> payments.findByPaymentIntentId(object.path("payment_intent").asString(""));
+            default -> payments.findByPaymentIntentId(object.path("id").asString(""));
+        };
+        if (found.isEmpty()) {
+            return false;
+        }
+        StripePayment payment = found.get();
+        Long amount = null;
+        switch (type) {
+            case "payment_intent.succeeded" -> {
+                amount = object.path("amount_received").asLong();
+                if (payment.getStatus() != StripePaymentStatus.CAPTURED) {
+                    payment.captured(amount, at);
+                }
+            }
+            case "payment_intent.canceled" -> {
+                if (payment.getStatus() == StripePaymentStatus.AUTHORISED) {
+                    payment.released(object.path("cancellation_reason").asString("canceled"), at);
+                }
+            }
+            case "payment_intent.payment_failed", "checkout.session.async_payment_failed" ->
+                    payment.failed(object.path("last_payment_error").path("code").asString(type));
+            case "charge.refunded" -> {
+                amount = object.path("amount_refunded").asLong();
+                payment.refunded(amount, at);
+            }
+            default -> {
+                // Événement suivi pour l'historique seulement (session terminée, autorisation mise à jour…).
+            }
+        }
+        paymentEvents.save(new StripePaymentEvent(payment, type, eventId, amount, null, at));
+        return true;
+    }
+
+    /**
+     * Webhook Duffel : statut de la commande (changée, annulation en cours, annulée) et historique, remboursement
+     * compris. Livraison répétée ignorée.
+     *
+     * @return {@code false} si l'événement ne concerne aucune commande connue, ou a déjà été traité
+     */
+    @Transactional
+    public boolean recordDuffelEvent(JsonNode event) {
+        String eventId = event.path("id").asString();
+        if (orderEvents.existsByDuffelEventId(eventId)) {
+            return false;
+        }
+        String type = event.path("type").asString("");
+        JsonNode object = event.path("data").path("object");
+        Optional<FlightOrder> found = orderIdOf(event, object).flatMap(orders::findByDuffelOrderId);
+        if (found.isEmpty()) {
+            return false;
+        }
+        FlightOrder order = found.get();
+        Instant at = Optional.ofNullable(text(event.path("created_at"))).map(BookingRecorder::parseDuffelTime).orElse(clock.instant());
+        FlightOrderEvent history = new FlightOrderEvent(order, type, eventId, object.isMissingNode() ? null : json.writeValueAsString(object), at);
+        switch (type) {
+            case "order.airline_initiated_change_detected", "air.order.changed" -> order.markChanged();
+            case "order_cancellation.created" -> {
+                order.markCancellationPending();
+                withRefund(history, object);
+            }
+            case "order_cancellation.confirmed" -> {
+                order.cancel(at);
+                withRefund(history, object);
+            }
+            default -> {
+                // Historique seulement (commande créée, paiement Duffel…).
+            }
+        }
+        orderEvents.save(history);
+        return true;
+    }
+
+    /** La commande visée : {@code order_id} de l'objet (annulation, changement), l'objet lui-même, ou la clé d'idempotence. */
+    private static Optional<String> orderIdOf(JsonNode event, JsonNode object) {
+        for (String candidate : new String[]{text(object.path("order_id")), text(object.path("id")), text(event.path("idempotency_key"))}) {
+            if (candidate != null && candidate.startsWith("ord_")) {
+                return Optional.of(candidate);
+            }
+        }
+        return Optional.empty();
+    }
+
+    private static void withRefund(FlightOrderEvent history, JsonNode cancellation) {
+        String amount = text(cancellation.path("refund_amount"));
+        history.withRefund(amount == null ? null : new BigDecimal(amount), text(cancellation.path("refund_currency")),
+                text(cancellation.path("refund_to")));
+    }
+
+    /** Duffel écrit ses dates {@code 2020-04-11 15:48:11.642000+00:00} ou en ISO 8601 strict. */
+    static Instant parseDuffelTime(String value) {
+        return OffsetDateTime.parse(value.replace(' ', 'T')).toInstant();
     }
 
     @Transactional

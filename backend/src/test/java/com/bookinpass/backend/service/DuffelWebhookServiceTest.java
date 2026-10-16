@@ -28,7 +28,7 @@ class DuffelWebhookServiceTest {
 
     private DuffelWebhookService service(String secret) {
         return new DuffelWebhookService(new DuffelProperties("https://api.duffel.test", "duffel_test_x", "v2", Duration.ofSeconds(20),
-                Duration.ofSeconds(40), "fixtures/duffel", false, 10, secret), JsonMapper.builder().build(), clock);
+                Duration.ofSeconds(40), "fixtures/duffel", false, 10, secret), JsonMapper.builder().build(), clock, org.mockito.Mockito.mock(BookingRecorder.class));
     }
 
     @Test

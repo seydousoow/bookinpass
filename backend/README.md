@@ -75,7 +75,7 @@ en-tête `Stripe-Signature` vérifié). Reste à faire : voir [STRIPE_INTEGRATIO
 
 **Webhooks Duffel.** `POST /webhooks/duffel` (déclaré chez Duffel : `https://bip.dicortex.com/api/webhooks/duffel`) reçoit les événements Duffel (commandes, changements de vol décidés
 par la compagnie, paiements, `ping.triggered`), vérifie `X-Duffel-Signature` avec `DUFFEL_WEBHOOK_SECRET` et répond
-`{"success": true}`. Pour l'instant ils sont journalisés (changement de vol en WARN : le voyageur devra être prévenu).
+`{"success": true}`. Ils mettent à jour la commande enregistrée (`flight_order` : changée, annulation en cours, annulée, remboursement dans `flight_order_event`) et sont journalisés (changement de vol en WARN : le voyageur devra être prévenu).
 Un seul webhook par mode (test / production), en HTTPS, jamais `localhost` (en développement : tunnel ngrok).
 Le secret n'est rendu **qu'une fois**, à la création :
 
@@ -87,6 +87,12 @@ curl -X POST https://api.duffel.com/air/webhooks \
        "order_cancellation.confirmed","air.payment.succeeded","air.payment.failed"]}}'
 # → data.secret dans DUFFEL_WEBHOOK_SECRET, puis test : POST /air/webhooks/{id}/actions/ping
 ```
+
+**Réservations enregistrées.** Après chaque commande : voyageurs (`users`, retrouvés par e-mail + prénom, nom, date de
+naissance et sexe), commande (`flight_order`, prix détaillé en JSONB : billet et frais BIP, services et marge),
+passagers, historique (`flight_order_event`) et paiement Stripe (`stripe_payment`, de l'autorisation au remboursement,
+`stripe_payment_event`). Le titulaire de l'e-mail (premier adulte) reçoit un client Duffel (`icu_…`, un seul par
+e-mail chez Duffel), rattaché à la commande. Un échec d'enregistrement ne fait jamais échouer une réservation.
 
 **Hébergements.** Duffel Stays cherche autour de coordonnées : `l` est l'identifiant GeoNames d'une ville
 (`2253354` = Dakar), dont les coordonnées viennent de la table `city` ; rayon `stays-radius-km` (10 km).

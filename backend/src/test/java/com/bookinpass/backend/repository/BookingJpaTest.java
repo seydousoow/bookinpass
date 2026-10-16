@@ -167,4 +167,55 @@ class BookingJpaTest {
         assertThat(jdbc.queryForObject("SELECT order_id FROM stripe_payment WHERE id = ?", Integer.class, payment.getId())).isEqualTo(order.getId());
         assertThat(jdbc.queryForObject("SELECT count(*) FROM stripe_payment_event WHERE payment_id = ?", Integer.class, payment.getId())).isEqualTo(2);
     }
+
+    @Test
+    void webhooksMoveOrderAndPaymentThroughTheirStatuses() {
+        JsonMapper json = JsonMapper.builder().build();
+        Instant now = Instant.parse("2026-10-17T10:00:00Z");
+        FlightOrder order = orders.save(new FlightOrder("ord_w", "off_w", "XYZ789", "EUR", new BigDecimal("100.00"),
+                new BigDecimal("105.00"), "{}", false, now));
+        StripePayment payment = new StripePayment("cs_w", "pi_w", "EUR", 10500, false, now);
+        payment.captured(10500, now);
+        payment.attachTo(order);
+        payments.save(payment);
+
+        var change = json.readTree("""
+                {"id":"wev_1","type":"order.airline_initiated_change_detected","created_at":"2026-10-18 08:00:00.000000+00:00",
+                 "idempotency_key":"aic_1","data":{"object":{"id":"aic_1","order_id":"ord_w","available_actions":["accept","cancel"]}}}""");
+        assertThat(recorder.recordDuffelEvent(change)).isTrue();
+        assertThat(recorder.recordDuffelEvent(change)).isFalse();
+
+        assertThat(recorder.recordDuffelEvent(json.readTree("""
+                {"id":"wev_2","type":"order_cancellation.confirmed","created_at":"2026-10-19T08:00:00Z",
+                 "data":{"object":{"id":"ore_1","order_id":"ord_w","refund_amount":"90.00","refund_currency":"EUR","refund_to":"balance"}}}"""))).isTrue();
+        assertThat(recorder.recordStripeEvent(json.readTree("""
+                {"id":"evt_1","type":"charge.refunded","created":1800000000,
+                 "data":{"object":{"payment_intent":"pi_w","amount_refunded":5000}}}"""))).isTrue();
+        assertThat(recorder.recordStripeEvent(json.readTree("""
+                {"id":"evt_2","type":"payment_intent.succeeded","data":{"object":{"id":"pi_unknown"}}}"""))).isFalse();
+        entityManager.flush();
+        entityManager.clear();
+
+        FlightOrder stored = orders.findByDuffelOrderId("ord_w").orElseThrow();
+        assertThat(stored.getStatus()).isEqualTo(FlightOrderStatus.CANCELLED);
+        assertThat(stored.getCancelledAt()).isEqualTo(Instant.parse("2026-10-19T08:00:00Z"));
+        assertThat(jdbc.queryForObject("SELECT refund_amount FROM flight_order_event WHERE duffel_event_id = 'wev_2'", BigDecimal.class))
+                .isEqualByComparingTo("90.00");
+        assertThat(payments.findByCheckoutSessionId("cs_w").orElseThrow().getStatus()).isEqualTo(StripePaymentStatus.PARTIALLY_REFUNDED);
+    }
+
+    @Test
+    void sessionCompletedWebhookTracesAnAuthorisationWithoutBooking() {
+        JsonMapper json = JsonMapper.builder().build();
+
+        assertThat(recorder.recordStripeEvent(json.readTree("""
+                {"id":"evt_3","type":"checkout.session.completed","created":1800000000,
+                 "data":{"object":{"id":"cs_orphan","status":"complete","payment_intent":"pi_orphan","amount_total":5000,"currency":"eur","livemode":false}}}""")))
+                .isTrue();
+
+        StripePayment orphan = payments.findByCheckoutSessionId("cs_orphan").orElseThrow();
+        assertThat(orphan.getPaymentIntentId()).isEqualTo("pi_orphan");
+        assertThat(orphan.getStatus()).isEqualTo(StripePaymentStatus.AUTHORISED);
+        assertThat(orphan.getOrder()).isNull();
+    }
 }
