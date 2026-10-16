@@ -7,6 +7,7 @@ import com.bookinpass.backend.dto.request.PriceOfferRequest.IntendedService;
 import com.bookinpass.backend.dto.response.CheckoutSessionResponse;
 import com.bookinpass.backend.exception.PaymentException;
 import com.bookinpass.backend.service.pricing.FlightPricing;
+import com.bookinpass.backend.service.pricing.StayPricing;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -40,6 +41,7 @@ public class PaymentService {
     private final StripeProperties stripeProperties;
     private final StripeClient stripe;
     private final FlightService flights;
+    private final StayService stays;
     private final JsonMapper json;
     private final Clock clock;
     private final BookingRecorder recorder;
@@ -59,6 +61,27 @@ public class PaymentService {
                 idempotencyKey(offerId, summary, Long.toString(quote.sellingMinorUnits()), quote.currency(), Integer.toString(attempt)));
         return new CheckoutSessionResponse(session.path("id").asString(), session.path("client_secret").asString(),
                 stripeProperties.publishableKey(), quote.sellingTotal().toPlainString(), quote.currency());
+    }
+
+    /**
+     * Séjour : devis Duffel relu, prix de vente = prix Duffel + 5 % de frais BIP ({@link StayPricing}).
+     *
+     * @param returnPath page du site où revenir après un moyen à redirection
+     * @param attempt    rang du paiement : même rang et même montant, même session
+     */
+    public CheckoutSessionResponse createStayCheckout(String quoteId, String returnPath, int attempt) {
+        requireEnabled();
+        JsonNode quote = json.readTree(stays.getQuote(quoteId)).path("data");
+        String currency = quote.path("total_currency").asString();
+        BigDecimal total = StayPricing.sellingTotal(quote);
+        long minorUnits = total.movePointRight(FlightPricing.decimals(currency)).longValueExact();
+        String label = quote.path("accommodation").path("name").asString("Book In Pass");
+        String returnUrl = stripeProperties.frontendUrl().replaceAll("/+$", "") + returnPath + "?checkout_session_id={CHECKOUT_SESSION_ID}";
+        JsonNode session = stripe.createCheckoutSession(minorUnits, currency, label, returnUrl,
+                Map.of("quote_id", quoteId, "kind", "stay", "amount", total.toPlainString()),
+                "bip-stay-" + idempotencyKey(quoteId, Long.toString(minorUnits), currency, Integer.toString(attempt)));
+        return new CheckoutSessionResponse(session.path("id").asString(), session.path("client_secret").asString(),
+                stripeProperties.publishableKey(), total.toPlainString(), currency);
     }
 
     /**

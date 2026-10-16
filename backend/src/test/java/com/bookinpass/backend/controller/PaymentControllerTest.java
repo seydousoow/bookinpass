@@ -73,4 +73,15 @@ class PaymentControllerTest {
                 .hasStatus(HttpStatus.NO_CONTENT);
         org.mockito.Mockito.verify(payments).handleWebhook(argThat(body -> new String(body).equals(payload)), eq("t=1,v1=ab"));
     }
+
+    @Test
+    void stayCheckoutIsCreatedForTheQuote() {
+        given(payments.createStayCheckout("quo_1", "/stays/srr_1", 0)).willReturn(new CheckoutSessionResponse("cs_s", "cs_s_secret", "pk_test", "220.50", "EUR"));
+
+        assertThat(mvc.post().uri("/payments/stays/quo_1/checkout-session").contentType(MediaType.APPLICATION_JSON).content("{\"return_path\":\"/stays/srr_1\"}"))
+                .hasStatusOk()
+                .bodyJson().extractingPath("$.amount").isEqualTo("220.50");
+        assertThat(mvc.post().uri("/payments/stays/not-a-quote/checkout-session").contentType(MediaType.APPLICATION_JSON).content("{\"return_path\":\"/stays/x\"}"))
+                .hasStatus(HttpStatus.BAD_REQUEST);
+    }
 }

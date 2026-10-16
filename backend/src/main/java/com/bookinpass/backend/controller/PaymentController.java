@@ -2,6 +2,7 @@ package com.bookinpass.backend.controller;
 
 import com.bookinpass.backend.config.OpenApiConfig;
 import com.bookinpass.backend.dto.request.FlightPaymentRequest;
+import com.bookinpass.backend.dto.request.StayPaymentRequest;
 import com.bookinpass.backend.dto.request.PriceOfferRequest.IntendedService;
 import com.bookinpass.backend.dto.response.CheckoutSessionResponse;
 import com.bookinpass.backend.service.PaymentService;
@@ -33,7 +34,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequiredArgsConstructor
 @Tag(name = OpenApiConfig.TAG_PAYMENTS)
-@RegisterReflection(classes = {FlightPaymentRequest.class, IntendedService.class}, memberCategories = {MemberCategory.INVOKE_DECLARED_CONSTRUCTORS, MemberCategory.INVOKE_DECLARED_METHODS, MemberCategory.ACCESS_DECLARED_FIELDS})
+@RegisterReflection(classes = {FlightPaymentRequest.class, StayPaymentRequest.class, IntendedService.class}, memberCategories = {MemberCategory.INVOKE_DECLARED_CONSTRUCTORS, MemberCategory.INVOKE_DECLARED_METHODS, MemberCategory.ACCESS_DECLARED_FIELDS})
 @RequestMapping(path = "payments", produces = MediaType.APPLICATION_JSON_VALUE)
 public class PaymentController {
 
@@ -48,6 +49,16 @@ public class PaymentController {
     public CheckoutSessionResponse flightCheckout(@Parameter(description = "Identifiant d'offre Duffel", example = "off_0000AJyeTHWAvwAT9JcAqH") @PathVariable @Pattern(regexp = "off_[A-Za-z0-9]+") String offerId,
                                               @Valid @RequestBody FlightPaymentRequest request) {
         return payments.createFlightCheckout(offerId, request.services(), request.returnPath(), request.attempt());
+    }
+
+    @PostMapping(path = "/stays/{quoteId}/checkout-session", consumes = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Préparer le paiement d'un séjour",
+            description = "Session Checkout Stripe (formulaire intégré) au prix de vente du devis : prix Duffel + 5 % de frais de service BIP, recalculé depuis Duffel. Autorisation seule.")
+    @ApiResponse(responseCode = "200", description = "Session à confirmer dans le navigateur")
+    @ApiResponse(responseCode = "503", description = "Paiement non configuré (`payments-unavailable`)", content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE, schema = @Schema(implementation = ProblemDetail.class)))
+    public CheckoutSessionResponse stayCheckout(@Parameter(description = "Identifiant de devis Duffel", example = "quo_0000AS0NZdKjjnnHZmSUbI") @PathVariable @Pattern(regexp = "quo_[A-Za-z0-9]+") String quoteId,
+                                                @Valid @RequestBody StayPaymentRequest request) {
+        return payments.createStayCheckout(quoteId, request.returnPath(), request.attempt());
     }
 
     /** Corps lu en octets : la signature porte sur le corps exact envoyé par Stripe. */

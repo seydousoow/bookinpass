@@ -44,10 +44,11 @@ class FlightOrderServiceTest {
     private final StripeClient stripe = mock(StripeClient.class);
     private final DuffelClient duffel = mock(DuffelClient.class);
     private final FlightService flights = mock(FlightService.class);
+    private final StayService stays = mock(StayService.class);
     private final BookingRecorder recorder = mock(BookingRecorder.class);
     private final PaymentService payments = new PaymentService(
             new StripeProperties("https://api.stripe.com", "sk_test_x", "pk_test_x", "2026-03-25.dahlia", "", "http://localhost:4200"),
-            stripe, flights, json, Clock.systemUTC(), recorder);
+            stripe, flights, stays, json, Clock.systemUTC(), recorder);
     private final DuffelCustomerService customers = mock(DuffelCustomerService.class);
     private final FlightOrderService orders = new FlightOrderService(payments, stripe, duffel, json, recorder, customers);
 

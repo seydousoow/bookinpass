@@ -43,8 +43,9 @@ class PaymentServiceTest {
     private final JsonMapper json = JsonMapper.builder().build();
     private final StripeClient stripe = mock(StripeClient.class);
     private final FlightService flights = mock(FlightService.class);
+    private final StayService stays = mock(StayService.class);
     private final BookingRecorder recorder = mock(BookingRecorder.class);
-    private final PaymentService payments = new PaymentService(new StripeProperties("https://api.stripe.com", "sk_test_x", "pk_test_x", "2026-03-25.dahlia", "whsec_test", "http://localhost:4200/"), stripe, flights, json, CLOCK, recorder);
+    private final PaymentService payments = new PaymentService(new StripeProperties("https://api.stripe.com", "sk_test_x", "pk_test_x", "2026-03-25.dahlia", "whsec_test", "http://localhost:4200/"), stripe, flights, stays, json, CLOCK, recorder);
 
     @Test
     void amountIsComputedServerSideFromDuffel() {
@@ -93,7 +94,7 @@ class PaymentServiceTest {
 
     @Test
     void withoutStripeKeysPaymentsAreUnavailable() {
-        PaymentService unconfigured = new PaymentService(new StripeProperties("https://api.stripe.com", "", "", "2026-03-25.dahlia", "", "http://localhost:4200"), stripe, flights, json, CLOCK, recorder);
+        PaymentService unconfigured = new PaymentService(new StripeProperties("https://api.stripe.com", "", "", "2026-03-25.dahlia", "", "http://localhost:4200"), stripe, flights, stays, json, CLOCK, recorder);
 
         assertThatThrownBy(() -> unconfigured.createFlightCheckout("off_1", List.of(), "/flight/x", 0))
                 .isInstanceOf(PaymentException.class).hasFieldOrPropertyWithValue("code", "payments-unavailable");
@@ -113,7 +114,7 @@ class PaymentServiceTest {
 
     @Test
     void withoutWebhookSecretEventsAreRefused() {
-        PaymentService unconfigured = new PaymentService(new StripeProperties("https://api.stripe.com", "sk_test_x", "pk_test_x", "2026-03-25.dahlia", "", "http://localhost:4200"), stripe, flights, json, CLOCK, recorder);
+        PaymentService unconfigured = new PaymentService(new StripeProperties("https://api.stripe.com", "sk_test_x", "pk_test_x", "2026-03-25.dahlia", "", "http://localhost:4200"), stripe, flights, stays, json, CLOCK, recorder);
 
         assertThatThrownBy(() -> unconfigured.handleWebhook(new byte[0], "t=1,v1=00"))
                 .isInstanceOf(PaymentException.class).hasFieldOrPropertyWithValue("code", "payments-unavailable");
@@ -127,5 +128,20 @@ class PaymentServiceTest {
         assertThat(PaymentService.parseSummary("ase_bagx2,ase_seatx1"))
                 .containsExactly(new IntendedService("ase_bag", 2), new IntendedService("ase_seat", 1));
         assertThat(PaymentService.parseSummary("")).isEmpty();
+    }
+
+    @Test
+    void stayIsChargedTheQuoteWithFivePercentFees() {
+        given(stays.getQuote("quo_1")).willReturn("""
+                {"data":{"id":"quo_1","total_amount":"210.00","total_currency":"EUR","accommodation":{"name":"Maison d'hôtes Médina"}}}""");
+        given(stripe.createCheckoutSession(anyLong(), anyString(), anyString(), anyString(), any(), anyString()))
+                .willReturn(json.readTree("{\"id\":\"cs_s\",\"client_secret\":\"cs_s_secret\"}"));
+
+        CheckoutSessionResponse response = payments.createStayCheckout("quo_1", "/stays/srr_1", 0);
+
+        // 210.00 + 5 % = 220.50 € → 22050 centimes.
+        verify(stripe).createCheckoutSession(eq(22050L), eq("EUR"), eq("Maison d'hôtes Médina"),
+                eq("http://localhost:4200/stays/srr_1?checkout_session_id={CHECKOUT_SESSION_ID}"), any(Map.class), anyString());
+        assertThat(response.amount()).isEqualTo("220.50");
     }
 }
