@@ -34,6 +34,17 @@
       "10": "Octobre",
       "11": "Novembre",
       "12": "Décembre"
+    },
+    "pagination": {
+      "label": "Pagination",
+      "previous": "Page précédente",
+      "next": "Page suivante",
+      "page": "Page {page}",
+      "summary": "{from}–{to} sur {total}"
+    },
+    "phone": {
+      "country": "Indicatif du pays",
+      "search": "Rechercher un pays ou un indicatif"
     }
   },
   "picker": {
@@ -75,6 +86,7 @@
     "privacy": "Confidentialité"
   },
   "search": {
+    "loading": "Recherche des meilleurs vols…",
     "loading-flight": "Récupération des informations de votre vol",
     "from": "Départ",
     "to": "Destination",
@@ -103,19 +115,27 @@
       },
       "stops": {
         "title": "Escales",
-        "options": "{count, plural, =0 {Vols directs uniquement} one {# escale maximum} other {# escales admises}}",
-        "desc": "{count, plural, =0 {Direct} one {# escale} other {# escales}}"
+        "desc": "{count, plural, =0 {Direct} one {# escale} other {# escales}}",
+        "max": {
+          "0": "Vols directs uniquement",
+          "1": "1 escale maximum",
+          "2": "2 escales maximum"
+        }
       },
       "bags": {
         "title": "Bagages",
         "cabin": "Bagage à main inclus",
         "hold": "Bagages enregistrés inclus"
-      }
+      },
+      "reset": "Réinitialiser les filtres",
+      "no-match": "Aucune offre ne correspond à ces filtres.",
+      "applying": "Application des filtres…"
     },
     "error": {
-      "invalid-title": "Recherche invalide",
-      "invalid-message": "Des informations essentielles à votre recherche sont manquantes ou incorrectes.",
-      "back-home": "Retour à l'accueil"
+      "back-home": "Retour à l'accueil",
+      "failed-title": "Recherche indisponible",
+      "failed-message": "Nous n'avons pas pu récupérer les vols pour le moment. Réessayez dans quelques instants.",
+      "retry": "Réessayer"
     },
     "location": {
       "origin": "D'où partez-vous ?",
@@ -166,7 +186,47 @@
         "refundable": "{fee, plural, =0 {Annulation possible et sans frais ajoutés} other {Annulation possible moyennant des frais} }",
         "changeable": "{fee, plural, =0 {Changement possible et sans frais ajoutés} other {Changement possible moyennant des frais} }",
         "footer": "Vous pouvez consulter les règles tarifaires détaillées avant de réserver."
+      },
+      "cabin": {
+        "title": "Cabine et équipements",
+        "fare-basis": "Base tarifaire : {code}",
+        "seat": {
+          "standard": "Siège standard",
+          "skycouch": "Skycouch (rangée convertible en couchette)",
+          "recliner": "Siège inclinable",
+          "angle-flat": "Siège-lit incliné",
+          "full-flat": "Siège-lit entièrement plat",
+          "full-flat-pod": "Siège-lit plat en alcôve",
+          "private-suite": "Suite privée"
+        },
+        "legroom": {
+          "more": "Plus d'espace pour les jambes",
+          "standard": "Espace pour les jambes standard",
+          "less": "Moins d'espace pour les jambes"
+        },
+        "pitch": "Espacement entre les sièges : {inches} pouces ({cm} cm)",
+        "wifi": {
+          "none": "Pas de Wi-Fi à bord",
+          "free": "Wi-Fi gratuit",
+          "included": "Wi-Fi inclus",
+          "paid": "Wi-Fi payant",
+          "free-or-paid": "Wi-Fi gratuit ou payant",
+          "n-a": "Wi-Fi à bord"
+        },
+        "power": {
+          "yes": "Prise électrique au siège",
+          "no": "Pas de prise électrique"
+        },
+        "unknown": "Équipements non communiqués par la compagnie"
       }
+    },
+    "empty": {
+      "title": "Aucun vol trouvé",
+      "message": "Aucun vol ne correspond à votre recherche. Essayez d'autres dates ou d'autres aéroports."
+    },
+    "summary": {
+      "edit": "Modifier la recherche",
+      "travelers": "{count, plural, one {# voyageur} other {# voyageurs}}"
     }
   },
   "flight": {
@@ -198,7 +258,20 @@
         "no-carry-on": "Pas de bagage cabine pour ce vol",
         "no-checked": "Pas de bagage en soute pour ce vol",
         "edit-info": "Modifier les informations sur ce voyageur",
-        "born-on": "Né(e) le {date}"
+        "born-on": "Né(e) le {date}",
+        "missing": "Informations requises pour continuer.",
+        "saving": "Enregistrement…",
+        "save-failed": "Enregistrement impossible.",
+        "retry": "Réessayer",
+        "extra-bags": {
+          "title": "Bagages supplémentaires",
+          "checked": "Bagage en soute supplémentaire",
+          "carry_on": "Bagage cabine supplémentaire",
+          "weight": "{kg} kg max",
+          "add": "Ajouter : {bag}",
+          "remove": "Retirer : {bag}",
+          "unavailable": "Les bagages supplémentaires ne sont pas disponibles pour ce passager sur ce vol."
+        }
       },
       "contact": {
         "title": "Coordonnées",
@@ -207,7 +280,8 @@
         "email-hint": "Nous enverrons la confirmation de votre vol à cette adresse.",
         "email-invalid": "Adresse e-mail invalide",
         "phone": "Numéro de téléphone",
-        "phone-hint": "Utilisé uniquement en cas de changement concernant votre vol."
+        "phone-hint": "Utilisé uniquement en cas de changement concernant votre vol.",
+        "phone-invalid": "Numéro invalide pour ce pays"
       },
       "fare": {
         "title": "Détail du tarif",
@@ -219,7 +293,10 @@
         "taxes": "Taxes et frais",
         "total": "Total",
         "taxes-included": "Taxes et frais compris",
-        "no-hidden-fees": "Pas de frais cachés - consultez le tarif à chaque étape"
+        "no-hidden-fees": "Pas de frais cachés - consultez le tarif à chaque étape",
+        "seats": "{count, plural, one {Siège (#)} other {Sièges (#)}}",
+        "extra-bags": "{count, plural, one {# bagage supplémentaire} other {# bagages supplémentaires}}",
+        "service-fees": "BIP Service Fees"
       },
       "assistance": {
         "title": "Demandez une assistance spéciale à l’aéroport",
@@ -249,13 +326,411 @@
           "future": "La date de naissance ne peut pas être dans le futur.",
           "age-adult": "Un adulte doit avoir au moins 12 ans à la date du dernier vol.",
           "age-child": "Un enfant doit avoir entre 2 et 11 ans à la date du dernier vol.",
-          "age-infant_without_seat": "Un bébé doit avoir moins de 2 ans à la date du dernier vol."
+          "age-infant_without_seat": "Un bébé doit avoir moins de 2 ans à la date du dernier vol.",
+          "name-length": "20 caractères maximum.",
+          "loyalty-number": "Utilisez uniquement des lettres, des chiffres ou des traits d’union.",
+          "passport-number": "Lettres et chiffres uniquement, sans espace (5 à 20 caractères).",
+          "passport-expired": "Le passeport doit être valide jusqu'au dernier vol."
+        },
+        "loyalty": "Programme de fidélité (facultatif)",
+        "loyalty-airline": "Compagnie",
+        "loyalty-airline-placeholder": "Sélectionnez une compagnie",
+        "loyalty-number": "Numéro de membre",
+        "passport": "Passeport",
+        "passport-hint": "La compagnie exige le passeport de chaque voyageur. Il doit être valide jusqu'au dernier vol.",
+        "passport-number": "Numéro de passeport",
+        "passport-country": "Pays de délivrance",
+        "passport-country-placeholder": "Choisir un pays",
+        "passport-expiry": "Date d'expiration"
+      },
+      "back": "Retour",
+      "coming-soon": "Cette étape arrive bientôt.",
+      "incomplete": "Renseignez chaque voyageur et vos coordonnées pour continuer.",
+      "itinerary": {
+        "title": "Votre vol",
+        "fare-brand": "Tarif {name}",
+        "flight-number": "Vol {number}",
+        "operated-by": "Opéré par {airline}",
+        "aircraft": "Appareil : {name}",
+        "aircraft-type": "Type : {code}",
+        "aircraft-unknown": "Appareil non communiqué par la compagnie",
+        "see-conditions": "Voir les conditions du billet"
+      },
+      "conditions": {
+        "title": "Conditions du billet",
+        "refund": "Annulation et remboursement",
+        "change": "Modification",
+        "priority-check-in": "Enregistrement prioritaire",
+        "priority-boarding": "Embarquement prioritaire",
+        "seat-selection": "Choix du siège à l’avance",
+        "carriage": "Conditions de transport de {airline}",
+        "disclaimer": "Ces conditions valent pour une modification ou une annulation demandée par le voyageur, avant le départ du premier vol. Les frais indiqués s’ajoutent à l’éventuelle différence de tarif, ou se déduisent du remboursement. Si un vol a déjà eu lieu, ou si la compagnie modifie elle-même le voyage, d’autres règles s’appliquent.",
+        "values": {
+          "refund-free": "Remboursable sans frais",
+          "refund-fee": "Remboursable, frais de {amount}",
+          "refund-fee-unknown": "Remboursable, frais non communiqués",
+          "refund-no": "Non remboursable",
+          "change-free": "Modifiable sans frais",
+          "change-fee": "Modifiable, frais de {amount}",
+          "change-fee-unknown": "Modifiable, frais non communiqués",
+          "change-no": "Non modifiable",
+          "included": "Inclus",
+          "not-included": "Non inclus",
+          "unknown": "Non communiqué par la compagnie",
+          "change-partial": "Non modifiable en entier ; certains vols le sont (détail ci-dessous)"
+        }
+      },
+      "ticket": {
+        "title": "Choisissez votre type de billet",
+        "subtitle": "Plus de bagages ou de souplesse ? Les tarifs supérieurs de la compagnie pour le même vol.",
+        "current": "Votre tarif actuel",
+        "total": "{amount} au total",
+        "select": "Choisir ce tarif",
+        "selected": "Tarif choisi",
+        "loading": "Recherche des tarifs disponibles",
+        "error": "Impossible de changer de tarif pour le moment. Réessayez."
+      },
+      "seats": {
+        "title": "Choisissez vos sièges",
+        "subtitle": "Facultatif : sans choix, la compagnie vous attribue un siège à l'enregistrement.",
+        "loading": "Chargement du plan de cabine",
+        "unavailable": "La compagnie ne propose pas de choix de siège pour ce vol. Un siège vous sera attribué à l'enregistrement.",
+        "unavailable-flight": "Pas de plan de cabine pour ce vol : un siège vous sera attribué à l'enregistrement.",
+        "failed": "Impossible de charger le plan de cabine pour le moment. Vous pouvez réessayer, ou continuer : un siège vous sera attribué à l'enregistrement.",
+        "retry": "Réessayer",
+        "no-map": "plan indisponible",
+        "flights": "Vols",
+        "travelers": "Voyageurs",
+        "seat": "Siège {designator}",
+        "no-seat": "Aucun siège choisi",
+        "traveler": {
+          "adult": "Adulte n° {index}",
+          "child": "Enfant n° {index}",
+          "infant_without_seat": "Bébé n° {index}"
+        },
+        "legend": {
+          "available": "Disponible",
+          "current": "Votre choix",
+          "party": "Autre voyageur",
+          "unavailable": "Indisponible",
+          "wing": "Au-dessus de l'aile"
+        },
+        "cabin": {
+          "economy": "Économie",
+          "premium_economy": "Économie premium",
+          "business": "Affaires",
+          "first": "Première"
+        },
+        "upper-deck": "Pont supérieur",
+        "element": {
+          "bassinet": "Berceau",
+          "exit_row": "Sortie",
+          "lavatory": "WC",
+          "galley": "Office",
+          "closet": "Vestiaire",
+          "stairs": "Escalier",
+          "restricted_seat_general": "Restreint"
+        },
+        "aria": {
+          "available": "Siège {designator}, {price}",
+          "taken": "Siège {designator}, choisi",
+          "unavailable": "Siège {designator}, indisponible"
+        },
+        "summary": "Sièges choisis",
+        "free": "Gratuit",
+        "remove": "Retirer",
+        "total": "Total des sièges",
+        "disclosures-note": "Conditions fournies en anglais par la compagnie.",
+        "optional": "Les sièges choisis sont payés avec le billet."
+      },
+      "idle": {
+        "title": "Session expirée",
+        "message": "Vous êtes resté inactif plus de 15 minutes. Les prix et la disponibilité ont pu changer : relancez votre recherche pour réserver.",
+        "back": "Retour à la recherche"
+      },
+      "pay": {
+        "pricing": "Confirmation du prix auprès de la compagnie…",
+        "failed": "Le prix n'a pas pu être confirmé.",
+        "confirmed": "Prix confirmé par la compagnie, services choisis compris."
+      },
+      "booking": {
+        "in-progress": "Réservation auprès de la compagnie…",
+        "confirmed": "Votre vol est réservé",
+        "reference": "Référence de réservation",
+        "reference-hint": "Conservez-la : elle vous permet d'enregistrer et de gérer votre réservation sur le site de la compagnie.",
+        "charged": "Montant débité : {amount}.",
+        "operated-by": "Vols opérés par {carriers}.",
+        "new-search": "Nouvelle recherche",
+        "edit-travelers": "Modifier les voyageurs",
+        "errors": {
+          "failed": "La réservation n'a pas pu être confirmée. Rien ne vous sera débité sans billet.",
+          "rejected": "La compagnie a refusé les informations d'un voyageur. Aucun montant n'a été débité : corrigez-les puis payez de nouveau.",
+          "price-changed": "Le prix a changé depuis votre paiement. Aucun montant n'a été débité : vérifiez le nouveau prix et payez de nouveau.",
+          "released": "La réservation n'a pas abouti. Aucun montant n'a été débité : vous pouvez payer de nouveau."
         }
       }
     }
   },
   "home": {
     "title": "Un seul passe pour tous vos voyages",
-    "subtitle": "Vols, séjours, activités et transport local — payés en francs CFA, par carte, Wave ou Orange Money."
+    "subtitle": "Vols, séjours, activités et transport local — payés en francs CFA, par carte, Wave ou Orange Money.",
+    "tabs": {
+      "label": "Que recherchez-vous ?",
+      "flights": "Vols",
+      "stays": "Hébergement"
+    }
+  },
+  "stay": {
+    "search": {
+      "destination": "Où allez-vous ?",
+      "destination-placeholder": "Ville",
+      "destination-searching": "Recherche…",
+      "dates": "Arrivée — Départ",
+      "dates-placeholder": "Vos dates de séjour",
+      "submit": "Rechercher",
+      "errors": {
+        "check-in-required": "Choisissez une date d'arrivée.",
+        "check-in-range": "L'arrivée doit être entre aujourd'hui et dans 330 jours.",
+        "check-out-required": "Choisissez une date de départ.",
+        "stay-length": "Un séjour dure de 1 à 99 nuits."
+      },
+      "loading": "Recherche des hébergements disponibles",
+      "summary": "{nights, plural, one {# nuit} other {# nuits}} · {adults, plural, one {# adulte} other {# adultes}}{children, plural, =0 {} one {, # enfant} other {, # enfants}} · {rooms, plural, one {# chambre} other {# chambres}}",
+      "edit": "Modifier la recherche",
+      "failed-title": "La recherche n'a pas abouti",
+      "failed-message": "Le service d'hébergement ne répond pas pour le moment. Réessayez dans quelques instants.",
+      "retry": "Réessayer",
+      "empty-title": "Aucun hébergement disponible",
+      "empty-message": "Essayez d'autres dates ou une autre ville.",
+      "count": "{shown, plural, one {# établissement} other {# établissements}} sur {total}",
+      "filtered-out": "Aucun établissement ne correspond à ces filtres."
+    },
+    "guests": {
+      "label": "Voyageurs et chambres",
+      "adults-count": "{count, plural, one {# adulte} other {# adultes}}",
+      "children-count": "{count, plural, one {# enfant} other {# enfants}}",
+      "rooms-count": "{count, plural, one {# chambre} other {# chambres}}",
+      "rooms": {
+        "label": "Chambres",
+        "hint": "Au moins un adulte par chambre"
+      },
+      "adults": {
+        "label": "Adultes",
+        "hint": "18 ans et plus"
+      },
+      "children": {
+        "label": "Enfants",
+        "hint": "De 0 à 17 ans"
+      },
+      "add": "Ajouter : {item}",
+      "remove": "Retirer : {item}",
+      "child-age": "Âge de l'enfant n° {index}",
+      "age": "{count, plural, =0 {Moins d'un an} one {# an} other {# ans}}",
+      "age-hint": "Âge à la date d'arrivée : l'hôtel adapte le tarif et le couchage.",
+      "invalid": "Au moins un adulte par chambre, 8 chambres et 8 enfants au plus."
+    },
+    "rating": {
+      "stars": "{count, plural, one {# étoile} other {# étoiles}}"
+    },
+    "reviews": {
+      "title": "Avis des clients",
+      "levels": {
+        "exceptional": "Exceptionnel",
+        "very-good": "Très bien",
+        "good": "Bien",
+        "fair": "Correct"
+      },
+      "count": "{count, plural, one {# avis} other {# avis}}",
+      "anonymous": "Anonyme",
+      "none": "Pas encore d'avis pour cet établissement.",
+      "loading": "Chargement des avis",
+      "failed": "Les avis n'ont pas pu être chargés.",
+      "retry": "Réessayer",
+      "more": "Voir plus d'avis"
+    },
+    "amenities": {
+      "parking": "Parking",
+      "gym": "Salle de sport",
+      "wifi": "Wi-Fi",
+      "24_hour_front_desk": "Réception 24h/24",
+      "accessibility_hearing": "Accessibilité auditive",
+      "accessibility_mobility": "Accès à mobilité réduite",
+      "adult_only": "Adultes uniquement",
+      "business_centre": "Centre d'affaires",
+      "cash_machine": "Distributeur de billets",
+      "childcare_service": "Garde d'enfants",
+      "concierge": "Conciergerie",
+      "laundry": "Blanchisserie",
+      "lounge": "Salon",
+      "pets_allowed": "Animaux acceptés",
+      "pool": "Piscine",
+      "restaurant": "Restaurant",
+      "room_service": "Service en chambre",
+      "spa": "Spa",
+      "more": "+{count}"
+    },
+    "card": {
+      "from": "À partir de",
+      "stay-length": "{nights, plural, one {# nuit} other {# nuits}}, {rooms, plural, one {# chambre} other {# chambres}}",
+      "per-night": "soit {price} la nuit",
+      "due-at-accommodation": "+ {amount} à régler sur place",
+      "see-rooms": "Voir les chambres"
+    },
+    "filter": {
+      "title": "Filtres",
+      "reset": "Tout effacer",
+      "close": "Fermer les filtres",
+      "budget": "Budget total",
+      "stars": "Classement",
+      "star-count": "{count, plural, one {# étoile} other {# étoiles}}",
+      "reviews": "Note des clients",
+      "review-min": "{score} et plus",
+      "amenities": "Équipements",
+      "show": "Voir les résultats"
+    },
+    "sort": {
+      "label": "Trier par",
+      "price": "Prix le plus bas",
+      "rating": "Étoiles",
+      "reviews": "Note des clients"
+    },
+    "gallery": {
+      "photo": "{name}, photo {index}",
+      "show": "Afficher la photo {index}"
+    },
+    "overview": {
+      "title": "L'établissement",
+      "check-in": "Arrivée",
+      "check-out": "Départ",
+      "between": "Entre {from} et {to}",
+      "from": "À partir de {time}",
+      "until": "Jusqu'à {time}",
+      "late-arrival": "Arrivée tardive ? Signalez-la dans vos demandes à l'établissement, pour ne pas être considéré comme absent.",
+      "keys": "Remise des clés :",
+      "amenities": "Équipements",
+      "no-amenities": "L'établissement n'a pas communiqué ses équipements."
+    },
+    "rate": {
+      "board": {
+        "room_only": "Chambre seule",
+        "breakfast": "Petit-déjeuner inclus",
+        "half_board": "Demi-pension",
+        "full_board": "Pension complète",
+        "all_inclusive": "Tout compris"
+      },
+      "free-cancellation": "Annulation gratuite jusqu'au {date}",
+      "partial-refund": "{amount} remboursés en cas d'annulation avant le {date}",
+      "non-refundable": "Non remboursable",
+      "payment": {
+        "pay_now": "Paiement à la réservation",
+        "guarantee": "Paiement à l'établissement, carte en garantie",
+        "deposit": "Acompte à la réservation, solde sur place"
+      },
+      "loyalty-required": "Réservé aux membres du programme de fidélité",
+      "low-stock": "{count, plural, one {Plus qu'une chambre} other {Plus que # chambres}} à ce tarif",
+      "taxes-included": "Taxes et frais inclus",
+      "due-at-accommodation": "+ {amount} sur place",
+      "conditions": "{count, plural, one {Voir la condition} other {Voir les # conditions}}"
+    },
+    "room": {
+      "beds": {
+        "single": "{count, plural, one {# lit simple} other {# lits simples}}",
+        "double": "{count, plural, one {# lit double} other {# lits doubles}}",
+        "queen": "{count, plural, one {# grand lit} other {# grands lits}}",
+        "king": "{count, plural, one {# très grand lit} other {# très grands lits}}",
+        "sofabed": "{count, plural, one {# canapé-lit} other {# canapés-lits}}",
+        "bunk": "{count, plural, one {# lit superposé} other {# lits superposés}}"
+      },
+      "rates-of": "Tarifs de la chambre {name}"
+    },
+    "guest-form": {
+      "title": "Les voyageurs",
+      "subtitle": "Saisissez les noms exactement comme sur les pièces d'identité : l'établissement les vérifie à l'arrivée.",
+      "slot": {
+        "adult": "Adulte n° {index}",
+        "child": "Enfant n° {index}"
+      },
+      "age": "{count, plural, =0 {moins d'un an} one {# an} other {# ans}}",
+      "given-name": "Prénom(s)",
+      "family-name": "Nom(s)",
+      "contact": "Vos coordonnées",
+      "email": "Adresse e-mail",
+      "email-hint": "La confirmation de réservation y sera envoyée.",
+      "phone": "Téléphone",
+      "phone-hint": "L'établissement peut vous joindre avant votre arrivée.",
+      "requests": "Demandes à l'établissement (facultatif)",
+      "requests-hint": "Arrivée tardive, lit bébé… Transmis sans garantie.",
+      "errors": {
+        "name": "Utilisez uniquement des lettres, espaces, apostrophes ou traits d'union.",
+        "name-length": "50 caractères maximum.",
+        "email": "Adresse e-mail invalide.",
+        "phone": "Numéro invalide, par exemple +221 77 123 45 67."
+      }
+    },
+    "summary": {
+      "title": "Votre séjour",
+      "check-in": "Arrivée",
+      "check-out": "Départ",
+      "stay": "{nights, plural, one {# nuit} other {# nuits}} · {rooms, plural, one {# chambre} other {# chambres}} · {adults, plural, one {# adulte} other {# adultes}}{children, plural, =0 {} one {, # enfant} other {, # enfants}}",
+      "lines": {
+        "base": "Hébergement",
+        "tax": "Taxes",
+        "fee": "Frais"
+      },
+      "total": "Total",
+      "deposit": "Acompte de {amount} payé à la réservation ; le solde est réglé à l'établissement.",
+      "due-at-accommodation": "{amount} de taxes ou frais à régler sur place, non compris dans le total.",
+      "not-final": "Prix vérifié à l'étape suivante.",
+      "choose-room": "Choisissez une chambre pour voir le détail du prix."
+    },
+    "steps": {
+      "label": "Étapes de la réservation",
+      "room": "Chambre",
+      "guests": "Voyageurs",
+      "pay": "Vérifiez et payez"
+    },
+    "details": {
+      "loading": "Chargement des chambres",
+      "failed-title": "Les chambres n'ont pas pu être chargées",
+      "failed-message": "Le service d'hébergement ne répond pas pour le moment. Réessayez dans quelques instants.",
+      "back-to-results": "Retour aux résultats",
+      "rooms": "Choisissez votre chambre",
+      "rate-lost": "Le tarif que vous aviez choisi n'est plus proposé. Choisissez-en un autre.",
+      "rate-gone": "Ce tarif vient d'être réservé ou retiré par l'établissement. Les tarifs ont été mis à jour : choisissez-en un autre.",
+      "no-rooms": "Plus aucune chambre disponible pour ces dates.",
+      "coming-soon": "Cette étape arrive bientôt.",
+      "missing-rate": "Choisissez une chambre et un tarif pour continuer.",
+      "incomplete": "Complétez les informations des voyageurs pour continuer.",
+      "quote-failed": "Le tarif n'a pas pu être vérifié. Réessayez dans quelques instants.",
+      "back": "Retour"
+    },
+    "unavailable": {
+      "title": "Cet hébergement n'est plus disponible.",
+      "subtitle": "Les tarifs de cette recherche ont expiré ou les dernières chambres ont été réservées. Relancez votre recherche.",
+      "new-search": "Nouvelle recherche"
+    },
+    "idle": {
+      "title": "Session expirée",
+      "message": "Vous êtes resté inactif plus de 15 minutes. Les prix et la disponibilité ont pu changer : relancez votre recherche pour réserver.",
+      "back": "Retour à la recherche"
+    }
+  },
+  "payment": {
+    "title": "Paiement",
+    "secure": "Paiement sécurisé par Stripe : vos données de paiement lui sont transmises directement, Book In Pass ne les voit ni ne les conserve.",
+    "loading": "Chargement du paiement sécurisé…",
+    "charged-in": "Montant débité : {amount} ({currency}).",
+    "retry": "Réessayer",
+    "authorised": "Paiement de {amount} autorisé.",
+    "errors": {
+      "unavailable": "Le paiement sécurisé n'a pas pu être chargé.",
+      "declined": "Le paiement n'a pas abouti. Réessayez ou utilisez un autre moyen de paiement.",
+      "processing": "Votre paiement est en cours de traitement par votre banque.",
+      "intent": "Le paiement n'a pas pu être préparé.",
+      "payments-unavailable": "Le paiement en ligne est momentanément indisponible.",
+      "service-unavailable": "Un service choisi n'est plus disponible : revenez aux étapes précédentes pour le modifier.",
+      "expired": "La session de paiement a expiré : rechargez la page pour recommencer."
+    },
+    "processing": "Paiement en cours…"
   }
 }
