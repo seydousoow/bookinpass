@@ -37,6 +37,19 @@ describe('offre tarifée', () => {
     expect(ticketAmount(priced)).toBe(184.47);
     expect(sellingTotal(priced)).toBe(193.69);
   });
+
+  it('retire aussi les sièges, absents de available_services : leur prix vient des plans de cabine', () => {
+    // Cas réel : 245.16 € = billet 225.16 + siège 20 ; vendu 225.16 + 11.26 (5 %) + 24 = 260.42.
+    const priced: IPricedOffer = {
+      ...offer(DAKAR, PARIS, '245.16'),
+      available_services: [],
+      intended_services: [{ id: 'ase_seat', quantity: 1 }],
+    };
+    const seats = new Map([['ase_seat', 20]]);
+    expect(ticketAmount(priced, seats)).toBe(225.16);
+    expect(sellingTotal(priced, seats)).toBe(236.42);
+    expect(ancillaryPrice('20.00', 'EUR')).toBe(24);
+  });
 });
 
 describe('ancillaryPrice', () => {

@@ -39,24 +39,34 @@ export function serviceFeeRate(offer: IPricedOffer): number {
   return places.length && !countries.has(null) && countries.size === 1 ? SERVICE_FEE_RATES.sameCountry : SERVICE_FEE_RATES.other;
 }
 
+/** Prix Duffel unitaire de services absents de `available_services` — les sièges, tirés des plans de cabine. */
+export type TServicePrices = ReadonlyMap<string, number>;
+
+/**
+ * Prix Duffel des services prévus d'une offre tarifée. Duffel les inclut dans `total_amount` (et dans `base_amount`) :
+ * bagages comme sièges. Prix des bagages lus dans l'offre, des sièges dans `seatPrices`.
+ */
+export function intendedServicesAmount(offer: IPricedOffer, seatPrices: TServicePrices = new Map()): number {
+  const prices = new Map((offer.available_services ?? []).map((s) => [s.id, Number(s.total_amount)]));
+  return (offer.intended_services ?? []).reduce((sum, s) => sum + (prices.get(s.id) ?? seatPrices.get(s.id) ?? 0) * s.quantity, 0);
+}
+
 /**
  * Prix Duffel du billet seul : le total, moins les services prévus d'une offre tarifée (comptés à part, majorés
  * comme services annexes). Les suppléments éventuels de la tarification restent dans le billet.
  */
-export function ticketAmount(offer: IPricedOffer): number {
-  const prices = new Map((offer.available_services ?? []).map((s) => [s.id, Number(s.total_amount)]));
-  const services = (offer.intended_services ?? []).reduce((sum, s) => sum + (prices.get(s.id) ?? 0) * s.quantity, 0);
-  return roundMoney(Number(offer.total_amount) - services, offer.total_currency);
+export function ticketAmount(offer: IPricedOffer, seatPrices?: TServicePrices): number {
+  return roundMoney(Number(offer.total_amount) - intendedServicesAmount(offer, seatPrices), offer.total_currency);
 }
 
 /** Frais de service BIP d'un billet, dans `total_currency`. */
-export function serviceFee(offer: IPricedOffer): number {
-  return roundMoney(ticketAmount(offer) * serviceFeeRate(offer), offer.total_currency);
+export function serviceFee(offer: IPricedOffer, seatPrices?: TServicePrices): number {
+  return roundMoney(ticketAmount(offer, seatPrices) * serviceFeeRate(offer), offer.total_currency);
 }
 
 /** Prix de vente du billet seul : prix Duffel du billet + frais de service BIP (services annexes à part). */
-export function sellingTotal(offer: IPricedOffer): number {
-  return roundMoney(ticketAmount(offer) + serviceFee(offer), offer.total_currency);
+export function sellingTotal(offer: IPricedOffer, seatPrices?: TServicePrices): number {
+  return roundMoney(ticketAmount(offer, seatPrices) + serviceFee(offer, seatPrices), offer.total_currency);
 }
 
 /** Prix de vente d'un service annexe : prix Duffel + 20 %. */

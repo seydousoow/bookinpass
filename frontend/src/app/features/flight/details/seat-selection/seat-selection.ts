@@ -182,6 +182,7 @@ export class SeatSelectionComponent {
         designator: seat.designator,
         // Prix de vente : prix Duffel majoré (services annexes).
         amount: String(ancillaryPrice(service.total_amount, service.total_currency)),
+        duffelAmount: service.total_amount,
         currency: service.total_currency,
         disclosures: seat.disclosures ?? [],
       },

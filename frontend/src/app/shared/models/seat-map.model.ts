@@ -61,7 +61,10 @@ export interface ISeatChoice {
   readonly passengerId: string;
   readonly serviceId: string;
   readonly designator: string;
+  /** Prix de vente (prix Duffel majoré). */
   readonly amount: string;
+  /** Prix Duffel, compris dans le `total_amount` de l'offre tarifée ; absent d'un brouillon antérieur. */
+  readonly duffelAmount?: string;
   readonly currency: string;
   readonly disclosures: readonly string[];
 }
