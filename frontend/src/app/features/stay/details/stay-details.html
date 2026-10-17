@@ -41,7 +41,9 @@
                 <p class="bg-state-warning-soft rounded-card p-3 text-sm" role="alert">{{ t('stay.details.rate-gone') }}</p>
               }
               @for (room of rooms(); track room.name; let i = $index) {
-                <bip-room-card (chosen)="chooseRate($event)" [index]="i" [room]="room" [selectedId]="selectedRateId()"/>
+                <div class="space-2">
+                  <bip-room-card (chosen)="chooseRate($event)" [index]="i" [room]="room" [selectedId]="selectedRateId()"/>
+                </div>
               } @empty {
                 <p class="text-muted rounded-card border-border-strong border border-dashed p-6 text-center text-sm">{{ t('stay.details.no-rooms') }}</p>
               }
@@ -53,7 +55,7 @@
                               [score]="result.accommodation.review_score"/>
           }
           @case ('guests') {
-            <bip-guest-form [(value)]="details" [slots]="slots()"/>
+            <bip-guest-form (valueChange)="details.set($event)" [slots]="slots()" [value]="details()"/>
           }
           @default {
             <section>

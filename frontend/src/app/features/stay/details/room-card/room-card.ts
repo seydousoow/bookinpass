@@ -9,10 +9,14 @@ import { RateOption } from '../rate-option/rate-option';
   selector: 'bip-room-card',
   imports: [TranslocoDirective, StayPhoto, RateOption],
   template: `
-    <article *transloco="let t; prefix: 'stay.room'"
-             class="rounded-card border-border-subtle bg-surface-muted grid gap-3 border p-3 md:grid-cols-[12rem_1fr]">
+    <article
+      *transloco="let t; prefix: 'stay.room'"
+      class="rounded-card border-border-subtle bg-surface-muted grid gap-3 border p-3 md:grid-cols-[12rem_1fr] shadow-md">
       <div class="space-y-2">
-        <bip-stay-photo [alt]="room().name" [url]="room().photos?.[0]?.url" class="rounded-card aspect-video" />
+        <bip-stay-photo
+          [alt]="room().name"
+          [url]="room().photos?.[0]?.url"
+          class="rounded-card shadow-border-strong aspect-video border border-gray-200 shadow-lg/80" />
         <h3 class="font-bold">{{ room().name }}</h3>
         @if (room().beds?.length) {
           <ul class="text-muted text-sm">
@@ -22,7 +26,7 @@ import { RateOption } from '../rate-option/rate-option';
           </ul>
         }
       </div>
-      <div [attr.aria-label]="t('rates-of', { name: room().name })" class="space-y-2" role="radiogroup">
+      <div [attr.aria-label]="t('rates-of', { name: room().name })" class="grid grid-cols-1 gap-y-2" role="radiogroup">
         @for (rate of rates(); track rate.id) {
           <bip-rate-option (chosen)="chosen.emit(rate)" [name]="'rates-' + index()" [rate]="rate" [selected]="rate.id === selectedId()" />
         }
