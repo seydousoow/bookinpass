@@ -3,6 +3,7 @@ package com.bookinpass.backend.service;
 import com.bookinpass.backend.client.StripeClient;
 import com.bookinpass.backend.client.WebhookSignature;
 import com.bookinpass.backend.config.StripeProperties;
+import com.bookinpass.backend.dto.request.PriceOfferRequest;
 import com.bookinpass.backend.dto.request.PriceOfferRequest.IntendedService;
 import com.bookinpass.backend.dto.response.CheckoutSessionResponse;
 import com.bookinpass.backend.exception.PaymentException;
@@ -13,6 +14,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.node.ObjectNode;
 import tools.jackson.databind.json.JsonMapper;
 
 import java.math.BigDecimal;
@@ -106,26 +108,32 @@ public class PaymentService {
     FlightQuote quote(String offerId, List<IntendedService> services) {
         JsonNode offer = json.readTree(flights.offer(offerId)).path("data");
         Map<String, ServicePrice> prices = servicePrices(offerId, offer, services);
-        String currency = offer.path("total_currency").asString();
+        // Montant exact que Duffel débitera sur le solde : l'offre tarifée avec ces services. Son `total_amount` les
+        // comprend déjà — tout comme celui de l'offre relue après une tarification, d'où cette tarification à chaque fois
+        // (une tarification antérieure avec d'autres services fausserait le total relu).
+        JsonNode priced = json.readTree(flights.price(offerId, new PriceOfferRequest(services))).path("data");
+        String currency = priced.path("total_currency").asString();
         int scale = FlightPricing.decimals(currency);
-        BigDecimal ticket = new BigDecimal(offer.path("total_amount").asString());
-        BigDecimal duffel = ticket;
+        BigDecimal duffel = new BigDecimal(priced.path("total_amount").asString()).setScale(scale, RoundingMode.HALF_UP);
+        BigDecimal servicesTotal = BigDecimal.ZERO;
         List<ServiceLine> lines = new ArrayList<>();
         for (IntendedService service : services) {
             ServicePrice unit = prices.get(service.id());
             BigDecimal quantity = BigDecimal.valueOf(service.quantity());
             BigDecimal price = unit.price().multiply(quantity);
             BigDecimal markup = FlightPricing.ancillaryUnitPrice(unit.price(), currency).subtract(unit.price()).multiply(quantity);
-            duffel = duffel.add(price);
+            servicesTotal = servicesTotal.add(price);
             lines.add(new ServiceLine(service.id(), unit.type(), service.quantity(), price.setScale(scale, RoundingMode.HALF_UP),
                     markup.setScale(scale, RoundingMode.HALF_UP)));
         }
+        // Billet seul (comme `ticketAmount` du front) : frais BIP dessus, services majorés à part.
+        BigDecimal ticket = duffel.subtract(servicesTotal).setScale(scale, RoundingMode.HALF_UP);
+        ObjectNode ticketOffer = ((ObjectNode) priced.deepCopy()).put("total_amount", ticket.toPlainString());
         Map<String, BigDecimal> unitPrices = new HashMap<>();
         prices.forEach((id, price) -> unitPrices.put(id, price.price()));
-        BigDecimal selling = FlightPricing.sellingTotal(offer, unitPrices, services);
-        return new FlightQuote(offer, currency, duffel.setScale(scale, RoundingMode.HALF_UP), selling,
-                selling.movePointRight(scale).longValueExact(), ticket, FlightPricing.serviceFee(offer), FlightPricing.serviceFeeRate(offer),
-                List.copyOf(lines));
+        BigDecimal selling = FlightPricing.sellingTotal(ticketOffer, unitPrices, services);
+        return new FlightQuote(offer, currency, duffel, selling, selling.movePointRight(scale).longValueExact(), ticket,
+                FlightPricing.serviceFee(ticketOffer), FlightPricing.serviceFeeRate(ticketOffer), List.copyOf(lines));
     }
 
     /** Prix Duffel unitaire d'un service, son type et la quantité maximale autorisée. */

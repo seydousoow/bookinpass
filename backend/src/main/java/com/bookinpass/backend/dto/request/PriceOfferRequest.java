@@ -13,7 +13,7 @@ import java.util.List;
 
 /**
  * Services que le voyageur compte ajouter à l'offre (bagages, sièges…), pour obtenir le prix final.
- * Les moyens de paiement viendront avec l'étape de paiement.
+ * Le moyen de paiement prévu est posé par {@link com.bookinpass.backend.dto.duffel.DuffelPriceRequest} (solde Duffel).
  */
 public record PriceOfferRequest(@JsonProperty("intended_services") @NotNull @Size(max = 50) List<@Valid IntendedService> intendedServices) {
 

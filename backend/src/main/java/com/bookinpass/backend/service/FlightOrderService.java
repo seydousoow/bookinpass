@@ -3,6 +3,7 @@ package com.bookinpass.backend.service;
 import com.bookinpass.backend.client.DuffelClient;
 import com.bookinpass.backend.client.StripeClient;
 import com.bookinpass.backend.dto.duffel.DuffelOrderRequest;
+import com.bookinpass.backend.dto.duffel.DuffelPriceRequest;
 import com.bookinpass.backend.dto.request.FlightOrderRequest;
 import com.bookinpass.backend.dto.request.PriceOfferRequest.IntendedService;
 import com.bookinpass.backend.dto.response.FlightOrderResponse;
@@ -104,7 +105,15 @@ public class FlightOrderService {
             throw new PaymentException(HttpStatus.CONFLICT, "payment-not-authorised", "The payment authorisation is no longer valid.");
         }
 
-        FlightQuote quote = payments.quote(request.offerId(), services);
+        // Dès ici, tout échec sans commande libère l'autorisation chez Stripe : le client n'est pas débité.
+        FlightQuote quote;
+        try {
+            quote = payments.quote(request.offerId(), services);
+        } catch (RuntimeException e) {
+            // Offre expirée, service disparu, Duffel injoignable…
+            cancel(intentId, sessionId, "quote failed: " + reason(e));
+            throw e;
+        }
         if (quote.sellingMinorUnits() != session.path("amount_total").asLong(-1)
                 || !quote.currency().equalsIgnoreCase(session.path("currency").asString(""))) {
             cancel(intentId, sessionId, "price changed");
@@ -114,12 +123,11 @@ public class FlightOrderService {
         JsonNode order;
         try {
             order = json.readTree(duffel.createOrder(orderRequest(request, quote, services, intentId))).path("data");
-        } catch (DuffelException | ResourceAccessException e) {
+        } catch (RuntimeException e) {
             // Délai dépassé ou 5xx : la commande a pu passer quand même — on vérifie avant de libérer le paiement.
             Optional<JsonNode> placed = isUncertain(e) ? findOrder(request.offerId(), request.checkoutSessionId()) : Optional.empty();
             if (placed.isEmpty()) {
-                String code = e instanceof DuffelException d && d.code() != null ? d.code() : e.getClass().getSimpleName();
-                cancel(intentId, sessionId, "order failed: " + code);
+                cancel(intentId, sessionId, "order failed: " + reason(e));
                 throw e;
             }
             order = placed.get();
@@ -173,7 +181,8 @@ public class FlightOrderService {
         }
         return new DuffelOrderRequest(new DuffelOrderRequest.Data(
                 List.of(request.offerId()), "instant", passengers, services,
-                List.of(new DuffelOrderRequest.Payment("balance", quote.currency(), quote.duffelTotal().toPlainString())),
+                // Montant de l'offre tarifée (services compris) : celui que Duffel attend, au centime près.
+                List.of(new DuffelOrderRequest.Payment(DuffelPriceRequest.PAYMENT_TYPE, quote.currency(), quote.duffelTotal().toPlainString())),
                 Map.of("checkout_session_id", request.checkoutSessionId(), "payment_intent_id", intentId)));
     }
 
@@ -185,6 +194,17 @@ public class FlightOrderService {
             }
         }
         return Optional.empty();
+    }
+
+    /** Cause lisible d'un échec, pour le journal et l'historique du paiement. */
+    private static String reason(RuntimeException e) {
+        if (e instanceof DuffelException d && d.code() != null) {
+            return d.code();
+        }
+        if (e instanceof PaymentException p) {
+            return p.code();
+        }
+        return e.getClass().getSimpleName();
     }
 
     private static boolean isUncertain(RuntimeException e) {

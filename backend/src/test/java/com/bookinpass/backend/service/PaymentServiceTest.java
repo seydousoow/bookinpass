@@ -2,13 +2,18 @@ package com.bookinpass.backend.service;
 
 import com.bookinpass.backend.client.StripeClient;
 import com.bookinpass.backend.config.StripeProperties;
+import com.bookinpass.backend.dto.request.PriceOfferRequest;
 import com.bookinpass.backend.dto.request.PriceOfferRequest.IntendedService;
 import com.bookinpass.backend.dto.response.CheckoutSessionResponse;
 import com.bookinpass.backend.exception.PaymentException;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
+import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.json.JsonMapper;
+import tools.jackson.databind.node.ObjectNode;
 
+import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
 import java.time.Clock;
 import java.time.Instant;
@@ -47,9 +52,34 @@ class PaymentServiceTest {
     private final BookingRecorder recorder = mock(BookingRecorder.class);
     private final PaymentService payments = new PaymentService(new StripeProperties("https://api.stripe.com", "sk_test_x", "pk_test_x", "2026-03-25.dahlia", "whsec_test", "http://localhost:4200/"), stripe, flights, stays, json, CLOCK, recorder);
 
+    /**
+     * Tarification comme Duffel : l'offre relue, son {@code total_amount} augmenté des services prévus (bagages de l'offre,
+     * sièges à {@code seatPrice}).
+     */
+    static void priceLikeDuffel(FlightService flights, JsonMapper json, String offer, String seatPrice) {
+        given(flights.price(anyString(), any())).willAnswer(call -> {
+            PriceOfferRequest request = call.getArgument(1);
+            ObjectNode root = (ObjectNode) json.readTree(offer);
+            ObjectNode data = (ObjectNode) root.path("data");
+            BigDecimal total = new BigDecimal(data.path("total_amount").asString());
+            for (IntendedService service : request.intendedServices()) {
+                String unit = seatPrice;
+                for (JsonNode available : data.path("available_services")) {
+                    if (available.path("id").asString().equals(service.id())) {
+                        unit = available.path("total_amount").asString();
+                    }
+                }
+                total = total.add(new BigDecimal(unit).multiply(BigDecimal.valueOf(service.quantity())));
+            }
+            data.put("total_amount", total.toPlainString());
+            return json.writeValueAsString(root);
+        });
+    }
+
     @Test
     void amountIsComputedServerSideFromDuffel() {
         given(flights.offer("off_1")).willReturn(OFFER);
+        priceLikeDuffel(flights, json, OFFER, "12.50");
         given(flights.seatMaps("off_1")).willReturn(SEAT_MAPS);
         given(stripe.createCheckoutSession(anyLong(), anyString(), anyString(), anyString(), any(), anyString()))
                 .willReturn(json.readTree("{\"id\":\"cs_1\",\"client_secret\":\"cs_1_secret\"}"));
@@ -66,8 +96,24 @@ class PaymentServiceTest {
     }
 
     @Test
+    @DisplayName("Offre déjà tarifée avec un bagage (total relu bagage compris) : le bagage n'est pas compté deux fois")
+    void servicesAlreadyInThePricedTotalAreNotCountedTwice() {
+        // Relue après une tarification avec le bagage : 204.47 = 184.47 + 20.00.
+        given(flights.offer("off_1")).willReturn(OFFER.replace("\"184.47\"", "\"204.47\""));
+        priceLikeDuffel(flights, json, OFFER, "12.50");
+
+        PaymentService.FlightQuote quote = payments.quote("off_1", List.of(new IntendedService("ase_bag", 1)));
+
+        assertThat(quote.duffelTotal()).isEqualByComparingTo("204.47");
+        assertThat(quote.ticket()).isEqualByComparingTo("184.47");
+        // 184.47 + 9.22 + 24.00
+        assertThat(quote.sellingTotal()).isEqualByComparingTo("217.69");
+    }
+
+    @Test
     void sameAttemptReopensTheSameSessionAndANewAttemptANewOne() {
         given(flights.offer("off_1")).willReturn(OFFER);
+        priceLikeDuffel(flights, json, OFFER, "12.50");
         given(stripe.createCheckoutSession(anyLong(), anyString(), anyString(), anyString(), any(), anyString()))
                 .willReturn(json.readTree("{\"id\":\"cs_1\",\"client_secret\":\"cs_1_secret\"}"));
 

@@ -68,6 +68,7 @@ class FlightOrderServiceTest {
     @BeforeEach
     void offer() {
         given(flights.offer("off_1")).willReturn(OFFER);
+        PaymentServiceTest.priceLikeDuffel(flights, json, OFFER, "0");
         given(duffel.findOrders("off_1")).willReturn("{\"data\":[]}");
     }
 
@@ -128,6 +129,18 @@ class FlightOrderServiceTest {
         verify(stripe).cancelPaymentIntent("pi_1", "abandoned", "bip-cancel-pi_1");
         verify(stripe, never()).capturePaymentIntent(anyString(), anyString());
         verify(recorder).recordRelease("cs_1", "order failed: offer_no_longer_available");
+    }
+
+    @Test
+    void expiredOfferReleasesThePaymentBeforeAnyOrder() {
+        session("complete", "requires_capture", 21769);
+        org.mockito.BDDMockito.willThrow(new DuffelException(HttpStatus.UNPROCESSABLE_CONTENT, "expired", "invalid_state_error", "offer_no_longer_available", null, null))
+                .given(flights).price(anyString(), any());
+
+        assertThatThrownBy(() -> orders.book(request())).isInstanceOf(DuffelException.class);
+        verify(stripe).cancelPaymentIntent("pi_1", "abandoned", "bip-cancel-pi_1");
+        verify(duffel, never()).createOrder(any());
+        verify(recorder).recordRelease("cs_1", "quote failed: offer_no_longer_available");
     }
 
     @Test

@@ -74,7 +74,7 @@ class FixtureDuffelClientTest {
         // Duffel exige les moyens de paiement prévus : liste vide tant que le paiement n'est pas branché.
         assertThat(json.writeValueAsString(new DuffelPriceRequest(request)))
                 .contains("\"intended_services\":[{\"id\":\"" + service.path("id").asString() + "\",\"quantity\":1}]")
-                .contains("\"intended_payment_methods\":[]");
+                .contains("\"intended_payment_methods\":[{\"type\":\"balance\"}]");
     }
 
     @Test
