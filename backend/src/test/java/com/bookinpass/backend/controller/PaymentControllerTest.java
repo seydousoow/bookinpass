@@ -29,11 +29,11 @@ class PaymentControllerTest {
 
     @Test
     void flightCheckoutIsCreatedForTheChosenServices() {
-        given(payments.createFlightCheckout(eq("off_1"), argThat(s -> s.size() == 1 && s.getFirst().id().equals("ase_1") && s.getFirst().quantity() == 2), eq("/flight/b2ZmXzE="), eq(2)))
+        given(payments.createFlightCheckout(eq("off_1"), argThat(s -> s.size() == 1 && s.getFirst().id().equals("ase_1") && s.getFirst().quantity() == 2), eq("/flight/b2ZmXzE="), eq(2), eq("fr")))
                 .willReturn(new CheckoutSessionResponse("cs_1", "cs_1_secret", "pk_test", "241.69", "EUR"));
 
         assertThat(mvc.post().uri("/payments/flights/off_1/checkout-session").contentType(MediaType.APPLICATION_JSON)
-                .content("{\"services\":[{\"id\":\"ase_1\",\"quantity\":2}],\"return_path\":\"/flight/b2ZmXzE=\",\"attempt\":2}"))
+                .content("{\"services\":[{\"id\":\"ase_1\",\"quantity\":2}],\"return_path\":\"/flight/b2ZmXzE=\",\"attempt\":2,\"locale\":\"fr-SN\"}"))
                 .hasStatusOk()
                 .bodyJson()
                 .satisfies(body -> {
@@ -57,7 +57,7 @@ class PaymentControllerTest {
 
     @Test
     void paymentErrorsKeepTheirCode() {
-        given(payments.createFlightCheckout(any(), any(), any(), org.mockito.ArgumentMatchers.anyInt())).willThrow(new PaymentException(HttpStatus.SERVICE_UNAVAILABLE, "payments-unavailable", "Payments are not configured."));
+        given(payments.createFlightCheckout(any(), any(), any(), org.mockito.ArgumentMatchers.anyInt(), any())).willThrow(new PaymentException(HttpStatus.SERVICE_UNAVAILABLE, "payments-unavailable", "Payments are not configured."));
 
         assertThat(mvc.post().uri("/payments/flights/off_1/checkout-session").contentType(MediaType.APPLICATION_JSON).content("{\"services\":[],\"return_path\":\"/flight/x\"}"))
                 .hasStatus(HttpStatus.SERVICE_UNAVAILABLE)
@@ -76,7 +76,7 @@ class PaymentControllerTest {
 
     @Test
     void stayCheckoutIsCreatedForTheQuote() {
-        given(payments.createStayCheckout("quo_1", "/stays/srr_1", 0)).willReturn(new CheckoutSessionResponse("cs_s", "cs_s_secret", "pk_test", "220.50", "EUR"));
+        given(payments.createStayCheckout("quo_1", "/stays/srr_1", 0, "auto")).willReturn(new CheckoutSessionResponse("cs_s", "cs_s_secret", "pk_test", "220.50", "EUR"));
 
         assertThat(mvc.post().uri("/payments/stays/quo_1/checkout-session").contentType(MediaType.APPLICATION_JSON).content("{\"return_path\":\"/stays/srr_1\"}"))
                 .hasStatusOk()

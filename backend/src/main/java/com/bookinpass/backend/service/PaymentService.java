@@ -51,16 +51,19 @@ public class PaymentService {
     /**
      * @param returnPath page du site où revenir après un moyen à redirection (déjà validée : un chemin, pas d'origine)
      * @param attempt    rang du paiement : même rang et même montant, même session (clé d'idempotence, 24 h chez Stripe)
+     * @param locale     langue de la session ({@link com.bookinpass.backend.dto.request.StripeLocale}) ; dans la clé
+     *                   d'idempotence, Stripe refusant une clé réutilisée avec d'autres paramètres
      */
-    public CheckoutSessionResponse createFlightCheckout(String offerId, List<IntendedService> services, String returnPath, int attempt) {
+    public CheckoutSessionResponse createFlightCheckout(String offerId, List<IntendedService> services, String returnPath, int attempt,
+                                                        String locale) {
         requireEnabled();
         FlightQuote quote = quote(offerId, services);
         String summary = summary(services);
         // Retour sur la page de l'offre : le formulaire y relit la session et reprend son statut.
         String returnUrl = stripeProperties.frontendUrl().replaceAll("/+$", "") + returnPath + "?checkout_session_id={CHECKOUT_SESSION_ID}";
-        JsonNode session = stripe.createCheckoutSession(quote.sellingMinorUnits(), quote.currency(), label(quote.offer()), returnUrl,
+        JsonNode session = stripe.createCheckoutSession(quote.sellingMinorUnits(), quote.currency(), label(quote.offer()), returnUrl, locale,
                 Map.of("offer_id", offerId, "services", summary, "amount", quote.sellingTotal().toPlainString()),
-                idempotencyKey(offerId, summary, Long.toString(quote.sellingMinorUnits()), quote.currency(), Integer.toString(attempt)));
+                idempotencyKey(offerId, summary, Long.toString(quote.sellingMinorUnits()), quote.currency(), Integer.toString(attempt), locale));
         return new CheckoutSessionResponse(session.path("id").asString(), session.path("client_secret").asString(),
                 stripeProperties.publishableKey(), quote.sellingTotal().toPlainString(), quote.currency());
     }
@@ -70,8 +73,9 @@ public class PaymentService {
      *
      * @param returnPath page du site où revenir après un moyen à redirection
      * @param attempt    rang du paiement : même rang et même montant, même session
+     * @param locale     langue de la session, comme pour un vol
      */
-    public CheckoutSessionResponse createStayCheckout(String quoteId, String returnPath, int attempt) {
+    public CheckoutSessionResponse createStayCheckout(String quoteId, String returnPath, int attempt, String locale) {
         requireEnabled();
         JsonNode quote = json.readTree(stays.getQuote(quoteId)).path("data");
         String currency = quote.path("total_currency").asString();
@@ -79,9 +83,9 @@ public class PaymentService {
         long minorUnits = total.movePointRight(FlightPricing.decimals(currency)).longValueExact();
         String label = quote.path("accommodation").path("name").asString("Book In Pass");
         String returnUrl = stripeProperties.frontendUrl().replaceAll("/+$", "") + returnPath + "?checkout_session_id={CHECKOUT_SESSION_ID}";
-        JsonNode session = stripe.createCheckoutSession(minorUnits, currency, label, returnUrl,
+        JsonNode session = stripe.createCheckoutSession(minorUnits, currency, label, returnUrl, locale,
                 Map.of("quote_id", quoteId, "kind", "stay", "amount", total.toPlainString()),
-                "bip-stay-" + idempotencyKey(quoteId, Long.toString(minorUnits), currency, Integer.toString(attempt)));
+                "bip-stay-" + idempotencyKey(quoteId, Long.toString(minorUnits), currency, Integer.toString(attempt), locale));
         return new CheckoutSessionResponse(session.path("id").asString(), session.path("client_secret").asString(),
                 stripeProperties.publishableKey(), total.toPlainString(), currency);
     }

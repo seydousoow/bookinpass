@@ -10,13 +10,15 @@ import jakarta.validation.constraints.Size;
 
 /**
  * Paiement d'un séjour : le montant vient du devis Duffel, relu par le serveur. Mêmes règles que
- * {@link FlightPaymentRequest} pour {@code return_path} et {@code attempt}.
+ * {@link FlightPaymentRequest} pour {@code return_path}, {@code attempt} et {@code locale}.
  */
 public record StayPaymentRequest(@JsonProperty("return_path") @Schema(example = "/stays/srr_0000ASVBuJVLdmqtZDJ4ca")
                                  @NotNull @Size(max = 300) @Pattern(regexp = "/[A-Za-z0-9._~%+=/-]*") String returnPath,
-                                 @Schema(example = "0") @Min(0) @Max(99) Integer attempt) {
+                                 @Schema(example = "0") @Min(0) @Max(99) Integer attempt,
+                                 @Schema(example = "fr") @Pattern(regexp = "auto|[a-z]{2,3}(-[A-Za-z0-9]{2,3})?") String locale) {
 
     public StayPaymentRequest {
         attempt = attempt == null ? 0 : attempt;
+        locale = StripeLocale.of(locale);
     }
 }

@@ -1,6 +1,7 @@
 import { inject, Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { TranslocoService } from '@jsverse/transloco';
 import { APP_CONFIG } from '@core/config/app-config.token';
 
 /** Session Checkout Stripe préparée par le backend, au montant qu'il a lui-même calculé. */
@@ -13,11 +14,15 @@ export interface ICheckoutSession {
   readonly currency: string;
 }
 
-/** Paiements : le navigateur ne fournit jamais le montant, seulement ce qui est acheté. */
+/**
+ * Paiements : le navigateur ne fournit jamais le montant, seulement ce qui est acheté. La langue active (`fr`, `en`)
+ * accompagne chaque session : le formulaire et les pages Stripe s'affichent dans la langue du site.
+ */
 @Injectable({ providedIn: 'root' })
 export class PaymentService {
   private readonly http = inject(HttpClient);
   private readonly url = `${inject(APP_CONFIG).apiBaseUrl}/payments`;
+  private readonly transloco = inject(TranslocoService);
 
   /**
    * Billet + services choisis (bagages, un par siège), au prix de vente recalculé par le serveur.
@@ -35,6 +40,7 @@ export class PaymentService {
       services,
       return_path: returnPath,
       attempt,
+      locale: this.transloco.getActiveLang(),
     });
   }
 
@@ -43,6 +49,7 @@ export class PaymentService {
     return this.http.post<ICheckoutSession>(`${this.url}/stays/${encodeURIComponent(quoteId)}/checkout-session`, {
       return_path: returnPath,
       attempt,
+      locale: this.transloco.getActiveLang(),
     });
   }
 }

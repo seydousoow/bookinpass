@@ -42,9 +42,10 @@ public class StripeClient {
      * @param amount         montant en plus petite unité de la devise (centimes ; francs pour le XOF)
      * @param label          libellé de l'unique ligne de la session, ex. « DSS → CDG »
      * @param returnUrl      retour après un moyen à redirection ; {@code {CHECKOUT_SESSION_ID}} y est remplacé par Stripe
+     * @param locale         langue du formulaire et des pages Stripe ({@code fr}, {@code en}… ou {@code auto})
      * @param idempotencyKey même clé, même session : un double clic ou un rechargement reprend la session ouverte
      */
-    public JsonNode createCheckoutSession(long amount, String currency, String label, String returnUrl,
+    public JsonNode createCheckoutSession(long amount, String currency, String label, String returnUrl, String locale,
                                           Map<String, String> metadata, String idempotencyKey) {
         MultiValueMap<String, String> form = new LinkedMultiValueMap<>();
         form.add("ui_mode", "form");
@@ -56,6 +57,7 @@ public class StripeClient {
         form.add("name_collection[individual][enabled]", "true");
         form.add("integration_identifier", "custom_embedded_web_0001");
         form.add("return_url", returnUrl);
+        form.add("locale", locale);
         form.add("line_items[0][price_data][currency]", currency.toLowerCase());
         form.add("line_items[0][price_data][unit_amount]", Long.toString(amount));
         form.add("line_items[0][price_data][product_data][name]", label);

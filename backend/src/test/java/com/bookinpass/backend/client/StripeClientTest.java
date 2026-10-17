@@ -39,6 +39,7 @@ class StripeClientTest {
                         Map.entry("name_collection[individual][enabled]", "true"),
                         Map.entry("integration_identifier", "custom_embedded_web_0001"),
                         Map.entry("return_url", "http://localhost:4200/flight/off_1?checkout_session_id={CHECKOUT_SESSION_ID}"),
+                        Map.entry("locale", "fr"),
                         Map.entry("line_items[0][price_data][currency]", "eur"),
                         Map.entry("line_items[0][price_data][unit_amount]", "25669"),
                         Map.entry("line_items[0][price_data][product_data][name]", "DSS → CDG"),
@@ -47,7 +48,7 @@ class StripeClientTest {
                         Map.entry("payment_intent_data[metadata][offer_id]", "off_1"))))
                 .andRespond(withSuccess("{\"id\":\"cs_1\",\"client_secret\":\"cs_1_secret\"}", MediaType.APPLICATION_JSON));
 
-        assertThat(stripe.createCheckoutSession(25669, "EUR", "DSS → CDG", "http://localhost:4200/flight/off_1?checkout_session_id={CHECKOUT_SESSION_ID}",
+        assertThat(stripe.createCheckoutSession(25669, "EUR", "DSS → CDG", "http://localhost:4200/flight/off_1?checkout_session_id={CHECKOUT_SESSION_ID}", "fr",
                 Map.of("offer_id", "off_1"), "key-1").path("client_secret").asString())
                 .isEqualTo("cs_1_secret");
         server.verify();
@@ -59,7 +60,7 @@ class StripeClientTest {
                 .andRespond(withStatus(HttpStatus.BAD_REQUEST).contentType(MediaType.APPLICATION_JSON)
                         .body("{\"error\":{\"type\":\"invalid_request_error\",\"code\":\"amount_too_small\"}}"));
 
-        assertThatThrownBy(() -> stripe.createCheckoutSession(1, "EUR", "DSS → CDG", "http://localhost:4200/", Map.of(), "key-2"))
+        assertThatThrownBy(() -> stripe.createCheckoutSession(1, "EUR", "DSS → CDG", "http://localhost:4200/", "auto", Map.of(), "key-2"))
                 .isInstanceOf(PaymentException.class).hasFieldOrPropertyWithValue("code", "payment-provider-error");
     }
 }

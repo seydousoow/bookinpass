@@ -81,14 +81,14 @@ class PaymentServiceTest {
         given(flights.offer("off_1")).willReturn(OFFER);
         priceLikeDuffel(flights, json, OFFER, "12.50");
         given(flights.seatMaps("off_1")).willReturn(SEAT_MAPS);
-        given(stripe.createCheckoutSession(anyLong(), anyString(), anyString(), anyString(), any(), anyString()))
+        given(stripe.createCheckoutSession(anyLong(), anyString(), anyString(), anyString(), anyString(), any(), anyString()))
                 .willReturn(json.readTree("{\"id\":\"cs_1\",\"client_secret\":\"cs_1_secret\"}"));
 
-        CheckoutSessionResponse response = payments.createFlightCheckout("off_1", List.of(new IntendedService("ase_bag", 2), new IntendedService("ase_seat", 1)), "/flight/b2ZmXzE=", 0);
+        CheckoutSessionResponse response = payments.createFlightCheckout("off_1", List.of(new IntendedService("ase_bag", 2), new IntendedService("ase_seat", 1)), "/flight/b2ZmXzE=", 0, "fr");
 
         // 193.69 (billet + 5 %) + 2 × 24.00 + 15.00 = 256.69 € → 25669 centimes.
         verify(stripe).createCheckoutSession(eq(25669L), eq("EUR"), eq("DSS → CDG"),
-                eq("http://localhost:4200/flight/b2ZmXzE=?checkout_session_id={CHECKOUT_SESSION_ID}"), any(Map.class), anyString());
+                eq("http://localhost:4200/flight/b2ZmXzE=?checkout_session_id={CHECKOUT_SESSION_ID}"), eq("fr"), any(Map.class), anyString());
         assertThat(response.amount()).isEqualTo("256.69");
         assertThat(response.checkoutSessionId()).isEqualTo("cs_1");
         assertThat(response.clientSecret()).isEqualTo("cs_1_secret");
@@ -114,16 +114,21 @@ class PaymentServiceTest {
     void sameAttemptReopensTheSameSessionAndANewAttemptANewOne() {
         given(flights.offer("off_1")).willReturn(OFFER);
         priceLikeDuffel(flights, json, OFFER, "12.50");
-        given(stripe.createCheckoutSession(anyLong(), anyString(), anyString(), anyString(), any(), anyString()))
+        given(stripe.createCheckoutSession(anyLong(), anyString(), anyString(), anyString(), anyString(), any(), anyString()))
                 .willReturn(json.readTree("{\"id\":\"cs_1\",\"client_secret\":\"cs_1_secret\"}"));
 
-        payments.createFlightCheckout("off_1", List.of(), "/flight/x", 0);
-        payments.createFlightCheckout("off_1", List.of(), "/flight/x", 0);
-        payments.createFlightCheckout("off_1", List.of(), "/flight/x", 1);
+        payments.createFlightCheckout("off_1", List.of(), "/flight/x", 0, "fr");
+        payments.createFlightCheckout("off_1", List.of(), "/flight/x", 0, "fr");
+        payments.createFlightCheckout("off_1", List.of(), "/flight/x", 1, "fr");
 
         ArgumentCaptor<String> keys = ArgumentCaptor.forClass(String.class);
-        verify(stripe, org.mockito.Mockito.times(3)).createCheckoutSession(anyLong(), anyString(), anyString(), anyString(), any(), keys.capture());
+        verify(stripe, org.mockito.Mockito.times(3)).createCheckoutSession(anyLong(), anyString(), anyString(), anyString(), anyString(), any(), keys.capture());
         assertThat(keys.getAllValues().get(0)).isEqualTo(keys.getAllValues().get(1)).isNotEqualTo(keys.getAllValues().get(2));
+
+        // Autre langue : Stripe refuserait la même clé avec d'autres paramètres, la clé change aussi.
+        payments.createFlightCheckout("off_1", List.of(), "/flight/x", 0, "en");
+        verify(stripe, org.mockito.Mockito.times(4)).createCheckoutSession(anyLong(), anyString(), anyString(), anyString(), anyString(), any(), keys.capture());
+        assertThat(keys.getAllValues().getLast()).isNotEqualTo(keys.getAllValues().getFirst());
     }
 
     @Test
@@ -131,18 +136,18 @@ class PaymentServiceTest {
         given(flights.offer("off_1")).willReturn(OFFER);
         given(flights.seatMaps("off_1")).willReturn(SEAT_MAPS);
 
-        assertThatThrownBy(() -> payments.createFlightCheckout("off_1", List.of(new IntendedService("ase_gone", 1)), "/flight/x", 0))
+        assertThatThrownBy(() -> payments.createFlightCheckout("off_1", List.of(new IntendedService("ase_gone", 1)), "/flight/x", 0, "fr"))
                 .isInstanceOf(PaymentException.class).hasFieldOrPropertyWithValue("code", "service-unavailable");
-        assertThatThrownBy(() -> payments.createFlightCheckout("off_1", List.of(new IntendedService("ase_bag", 3)), "/flight/x", 0))
+        assertThatThrownBy(() -> payments.createFlightCheckout("off_1", List.of(new IntendedService("ase_bag", 3)), "/flight/x", 0, "fr"))
                 .isInstanceOf(PaymentException.class);
-        verify(stripe, never()).createCheckoutSession(anyLong(), anyString(), anyString(), anyString(), any(), anyString());
+        verify(stripe, never()).createCheckoutSession(anyLong(), anyString(), anyString(), anyString(), anyString(), any(), anyString());
     }
 
     @Test
     void withoutStripeKeysPaymentsAreUnavailable() {
         PaymentService unconfigured = new PaymentService(new StripeProperties("https://api.stripe.com", "", "", "2026-03-25.dahlia", "", "http://localhost:4200"), stripe, flights, stays, json, CLOCK, recorder);
 
-        assertThatThrownBy(() -> unconfigured.createFlightCheckout("off_1", List.of(), "/flight/x", 0))
+        assertThatThrownBy(() -> unconfigured.createFlightCheckout("off_1", List.of(), "/flight/x", 0, "fr"))
                 .isInstanceOf(PaymentException.class).hasFieldOrPropertyWithValue("code", "payments-unavailable");
     }
 
@@ -180,14 +185,14 @@ class PaymentServiceTest {
     void stayIsChargedTheQuoteWithFivePercentFees() {
         given(stays.getQuote("quo_1")).willReturn("""
                 {"data":{"id":"quo_1","total_amount":"210.00","total_currency":"EUR","accommodation":{"name":"Maison d'hôtes Médina"}}}""");
-        given(stripe.createCheckoutSession(anyLong(), anyString(), anyString(), anyString(), any(), anyString()))
+        given(stripe.createCheckoutSession(anyLong(), anyString(), anyString(), anyString(), anyString(), any(), anyString()))
                 .willReturn(json.readTree("{\"id\":\"cs_s\",\"client_secret\":\"cs_s_secret\"}"));
 
-        CheckoutSessionResponse response = payments.createStayCheckout("quo_1", "/stays/srr_1", 0);
+        CheckoutSessionResponse response = payments.createStayCheckout("quo_1", "/stays/srr_1", 0, "fr");
 
         // 210.00 + 5 % = 220.50 € → 22050 centimes.
         verify(stripe).createCheckoutSession(eq(22050L), eq("EUR"), eq("Maison d'hôtes Médina"),
-                eq("http://localhost:4200/stays/srr_1?checkout_session_id={CHECKOUT_SESSION_ID}"), any(Map.class), anyString());
+                eq("http://localhost:4200/stays/srr_1?checkout_session_id={CHECKOUT_SESSION_ID}"), eq("fr"), any(Map.class), anyString());
         assertThat(response.amount()).isEqualTo("220.50");
     }
 }

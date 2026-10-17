@@ -69,6 +69,8 @@ export class PaymentForm {
 
   private readonly host = viewChild.required<ElementRef<HTMLElement>>('element');
   private stripe: Stripe | null = null;
+  /** Langue de l'instance Stripe.js (messages d'erreur) : une autre langue en recharge une. */
+  private stripeLang: string | null = null;
   private form: StripeCheckoutForm | null = null;
   private destroyed = false;
 
@@ -92,7 +94,11 @@ export class PaymentForm {
     this.phase.set('loading');
     this.error.set(null);
     try {
-      this.stripe ??= await loadStripe(this.session().publishable_key);
+      const lang = untracked(this.lang);
+      if (!this.stripe || this.stripeLang !== lang) {
+        this.stripe = await loadStripe(this.session().publishable_key, { locale: lang === 'en' ? 'en' : 'fr' });
+        this.stripeLang = lang;
+      }
       if (!this.stripe) {
         throw new Error('Stripe.js unavailable');
       }
