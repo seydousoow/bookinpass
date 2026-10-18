@@ -90,17 +90,6 @@ public class StripePayment {
     @Column(name = "refunded_at")
     private Instant refundedAt;
 
-    /** Charge Stripe ({@code ch_…}) du paiement encaissé : porteuse du reçu. */
-    @Column(name = "charge_id")
-    private String chargeId;
-
-    /** Page du reçu Stripe, réutilisée jusqu'à {@link #receiptUrlExpiresAt} (Stripe fait expirer ses liens). */
-    @Column(name = "receipt_url")
-    private String receiptUrl;
-
-    @Column(name = "receipt_url_expires_at")
-    private Instant receiptUrlExpiresAt;
-
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
@@ -125,13 +114,6 @@ public class StripePayment {
         this.cardLast4 = cardLast4;
         this.customerEmail = customerEmail;
         this.customerName = customerName;
-    }
-
-    /** Reçu de la charge lu chez Stripe, gardé jusqu'à {@code expiresAt}. */
-    public void receipt(String chargeId, String url, Instant expiresAt) {
-        this.chargeId = chargeId;
-        this.receiptUrl = url;
-        this.receiptUrlExpiresAt = expiresAt;
     }
 
     public void attachTo(FlightOrder order) {

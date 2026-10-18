@@ -3,7 +3,6 @@ package com.bookinpass.backend.service.booking;
 import com.bookinpass.backend.mail.resources.BookingCancellationMailProperties;
 import com.bookinpass.backend.mail.resources.BookingChangeMailProperties;
 import com.bookinpass.backend.mail.resources.BookingConfirmationMailProperties;
-import com.bookinpass.backend.mail.resources.BookingReceiptMailProperties;
 import com.bookinpass.backend.mail.resources.BookingMailProperties;
 import com.bookinpass.backend.mail.resources.MailLang;
 import com.bookinpass.backend.mail.services.MailService;
@@ -45,16 +44,6 @@ public class BookingMailer {
                 .destination(to).name(travellerName).lang(MailLang.of(lang))
                 .pnr(pnr(order)).segments(BookingMailProperties.segmentsOf(order)).passengers(BookingMailProperties.passengersOf(order))
                 .refund(refund.isEmpty() ? "—" : refund + " " + cancellation.path("refund_currency").asString(""))
-                .build());
-    }
-
-    /** Paiement encaissé (réservation, ou modification payante) : lien du reçu Stripe. */
-    public void receiptIssued(String to, String travellerName, JsonNode order, String amount, String receiptUrl, String receiptNumber,
-                              String lang) {
-        mails.sendMail(BookingReceiptMailProperties.builder()
-                .destination(to).name(travellerName).lang(MailLang.of(lang))
-                .pnr(pnr(order)).segments(BookingMailProperties.segmentsOf(order)).passengers(BookingMailProperties.passengersOf(order))
-                .amount(amount).receiptUrl(receiptUrl).receiptNumber(receiptNumber)
                 .build());
     }
 

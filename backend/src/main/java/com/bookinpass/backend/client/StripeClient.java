@@ -98,21 +98,6 @@ public class StripeClient {
         return post("/v1/payment_intents/" + paymentIntentId + "/cancel", form, idempotencyKey, "cancellation");
     }
 
-    /**
-     * {@code GET /v1/payment_intents/{id}}, charge dépliée : sa {@code receipt_url} (page du reçu) et son
-     * {@code receipt_number}. Chaque lecture rend un lien valable (Stripe fait expirer les anciens après 30 jours).
-     */
-    public JsonNode retrievePaymentIntent(String paymentIntentId) {
-        String body = client.get()
-                .uri(uri -> uri.path("/v1/payment_intents/{id}").queryParam("expand[]", "latest_charge").build(paymentIntentId))
-                .retrieve()
-                .onStatus(HttpStatusCode::isError, (_, res) -> {
-                    throw failure(res, "payment intent retrieval");
-                })
-                .body(String.class);
-        return json.readTree(body);
-    }
-
     private JsonNode post(String path, MultiValueMap<String, String> form, String idempotencyKey, String what) {
         String body = client.post()
                 .uri(path)

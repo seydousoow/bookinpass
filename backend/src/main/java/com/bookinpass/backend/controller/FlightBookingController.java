@@ -22,8 +22,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import tools.jackson.databind.JsonNode;
 
-import java.util.Map;
-
 /** « Gérer mon vol » : consultation et annulation d'une réservation, avec son PNR et le nom d'un voyageur. */
 @RestController
 @RequiredArgsConstructor
@@ -44,15 +42,6 @@ public class FlightBookingController {
     @ApiResponse(responseCode = "410", description = "Dernier vol passé depuis plus de deux mois (`booking-expired`)", content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE, schema = @Schema(implementation = ProblemDetail.class)))
     public JsonNode lookup(@Valid @RequestBody BookingAccessRequest request) {
         return bookings.lookup(request.bookingReference(), request.lastName());
-    }
-
-    @PostMapping("receipt")
-    @Operation(summary = "Reçu de la réservation",
-            description = "Lien du reçu Stripe (`receipt_url`) du dernier paiement encaissé, téléchargeable en PDF depuis la page du reçu.")
-    @ApiResponse(responseCode = "200", description = "`{url}` — page du reçu")
-    @ApiResponse(responseCode = "409", description = "Pas de paiement encaissé pour cette réservation (`receipt-unavailable`)", content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE, schema = @Schema(implementation = ProblemDetail.class)))
-    public Map<String, String> receipt(@Valid @RequestBody BookingAccessRequest request) {
-        return Map.of("url", bookings.receiptUrl(request.bookingReference(), request.lastName()));
     }
 
     @PostMapping("cancellation")

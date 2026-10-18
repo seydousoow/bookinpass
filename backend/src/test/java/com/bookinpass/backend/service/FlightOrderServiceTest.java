@@ -10,7 +10,6 @@ import com.bookinpass.backend.dto.response.FlightOrderResponse;
 import com.bookinpass.backend.exception.DuffelException;
 import com.bookinpass.backend.exception.PaymentException;
 import com.bookinpass.backend.service.booking.BookingMailer;
-import com.bookinpass.backend.service.booking.FlightReceiptService;
 import com.bookinpass.backend.service.booking.FlightOrderCache;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -56,8 +55,7 @@ class FlightOrderServiceTest {
     private final DuffelCustomerService customers = mock(DuffelCustomerService.class);
     private final FlightOrderCache orderCache = mock(FlightOrderCache.class);
     private final BookingMailer mailer = mock(BookingMailer.class);
-    private final FlightReceiptService receipts = mock(FlightReceiptService.class);
-    private final FlightOrderService orders = new FlightOrderService(payments, stripe, duffel, json, recorder, customers, orderCache, mailer, receipts);
+    private final FlightOrderService orders = new FlightOrderService(payments, stripe, duffel, json, recorder, customers, orderCache, mailer);
 
     private static FlightOrderRequest request() {
         return new FlightOrderRequest("off_1", "cs_1", "amelia@example.com", "+221771234567", List.of(
@@ -106,7 +104,6 @@ class FlightOrderServiceTest {
         verify(recorder).recordCapture("cs_1", 21769);
         // « Gérer mon vol » : commande en cache dès sa création ; e-mail de confirmation au contact.
         verify(orderCache).put(eq("ord_1"), anyString());
-        verify(receipts).paymentCaptured("cs_1");
         verify(mailer).bookingConfirmed(eq("amelia@example.com"), eq("Amelia Earhart"), any(), eq("217.69 EUR"), any());
     }
 

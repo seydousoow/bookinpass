@@ -1,5 +1,5 @@
 import { Component, computed, inject, OnInit, signal } from '@angular/core';
-import { DatePipe, DOCUMENT } from '@angular/common';
+import { DatePipe } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { Badge, BadgeTone, Button, Card, Modal, Spinner } from '@shared/ui';
@@ -43,10 +43,6 @@ export class BookingDetails implements OnInit {
   protected readonly cancelBusy = signal(false);
   protected readonly cancelError = signal<string | null>(null);
   protected readonly cancelled = signal(false);
-  /** Reçu : lien demandé au serveur, page du reçu Stripe ouverte dans un nouvel onglet. */
-  protected readonly receiptBusy = signal(false);
-  protected readonly receiptError = signal<string | null>(null);
-  private readonly document = inject(DOCUMENT);
 
   ngOnInit(): void {
     if (!this.access) {
@@ -103,32 +99,6 @@ export class BookingDetails implements OnInit {
       error: (error: unknown) => {
         this.cancelBusy.set(false);
         this.cancelError.set(`flight.manage.errors.${errorCode(error)}`);
-      },
-    });
-  }
-
-  protected downloadReceipt(): void {
-    if (!this.access || this.receiptBusy()) {
-      return;
-    }
-    // Onglet ouvert dès le clic (sinon bloqué comme fenêtre surgissante), puis dirigé vers le reçu.
-    const tab = this.document.defaultView?.open('', '_blank');
-    this.receiptBusy.set(true);
-    this.receiptError.set(null);
-    this.bookings.receiptUrl(this.access).subscribe({
-      next: (url) => {
-        this.receiptBusy.set(false);
-        if (tab) {
-          tab.opener = null;
-          tab.location.href = url;
-        } else {
-          this.document.location.assign(url);
-        }
-      },
-      error: (error: unknown) => {
-        this.receiptBusy.set(false);
-        tab?.close();
-        this.receiptError.set(`flight.manage.errors.${errorCode(error)}`);
       },
     });
   }

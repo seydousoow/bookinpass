@@ -93,17 +93,6 @@ class MailServiceTest {
     }
 
     @Test
-    void receiptMailRendersInBothLanguages() throws Exception {
-        for (MailLang lang : MailLang.values()) {
-            MailService.Rendered mail = service(false).render(com.bookinpass.backend.mail.resources.BookingReceiptMailProperties.builder()
-                    .name("Amina").lang(lang).pnr("RZPNX8").segments(List.of()).passengers(List.of())
-                    .receiptNumber("1234-5678").amount("260.42 EUR").receiptUrl("https://pay.stripe.com/receipts/payment/x").build());
-            assertThat(mail.subject()).contains("RZPNX8");
-            assertThat(mail.body()).contains("1234-5678", "260.42 EUR", "https://pay.stripe.com/receipts/payment/x");
-        }
-    }
-
-    @Test
     void invalidRecipientIsSkipped() {
         given(verifier.isValid(anyString())).willReturn(false);
 

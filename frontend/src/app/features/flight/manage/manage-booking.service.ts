@@ -1,6 +1,6 @@
 import { inject, Injectable, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { map, Observable, tap } from 'rxjs';
+import { Observable, tap } from 'rxjs';
 import { APP_CONFIG } from '@core/config/app-config.token';
 
 /** Accès à une réservation : PNR + nom de famille d'un voyageur (vérifiés par le serveur à chaque appel). */
@@ -98,11 +98,6 @@ export class ManageBookingService {
         }
       }),
     );
-  }
-
-  /** Page du reçu Stripe du dernier paiement (téléchargeable en PDF depuis la page). */
-  receiptUrl(access: IBookingAccess): Observable<string> {
-    return this.http.post<{ url: string }>(`${this.url}/receipt`, access).pipe(map((r) => r.url));
   }
 
   quoteCancellation(access: IBookingAccess): Observable<ICancellationQuote> {
