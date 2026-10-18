@@ -3,6 +3,7 @@ package com.bookinpass.backend.service;
 import com.bookinpass.backend.dto.request.FlightOrderRequest;
 import com.bookinpass.backend.entity.FlightOrder;
 import com.bookinpass.backend.entity.FlightOrderEvent;
+import com.bookinpass.backend.entity.FlightOrderStatus;
 import com.bookinpass.backend.entity.StripePayment;
 import com.bookinpass.backend.entity.StripePaymentEvent;
 import com.bookinpass.backend.entity.StripePaymentStatus;
@@ -25,6 +26,7 @@ import tools.jackson.databind.node.ObjectNode;
 import java.math.BigDecimal;
 import java.time.Clock;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.HashMap;
 import java.util.Map;
@@ -270,7 +272,46 @@ public class BookingRecorder {
         Instant bookedAt = Optional.ofNullable(text(duffelOrder.path("created_at"))).map(Instant::parse).orElse(clock.instant());
         return new FlightOrder(duffelOrder.path("id").asString(), request.offerId(), text(duffelOrder.path("booking_reference")),
                 quote.currency(), quote.duffelTotal(), quote.sellingTotal(), pricing(quote), duffelOrder.path("live_mode").asBoolean(false),
-                bookedAt);
+                bookedAt, lastTravelDate(quote.offer().path("slices")));
+    }
+
+    /**
+     * Départ du dernier trajet : l'aller d'un aller simple, le retour d'un aller-retour. Date locale de l'aéroport
+     * ({@code departing_at} n'a pas de fuseau), nulle si l'offre ne la donne pas.
+     */
+    static LocalDate lastTravelDate(JsonNode slices) {
+        if (!slices.isArray() || slices.isEmpty()) {
+            return null;
+        }
+        String departure = text(slices.get(slices.size() - 1).path("segments").path(0).path("departing_at"));
+        return departure == null || departure.length() < 10 ? null : LocalDate.parse(departure.substring(0, 10));
+    }
+
+    /**
+     * Annulation confirmée depuis le site : la commande passe à {@code cancelled}, le remboursement Duffel est gardé
+     * dans l'historique. Le webhook {@code order_cancellation.confirmed} qui suit est dédoublonné par son identifiant.
+     *
+     * @return {@code false} si la commande était déjà annulée (rien n'est réécrit)
+     */
+    @Transactional
+    public boolean recordCancellation(String orderId, JsonNode cancellation) {
+        Optional<FlightOrder> found = orders.findByDuffelOrderId(orderId);
+        if (found.isEmpty() || found.get().getStatus() == FlightOrderStatus.CANCELLED) {
+            return false;
+        }
+        FlightOrder order = found.get();
+        Instant at = Optional.ofNullable(text(cancellation.path("confirmed_at"))).map(BookingRecorder::parseDuffelTime).orElse(clock.instant());
+        order.cancel(at);
+        FlightOrderEvent history = new FlightOrderEvent(order, "order_cancellation.confirmed", null, json.writeValueAsString(cancellation), at);
+        withRefund(history, cancellation);
+        orderEvents.save(history);
+        return true;
+    }
+
+    /** Statut enregistré d'une commande, vide si elle n'est pas chez nous. */
+    @Transactional(readOnly = true)
+    public Optional<FlightOrderStatus> statusOf(String orderId) {
+        return orders.findByDuffelOrderId(orderId).map(FlightOrder::getStatus);
     }
 
     /** {@code {currency, fee_rate, flight: {price, markup}, services: [{id, type, quantity, price, markup}]}}. */

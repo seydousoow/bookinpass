@@ -26,6 +26,21 @@ spring:
       port: ${REDIS_PORT:6379}
   cache:
     type: redis
+  # Gabarits FreeMarker des e-mails (templates/mail/*.ftlh) ; l'API ne rend aucune vue HTML.
+  freemarker:
+    template-loader-path: classpath:/templates/
+    suffix: .ftlh
+    charset: UTF-8
+    check-template-location: false
+  # Serveur SMTP (Mailpit en local : compose.yaml). Vide = aucun e-mail envoyé.
+  mail:
+    host: ${MAIL_HOST:}
+    port: ${MAIL_PORT:1025}
+    username: ${MAIL_USERNAME:}
+    password: ${MAIL_PASSWORD:}
+    properties:
+      mail.smtp.auth: ${MAIL_SMTP_AUTH:false}
+      mail.smtp.starttls.enable: ${MAIL_STARTTLS:false}
   flyway:
     locations: classpath:db/migration
   web:
@@ -115,3 +130,8 @@ bookinpass:
     stay-search-ttl: 10m
     stay-rates-max-ttl: 5m
     stay-reviews-ttl: 24h
+    flight-order-ttl: 7d
+  # E-mails aux voyageurs (réservation, modification, annulation). Envoyés seulement si spring.mail.host est renseigné.
+  mail:
+    from: ${MAIL_FROM:Book In Pass <reservations@bookinpass.com>}
+    frontend-url: ${FRONTEND_URL:http://localhost:4200}

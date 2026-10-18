@@ -87,7 +87,7 @@ class BookingJpaTest {
         User child = users.save(new User("Lou", "Sow", LocalDate.of(2018, 2, 3), "f", "aminata@example.com", "+221771234567"));
 
         FlightOrder order = new FlightOrder("ord_1", "off_1", "RZPNX8", "EUR", new BigDecimal("204.47"), new BigDecimal("217.69"),
-                "{\"currency\":\"EUR\",\"flight\":{\"price\":\"184.47\",\"markup\":\"9.22\"},\"services\":[]}", false, now);
+                "{\"currency\":\"EUR\",\"flight\":{\"price\":\"184.47\",\"markup\":\"9.22\"},\"services\":[]}", false, now, LocalDate.of(2026, 12, 20));
         order.addPassenger(booker, "pas_1", "adult");
         order.addPassenger(child, "pas_2", "child");
         orders.save(order);
@@ -173,7 +173,7 @@ class BookingJpaTest {
         JsonMapper json = JsonMapper.builder().build();
         Instant now = Instant.parse("2026-10-17T10:00:00Z");
         FlightOrder order = orders.save(new FlightOrder("ord_w", "off_w", "XYZ789", "EUR", new BigDecimal("100.00"),
-                new BigDecimal("105.00"), "{}", false, now));
+                new BigDecimal("105.00"), "{}", false, now, null));
         StripePayment payment = new StripePayment("cs_w", "pi_w", "EUR", 10500, false, now);
         payment.captured(10500, now);
         payment.attachTo(order);

@@ -18,6 +18,7 @@ import org.hibernate.type.SqlTypes;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -74,6 +75,10 @@ public class FlightOrder {
     @Column(name = "cancelled_at")
     private Instant cancelledAt;
 
+    /** Départ du dernier vol (retour d'un aller-retour), date locale ; la réservation se gère jusqu'à deux mois après. */
+    @Column(name = "last_travel_date")
+    private LocalDate lastTravelDate;
+
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<FlightOrderPassenger> passengers = new ArrayList<>();
 
@@ -86,7 +91,7 @@ public class FlightOrder {
     private Instant updatedAt;
 
     public FlightOrder(String duffelOrderId, String offerId, String bookingReference, String currency, BigDecimal duffelAmount,
-                       BigDecimal sellingAmount, String pricing, boolean liveMode, Instant bookedAt) {
+                       BigDecimal sellingAmount, String pricing, boolean liveMode, Instant bookedAt, LocalDate lastTravelDate) {
         this.duffelOrderId = duffelOrderId;
         this.offerId = offerId;
         this.bookingReference = bookingReference;
@@ -97,6 +102,7 @@ public class FlightOrder {
         this.pricing = pricing;
         this.liveMode = liveMode;
         this.bookedAt = bookedAt;
+        this.lastTravelDate = lastTravelDate;
     }
 
     public void addPassenger(User user, String duffelPassengerId, String passengerType) {

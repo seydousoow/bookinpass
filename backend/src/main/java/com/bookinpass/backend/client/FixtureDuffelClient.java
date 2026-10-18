@@ -64,6 +64,8 @@ public class FixtureDuffelClient implements DuffelClient {
     private final SecureRandom random = new SecureRandom();
     /** Clients Duffel de démo, par e-mail (en minuscules) : un seul par e-mail, comme chez Duffel. */
     private final Map<String, String> customerUsers = new ConcurrentHashMap<>();
+    /** Devis d'annulation de démo, par identifiant. */
+    private final Map<String, String> cancellations = new ConcurrentHashMap<>();
 
     /**
      * @param location dossier, ex. {@code file:fixtures/duffel/} — la barre finale est ajoutée si besoin
@@ -182,6 +184,10 @@ public class FixtureDuffelClient implements DuffelClient {
         order.set("passengers", json.valueToTree(request.data().passengers()));
         order.set("services", json.valueToTree(request.data().services()));
         order.set("metadata", json.valueToTree(request.data().metadata()));
+        order.put("created_at", java.time.Instant.now().toString());
+        order.put("live_mode", false);
+        order.putNull("cancelled_at");
+        order.set("available_actions", json.valueToTree(java.util.List.of("cancel")));
         ObjectNode response = json.createObjectNode();
         response.set("data", order);
         orders.put(offerId, json.writeValueAsString(order));
@@ -227,6 +233,79 @@ public class FixtureDuffelClient implements DuffelClient {
                 ObjectNode response = json.createObjectNode();
                 response.set("data", order);
                 return json.writeValueAsString(response);
+            }
+        }
+        throw new DuffelException(HttpStatus.NOT_FOUND, "Unknown demo order " + orderId);
+    }
+
+    @Override
+    public String getOrder(String orderId) {
+        ObjectNode response = json.createObjectNode();
+        response.set("data", demoOrder(orderId));
+        return json.writeValueAsString(response);
+    }
+
+    /** Devis de démo : remboursement intégral sur le solde, valable 15 minutes. */
+    @Override
+    public String createOrderCancellation(String orderId) {
+        JsonNode order = demoOrder(orderId);
+        if (!order.path("cancelled_at").isNull() && !order.path("cancelled_at").isMissingNode()) {
+            throw new DuffelException(HttpStatus.UNPROCESSABLE_CONTENT, "Demo order already cancelled", "invalid_state_error",
+                    "already_cancelled", null, null);
+        }
+        ObjectNode cancellation = json.createObjectNode();
+        String id = "ore_demo" + Long.toUnsignedString(random.nextLong(), 36);
+        cancellation.put("id", id);
+        cancellation.put("order_id", orderId);
+        cancellation.put("refund_amount", order.path("total_amount").asString());
+        cancellation.put("refund_currency", order.path("total_currency").asString());
+        cancellation.put("refund_to", "balance");
+        cancellation.put("expires_at", java.time.Instant.now().plusSeconds(900).toString());
+        cancellation.putNull("confirmed_at");
+        cancellations.put(id, json.writeValueAsString(cancellation));
+        ObjectNode response = json.createObjectNode();
+        response.set("data", cancellation);
+        return json.writeValueAsString(response);
+    }
+
+    @Override
+    public String getOrderCancellation(String cancellationId) {
+        String stored = cancellations.get(cancellationId);
+        if (stored == null) {
+            throw new DuffelException(HttpStatus.NOT_FOUND, "Unknown demo cancellation " + cancellationId);
+        }
+        return "{\"data\":" + stored + "}";
+    }
+
+    @Override
+    public String confirmOrderCancellation(String cancellationId) {
+        String stored = cancellations.get(cancellationId);
+        if (stored == null) {
+            throw new DuffelException(HttpStatus.NOT_FOUND, "Unknown demo cancellation " + cancellationId);
+        }
+        ObjectNode cancellation = (ObjectNode) json.readTree(stored);
+        String now = java.time.Instant.now().toString();
+        cancellation.put("confirmed_at", now);
+        String orderId = cancellation.path("order_id").asString();
+        for (Map.Entry<String, String> entry : orders.entrySet()) {
+            ObjectNode order = (ObjectNode) json.readTree(entry.getValue());
+            if (order.path("id").asString().equals(orderId)) {
+                order.put("cancelled_at", now);
+                order.set("available_actions", json.createArrayNode());
+                order.set("cancellation", cancellation);
+                entry.setValue(json.writeValueAsString(order));
+            }
+        }
+        ObjectNode response = json.createObjectNode();
+        response.set("data", cancellation);
+        return json.writeValueAsString(response);
+    }
+
+    private ObjectNode demoOrder(String orderId) {
+        for (String order : orders.values()) {
+            ObjectNode node = (ObjectNode) json.readTree(order);
+            if (node.path("id").asString().equals(orderId)) {
+                return node;
             }
         }
         throw new DuffelException(HttpStatus.NOT_FOUND, "Unknown demo order " + orderId);

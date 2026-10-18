@@ -9,6 +9,8 @@ import com.bookinpass.backend.dto.request.FlightOrderRequest.Passenger;
 import com.bookinpass.backend.dto.response.FlightOrderResponse;
 import com.bookinpass.backend.exception.DuffelException;
 import com.bookinpass.backend.exception.PaymentException;
+import com.bookinpass.backend.service.booking.BookingMailer;
+import com.bookinpass.backend.service.booking.FlightOrderCache;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -22,6 +24,7 @@ import java.util.List;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.mock;
@@ -50,7 +53,9 @@ class FlightOrderServiceTest {
             new StripeProperties("https://api.stripe.com", "sk_test_x", "pk_test_x", "2026-03-25.dahlia", "", "http://localhost:4200"),
             stripe, flights, stays, json, Clock.systemUTC(), recorder);
     private final DuffelCustomerService customers = mock(DuffelCustomerService.class);
-    private final FlightOrderService orders = new FlightOrderService(payments, stripe, duffel, json, recorder, customers);
+    private final FlightOrderCache orderCache = mock(FlightOrderCache.class);
+    private final BookingMailer mailer = mock(BookingMailer.class);
+    private final FlightOrderService orders = new FlightOrderService(payments, stripe, duffel, json, recorder, customers, orderCache, mailer);
 
     private static FlightOrderRequest request() {
         return new FlightOrderRequest("off_1", "cs_1", "amelia@example.com", "+221771234567", List.of(
@@ -97,6 +102,9 @@ class FlightOrderServiceTest {
         verify(recorder).recordAuthorisation(any());
         verify(recorder).recordOrder(any(), any(), any());
         verify(recorder).recordCapture("cs_1", 21769);
+        // « Gérer mon vol » : commande en cache dès sa création ; e-mail de confirmation au contact.
+        verify(orderCache).put(eq("ord_1"), anyString());
+        verify(mailer).bookingConfirmed(eq("amelia@example.com"), eq("Amelia Earhart"), any(), eq("217.69 EUR"));
     }
 
     @Test

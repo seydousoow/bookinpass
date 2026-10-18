@@ -72,4 +72,19 @@ public interface DuffelClient {
 
     /** {@code PATCH /air/orders/{id}} — rattache des clients Duffel à une commande. */
     String updateOrder(String orderId, DuffelOrderUpdate update);
+
+    /** {@code GET /air/orders/{id}} — la commande à jour (vols, voyageurs, actions possibles, annulation éventuelle). */
+    String getOrder(String orderId);
+
+    /**
+     * {@code POST /air/order_cancellations} — devis d'annulation : montant et destination du remboursement, valable
+     * jusqu'à {@code expires_at}. Rien n'est annulé tant qu'il n'est pas confirmé.
+     */
+    String createOrderCancellation(String orderId);
+
+    /** {@code GET /air/order_cancellations/{id}} — un devis d'annulation (pour vérifier sa commande avant confirmation). */
+    String getOrderCancellation(String cancellationId);
+
+    /** {@code POST /air/order_cancellations/{id}/actions/confirm} — annule la commande chez la compagnie. */
+    String confirmOrderCancellation(String cancellationId);
 }

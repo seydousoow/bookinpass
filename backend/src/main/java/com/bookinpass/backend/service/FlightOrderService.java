@@ -11,6 +11,8 @@ import com.bookinpass.backend.entity.User;
 import com.bookinpass.backend.exception.DuffelException;
 import com.bookinpass.backend.exception.PaymentException;
 import com.bookinpass.backend.service.PaymentService.FlightQuote;
+import com.bookinpass.backend.service.booking.BookingMailer;
+import com.bookinpass.backend.service.booking.FlightOrderCache;
 import com.bookinpass.backend.service.pricing.FlightPricing;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -61,6 +63,8 @@ public class FlightOrderService {
     private final JsonMapper json;
     private final BookingRecorder recorder;
     private final DuffelCustomerService customers;
+    private final FlightOrderCache orderCache;
+    private final BookingMailer mailer;
     /** Une réservation à la fois par session (double clic, onglet dupliqué) ; une seule instance aujourd'hui. */
     private final Set<String> inProgress = ConcurrentHashMap.newKeySet();
 
@@ -136,16 +140,34 @@ public class FlightOrderService {
         return response(order, session);
     }
 
-    /** Commande passée : enregistrée avec ses voyageurs, rattachée au client Duffel du titulaire, puis paiement encaissé. */
+    /**
+     * Commande passée : enregistrée avec ses voyageurs, rattachée au client Duffel du titulaire, mise en cache pour
+     * « Gérer mon vol », paiement encaissé, puis e-mail de confirmation.
+     */
     private void placed(JsonNode order, FlightOrderRequest request, FlightQuote quote, String intentId, JsonNode session) {
         String orderId = order.path("id").asString();
         safely("order " + orderId, () -> {
+            orderCache.put(orderId, json.writeValueAsString(Map.of("data", order)));
             User booker = recorder.recordOrder(order, request, quote);
             if (booker != null) {
                 customers.attach(booker, orderId);
+                // Le rattachement modifie la commande (`users`) : le cache est rechargé.
+                orderCache.refresh(orderId);
             }
         });
         capture(intentId, request.checkoutSessionId(), session.path("amount_total").asLong(), order);
+        safely("confirmation mail of " + orderId, () -> {
+            FlightOrderRequest.Passenger first = request.passengers().getFirst();
+            mailer.bookingConfirmed(request.email(), first.givenName() + " " + first.familyName(), order,
+                    paidAmount(session));
+        });
+    }
+
+    /** « 260.42 EUR » : montant débité par Stripe, dans la devise de la session. */
+    private static String paidAmount(JsonNode session) {
+        String currency = session.path("currency").asString("").toUpperCase();
+        return new BigDecimal(session.path("amount_total").asLong()).movePointLeft(FlightPricing.decimals(currency)).toPlainString()
+                + " " + currency;
     }
 
     /** Écriture en base qui ne doit pas faire échouer une réservation déjà passée. */

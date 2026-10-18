@@ -12,6 +12,8 @@ import org.springframework.http.MediaType;
 import org.springframework.web.client.RestClient;
 import tools.jackson.databind.json.JsonMapper;
 
+import java.util.Map;
+
 /**
  * Appels réels à {@code api.duffel.com}. Pas de {@code @Component} : instancié par {@code DuffelConfig},
  * qui décide à l'exécution entre ce client et le mode démo.
@@ -161,6 +163,52 @@ public class HttpDuffelClient implements DuffelClient {
                 .retrieve()
                 .onStatus(HttpStatusCode::isError, (_, res) -> {
                     throw errors.failure(res, "customer user lookup");
+                })
+                .body(String.class);
+    }
+
+    @Override
+    public String getOrder(String orderId) {
+        return client.get()
+                .uri("/air/orders/{id}", orderId)
+                .retrieve()
+                .onStatus(HttpStatusCode::isError, (_, res) -> {
+                    throw errors.failure(res, "order " + orderId);
+                })
+                .body(String.class);
+    }
+
+    @Override
+    public String createOrderCancellation(String orderId) {
+        return client.post()
+                .uri("/air/order_cancellations")
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(Map.of("data", Map.of("order_id", orderId)))
+                .retrieve()
+                .onStatus(HttpStatusCode::isError, (_, res) -> {
+                    throw errors.failure(res, "cancellation quote of order " + orderId);
+                })
+                .body(String.class);
+    }
+
+    @Override
+    public String getOrderCancellation(String cancellationId) {
+        return client.get()
+                .uri("/air/order_cancellations/{id}", cancellationId)
+                .retrieve()
+                .onStatus(HttpStatusCode::isError, (_, res) -> {
+                    throw errors.failure(res, "cancellation " + cancellationId);
+                })
+                .body(String.class);
+    }
+
+    @Override
+    public String confirmOrderCancellation(String cancellationId) {
+        return client.post()
+                .uri("/air/order_cancellations/{id}/actions/confirm", cancellationId)
+                .retrieve()
+                .onStatus(HttpStatusCode::isError, (_, res) -> {
+                    throw errors.failure(res, "confirmation of cancellation " + cancellationId);
                 })
                 .body(String.class);
     }

@@ -42,6 +42,8 @@ public class CacheConfig {
     public static final String AIRPORTS = "airports";
     public static final String AIRLINES = "airlines";
     public static final String RATES = "rates";
+    /** Commande Duffel, clé {@code bip::flight::{orderId}}. */
+    public static final String FLIGHT_ORDERS = "flight";
 
     /**
      * Premier {@code expires_at} du document : celui de l'offre elle-même pour {@code GET /air/offers/{id}},
@@ -97,6 +99,7 @@ public class CacheConfig {
                 .withCacheConfiguration(AIRLINES, base
                         .serializeValuesWith(SerializationPair.fromSerializer(new JacksonJsonRedisSerializer<>(AirlineResponse[].class)))
                         .entryTtl(ttl.airlinesTtl()))
+                .withCacheConfiguration(FLIGHT_ORDERS, rawJson.computePrefixWith(name -> "bip::" + name + "::").entryTtl(ttl.flightOrderTtl()))
                 .withCacheConfiguration(RATES, base
                         .serializeValuesWith(SerializationPair.fromSerializer(new JacksonJsonRedisSerializer<>(ExchangeRatesResponse.class)))
                         .entryTtl(ttl.ratesTtl()));

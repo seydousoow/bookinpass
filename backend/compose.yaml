@@ -7,7 +7,10 @@ name: bookinpass
 services:
   postgres:
     image: postgres:18.6
+    ports:
+      - "5432:5432"
     networks:
+      - bip-egress
       - bip-internal
     environment:
       POSTGRES_DB: bookinpass
@@ -41,6 +44,17 @@ services:
       timeout: 3s
       retries: 10
 
+  # Boîte d'e-mails de test : tout ce que le backend envoie s'affiche sur http://localhost:8025 (rien ne part).
+  mailpit:
+    image: axllent/mailpit:v1.27
+    networks:
+      - bip-internal
+      - bip-egress
+    ports:
+      - "${MAILPIT_UI_PORT:-8025}:8025"
+      # SMTP publié pour le backend lancé depuis l'IDE (MAIL_HOST=localhost).
+      - "${MAILPIT_SMTP_PORT:-1025}:1025"
+
   backend:
     build:
       context: .
@@ -67,6 +81,15 @@ services:
       STRIPE_PUBLISHABLE_KEY: ${STRIPE_PUBLISHABLE_KEY:-}
       STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET:-}
       FRONTEND_URL: ${FRONTEND_URL:-http://localhost:4200}
+
+      # E-mails aux voyageurs : Mailpit par défaut ; un vrai SMTP via .env (MAIL_HOST vide = aucun envoi).
+      MAIL_HOST: ${MAIL_HOST-mailpit}
+      MAIL_PORT: ${MAIL_PORT:-1025}
+      MAIL_USERNAME: ${MAIL_USERNAME:-}
+      MAIL_PASSWORD: ${MAIL_PASSWORD:-}
+      MAIL_SMTP_AUTH: ${MAIL_SMTP_AUTH:-false}
+      MAIL_STARTTLS: ${MAIL_STARTTLS:-false}
+      MAIL_FROM: ${MAIL_FROM:-Book In Pass <reservations@bookinpass.com>}
       STAYS_LOG_LEVEL: ${STAYS_LOG_LEVEL:-info}
 
       EXPEDIA_BASE_URL: ${EXPEDIA_BASE_URL:-https://test.ean.com/v3}
