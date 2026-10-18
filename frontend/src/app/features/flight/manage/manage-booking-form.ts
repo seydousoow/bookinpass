@@ -50,10 +50,11 @@ export class ManageBookingForm {
     const { booking_reference, last_name } = this.value();
     this.loading.set(true);
     this.error.set(null);
-    this.bookings.lookup({ booking_reference: booking_reference.trim().toUpperCase(), last_name: last_name.trim() }).subscribe({
+    const access = { booking_reference: booking_reference.trim().toUpperCase(), last_name: last_name.trim() };
+    this.bookings.lookup(access).subscribe({
       next: () => {
         this.loading.set(false);
-        void this.router.navigate(['/flight', 'booking']);
+        void this.router.navigate(['/flight', 'booking'], { queryParams: { n: access.booking_reference, l: access.last_name } });
       },
       error: (error: unknown) => {
         this.loading.set(false);

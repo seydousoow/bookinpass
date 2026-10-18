@@ -87,9 +87,9 @@ export interface ICancellationQuote {
 }
 
 /**
- * « Gérer mon vol ». L'accès (PNR + nom) n'est gardé qu'en mémoire, jamais dans le stockage du navigateur : un
- * rechargement de la page de la réservation renvoie au formulaire. Il est renvoyé à chaque appel, le serveur ne
- * faisant confiance à rien d'autre.
+ * « Gérer mon vol ». L'accès (PNR + nom) est porté par l'URL de la page de la réservation (`?n=…&l=…`), jamais par
+ * le stockage du navigateur ; le dernier utilisé est gardé en mémoire pour préremplir le formulaire. Il est renvoyé
+ * à chaque appel, le serveur ne faisant confiance à rien d'autre.
  */
 @Injectable({ providedIn: 'root' })
 export class ManageBookingService {
