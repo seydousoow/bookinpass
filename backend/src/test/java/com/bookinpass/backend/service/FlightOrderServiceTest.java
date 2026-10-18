@@ -104,7 +104,7 @@ class FlightOrderServiceTest {
         verify(recorder).recordCapture("cs_1", 21769);
         // « Gérer mon vol » : commande en cache dès sa création ; e-mail de confirmation au contact.
         verify(orderCache).put(eq("ord_1"), anyString());
-        verify(mailer).bookingConfirmed(eq("amelia@example.com"), eq("Amelia Earhart"), any(), eq("217.69 EUR"));
+        verify(mailer).bookingConfirmed(eq("amelia@example.com"), eq("Amelia Earhart"), any(), eq("217.69 EUR"), any());
     }
 
     @Test

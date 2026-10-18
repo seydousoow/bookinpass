@@ -79,6 +79,10 @@ public class FlightOrder {
     @Column(name = "last_travel_date")
     private LocalDate lastTravelDate;
 
+    /** Langue des e-mails de la commande ({@code fr}, {@code en}). */
+    @Column(nullable = false, length = 2)
+    private String lang = "fr";
+
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<FlightOrderPassenger> passengers = new ArrayList<>();
 
@@ -103,6 +107,11 @@ public class FlightOrder {
         this.liveMode = liveMode;
         this.bookedAt = bookedAt;
         this.lastTravelDate = lastTravelDate;
+    }
+
+    /** {@code en} pour une réservation faite sur le site en anglais, {@code fr} sinon. */
+    public void useLang(String lang) {
+        this.lang = lang != null && lang.toLowerCase().startsWith("en") ? "en" : "fr";
     }
 
     public void addPassenger(User user, String duffelPassengerId, String passengerType) {

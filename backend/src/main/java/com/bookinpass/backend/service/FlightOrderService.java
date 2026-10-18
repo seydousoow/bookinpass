@@ -159,7 +159,7 @@ public class FlightOrderService {
         safely("confirmation mail of " + orderId, () -> {
             FlightOrderRequest.Passenger first = request.passengers().getFirst();
             mailer.bookingConfirmed(request.email(), first.givenName() + " " + first.familyName(), order,
-                    paidAmount(session));
+                    paidAmount(session), request.lang());
         });
     }
 

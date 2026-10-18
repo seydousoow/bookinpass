@@ -115,7 +115,7 @@ public class FlightBookingService {
 
     /** E-mail d'annulation au titulaire de la réservation (annulation depuis le site ou signalée par webhook). */
     public void notifyCancelled(String orderId, JsonNode duffelOrder, JsonNode cancellation) {
-        contact(orderId).ifPresent(c -> mailer.bookingCancelled(c.email(), c.name(), duffelOrder, cancellation));
+        contact(orderId).ifPresent(c -> mailer.bookingCancelled(c.email(), c.name(), duffelOrder, cancellation, c.lang()));
     }
 
     /** E-mail de modification au titulaire (changement décidé par la compagnie). */
@@ -125,7 +125,7 @@ public class FlightBookingService {
             return;
         }
         try {
-            mailer.bookingChanged(contact.get().email(), contact.get().name(), data(cache.get(orderId)));
+            mailer.bookingChanged(contact.get().email(), contact.get().name(), data(cache.get(orderId)), contact.get().lang());
         } catch (RuntimeException e) {
             log.error("Change mail for order {} not sent", orderId, e);
         }
@@ -182,7 +182,7 @@ public class FlightBookingService {
         return orders.findWithTravellersByDuffelOrderId(orderId).flatMap(order -> order.getPassengers().stream()
                 .map(FlightOrderPassenger::getUser)
                 .findFirst()
-                .map(user -> new Contact(user.getEmail(), user.getFirstName() + " " + user.getLastName())));
+                .map(user -> new Contact(user.getEmail(), user.getFirstName() + " " + user.getLastName(), order.getLang())));
     }
 
     private static String normalize(String text) {
@@ -199,6 +199,6 @@ public class FlightBookingService {
         }
     }
 
-    private record Contact(String email, String name) {
+    private record Contact(String email, String name, String lang) {
     }
 }

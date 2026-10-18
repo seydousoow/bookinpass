@@ -118,7 +118,7 @@ class FlightBookingServiceTest {
         assertThat(view.path("cancellation").path("refund_amount").asString()).isEqualTo("200.00");
         verify(recorder).recordCancellation(eq("ord_1"), any());
         verify(cache).refresh("ord_1");
-        verify(mailer).bookingCancelled(eq("aminata@example.com"), eq("Aminata Séné-Sow"), any(), any());
+        verify(mailer).bookingCancelled(eq("aminata@example.com"), eq("Aminata Séné-Sow"), any(), any(), eq("fr"));
     }
 
     @Test

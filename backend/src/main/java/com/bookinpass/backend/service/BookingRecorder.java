@@ -270,9 +270,11 @@ public class BookingRecorder {
 
     private FlightOrder newOrder(JsonNode duffelOrder, FlightOrderRequest request, FlightQuote quote) {
         Instant bookedAt = Optional.ofNullable(text(duffelOrder.path("created_at"))).map(Instant::parse).orElse(clock.instant());
-        return new FlightOrder(duffelOrder.path("id").asString(), request.offerId(), text(duffelOrder.path("booking_reference")),
+        FlightOrder order = new FlightOrder(duffelOrder.path("id").asString(), request.offerId(), text(duffelOrder.path("booking_reference")),
                 quote.currency(), quote.duffelTotal(), quote.sellingTotal(), pricing(quote), duffelOrder.path("live_mode").asBoolean(false),
                 bookedAt, lastTravelDate(quote.offer().path("slices")));
+        order.useLang(request.lang());
+        return order;
     }
 
     /**

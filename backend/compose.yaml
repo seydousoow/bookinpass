@@ -44,17 +44,6 @@ services:
       timeout: 3s
       retries: 10
 
-  # Boîte d'e-mails de test : tout ce que le backend envoie s'affiche sur http://localhost:8025 (rien ne part).
-  mailpit:
-    image: axllent/mailpit:v1.27
-    networks:
-      - bip-internal
-      - bip-egress
-    ports:
-      - "${MAILPIT_UI_PORT:-8025}:8025"
-      # SMTP publié pour le backend lancé depuis l'IDE (MAIL_HOST=localhost).
-      - "${MAILPIT_SMTP_PORT:-1025}:1025"
-
   backend:
     build:
       context: .
@@ -82,14 +71,13 @@ services:
       STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET:-}
       FRONTEND_URL: ${FRONTEND_URL:-http://localhost:4200}
 
-      # E-mails aux voyageurs : Mailpit par défaut ; un vrai SMTP via .env (MAIL_HOST vide = aucun envoi).
-      MAIL_HOST: ${MAIL_HOST-mailpit}
-      MAIL_PORT: ${MAIL_PORT:-1025}
-      MAIL_USERNAME: ${MAIL_USERNAME:-}
-      MAIL_PASSWORD: ${MAIL_PASSWORD:-}
-      MAIL_SMTP_AUTH: ${MAIL_SMTP_AUTH:-false}
-      MAIL_STARTTLS: ${MAIL_STARTTLS:-false}
-      MAIL_FROM: ${MAIL_FROM:-Book In Pass <reservations@bookinpass.com>}
+      # E-mails aux voyageurs par AWS SES. MAIL_ENABLED=false : rendus et journalisés, jamais envoyés.
+      MAIL_ENABLED: ${MAIL_ENABLED:-false}
+      AWS_REGION: ${AWS_REGION:-eu-west-1}
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID:-}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY:-}
+      AWS_SES_SENDER: ${AWS_SES_SENDER:-reservations@bookinpass.com}
+      AWS_SES_ALIAS: ${AWS_SES_ALIAS:-Book In Pass}
       STAYS_LOG_LEVEL: ${STAYS_LOG_LEVEL:-info}
 
       EXPEDIA_BASE_URL: ${EXPEDIA_BASE_URL:-https://test.ean.com/v3}

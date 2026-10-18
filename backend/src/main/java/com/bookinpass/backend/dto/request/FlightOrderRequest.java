@@ -25,7 +25,12 @@ public record FlightOrderRequest(
         @JsonProperty("checkout_session_id") @Schema(example = "cs_test_a1b2") @NotNull @Pattern(regexp = "cs_[A-Za-z0-9_]+") @Size(max = 200) String checkoutSessionId,
         @Schema(example = "amelia@example.com") @NotBlank @Email @Size(max = 200) String email,
         @JsonProperty("phone_number") @Schema(example = "+221771234567") @NotNull @Pattern(regexp = "\\+[1-9][0-9]{6,14}") String phoneNumber,
-        @NotEmpty @Size(max = 9) List<@Valid @NotNull Passenger> passengers) {
+        @NotEmpty @Size(max = 9) List<@Valid @NotNull Passenger> passengers,
+        @Schema(description = "Langue du site (e-mails de la réservation) ; français si absente", example = "fr") @Pattern(regexp = "[a-z]{2}(-[A-Za-z]{2})?") String lang) {
+
+    public FlightOrderRequest(String offerId, String checkoutSessionId, String email, String phoneNumber, List<Passenger> passengers) {
+        this(offerId, checkoutSessionId, email, phoneNumber, passengers, null);
+    }
 
     public record Passenger(
             @Schema(example = "pas_00009hj8USM7Ncg31cBCLL") @NotNull @Pattern(regexp = "pas_[A-Za-z0-9]+") String id,
