@@ -21,6 +21,16 @@ export const routes: Routes = [
         runGuardsAndResolvers: 'paramsOrQueryParamsChange',
       },
       {
+        path: 'manage',
+        pathMatch: 'full',
+        loadComponent: () => import('@features/home/home').then((m) => m.Home),
+        children: [{ path: '', loadComponent: () => import('@features/flight/manage/manage-booking-form').then((m) => m.ManageBookingForm) }],
+      },
+      {
+        path: 'booking',
+        loadComponent: () => import('@features/flight/manage/booking-details').then((m) => m.BookingDetails),
+      },
+      {
         path: ':offerId',
         loadComponent: () => import('@features/flight/details/flight-offer').then((o) => o.FlightOffer),
       },

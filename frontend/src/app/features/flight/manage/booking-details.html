@@ -1,0 +1,99 @@
+<ng-container *transloco="let t">
+  <div class="mx-auto max-w-4xl px-4 py-8">
+    <div class="mb-6 flex flex-wrap items-center justify-between gap-3">
+      <h1 class="text-2xl font-bold">{{ t('flight.manage.details.title') }}</h1>
+      <bip-button (clicked)="another()" variant="outline">{{ t('flight.manage.details.another') }}</bip-button>
+    </div>
+
+    @if (loadError(); as error) {
+      <bip-card>
+        <p class="text-state-error text-sm" role="alert">{{ t(error) }}</p>
+        <div class="mt-4 flex gap-3">
+          <bip-button (clicked)="reload()" variant="primary">{{ t('flight.manage.details.retry') }}</bip-button>
+          <a bipButton routerLink="/flight/manage" variant="outline">{{ t('flight.manage.details.back') }}</a>
+        </div>
+      </bip-card>
+    } @else if (view(); as booking) {
+      @if (cancelled()) {
+        <p class="rounded-card bg-state-success-soft mb-4 p-4 text-sm" role="status">{{ t('flight.manage.cancel.done') }}</p>
+      }
+
+      <bip-card>
+        <div class="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <p class="text-muted text-xs">{{ t('flight.manage.details.reference') }}</p>
+            <p class="text-xl font-bold tracking-widest">{{ booking.order.booking_reference }}</p>
+          </div>
+          <bip-badge [tone]="statusTone()">{{ t('flight.manage.status.' + booking.status) }}</bip-badge>
+        </div>
+
+        <h2 class="mt-6 font-semibold">{{ t('flight.manage.details.flights') }}</h2>
+        <ol class="mt-2 space-y-3">
+          @for (slice of booking.order.slices; track $index) {
+            <li class="rounded-card border-border-subtle border p-3">
+              <p class="font-semibold">{{ slice.origin.city_name || slice.origin.iata_code }} → {{ slice.destination.city_name || slice.destination.iata_code }}</p>
+              <ul class="mt-2 space-y-1 text-sm">
+                @for (segment of slice.segments; track segment.id ?? $index) {
+                  <li class="flex flex-wrap justify-between gap-x-4">
+                    <span>{{ segment.origin.iata_code }} {{ segment.departing_at | date: 'EEE d MMM, HH:mm' }} → {{ segment.destination.iata_code }} {{ segment.arriving_at | date: 'HH:mm' }}</span>
+                    <span class="text-muted">{{ segment.marketing_carrier?.name }} {{ segment.marketing_carrier?.iata_code }}{{ segment.marketing_carrier_flight_number }}</span>
+                  </li>
+                }
+              </ul>
+            </li>
+          }
+        </ol>
+
+        <h2 class="mt-6 font-semibold">{{ t('flight.manage.details.passengers') }}</h2>
+        <ul class="mt-2 space-y-1 text-sm">
+          @for (passenger of booking.order.passengers; track passenger.id ?? $index) {
+            <li>{{ passenger.given_name }} {{ passenger.family_name }}</li>
+          }
+        </ul>
+
+        <div class="border-border-subtle mt-6 flex items-baseline justify-between gap-4 border-t pt-4">
+          <p class="font-semibold">{{ t('flight.manage.details.paid') }}</p>
+          <p class="text-lg font-bold">{{ money(booking.paid_amount, booking.paid_currency) }}</p>
+        </div>
+      </bip-card>
+
+      @if (cancellable()) {
+        <div class="mt-6 flex justify-end">
+          <bip-button (clicked)="openCancellation()" variant="outline">{{ t('flight.manage.cancel.open') }}</bip-button>
+        </div>
+      } @else if (booking.status !== 'cancelled') {
+        <p class="text-muted mt-6 text-sm">{{ t('flight.manage.cancel.offline') }}</p>
+      }
+    } @else {
+      <div class="flex justify-center py-16"><bip-spinner showLabel size="md"/></div>
+    }
+  </div>
+
+  <bip-modal [(opened)]="cancelOpened" [backdropDismissible]="!cancelBusy()" [title]="t('flight.manage.cancel.title')">
+    @if (quote(); as quote) {
+      <p class="text-sm">{{ t('flight.manage.cancel.refund') }}</p>
+      <p class="mt-2 text-lg font-bold">
+        @if (quote.refund_amount && quote.refund_currency) {
+          {{ money(quote.refund_amount, quote.refund_currency) }}
+        } @else {
+          {{ t('flight.manage.cancel.no-refund') }}
+        }
+      </p>
+      <p class="text-muted mt-3 text-xs">{{ t('flight.manage.cancel.refund-note') }}</p>
+      @if (quote.expires_at) {
+        <p class="text-muted mt-1 text-xs">{{ t('flight.manage.cancel.expires', { time: (quote.expires_at | date: 'HH:mm') }) }}</p>
+      }
+    } @else if (cancelBusy()) {
+      <div class="flex justify-center py-6"><bip-spinner showLabel/></div>
+    }
+    @if (cancelError(); as error) {
+      <p class="text-state-error mt-3 text-sm" role="alert">{{ t(error) }}</p>
+    }
+    <div modalFooter>
+      <bip-button (clicked)="cancelOpened.set(false)" [disabled]="cancelBusy()" variant="outline">{{ t('flight.manage.cancel.keep') }}</bip-button>
+      <bip-button (clicked)="confirmCancellation()" [disabled]="!quote()" [loading]="cancelBusy() && !!quote()" variant="primary">
+        {{ t('flight.manage.cancel.confirm') }}
+      </bip-button>
+    </div>
+  </bip-modal>
+</ng-container>

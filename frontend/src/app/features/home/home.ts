@@ -4,7 +4,7 @@ import { TranslocoDirective } from '@jsverse/transloco';
 import { Card } from '@shared/ui';
 
 interface IHomeTab {
-  readonly key: 'flights' | 'stays';
+  readonly key: 'flights' | 'stays' | 'manage';
   readonly route: string;
 }
 
@@ -22,6 +22,7 @@ export class Home {
   protected readonly tabs: readonly IHomeTab[] = [
     { key: 'flights', route: '/flight' },
     { key: 'stays', route: '/stays' },
+    { key: 'manage', route: '/flight/manage' },
   ];
   /** Premier onglet actif : le coin haut gauche de la carte se raccorde à lui, sans arrondi. */
   protected readonly firstTabActive = isActive(this.tabs[0].route, inject(Router), { paths: 'exact' });

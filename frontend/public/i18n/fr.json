@@ -485,6 +485,52 @@
           "released": "La réservation n'a pas abouti. Aucun montant n'a été débité : vous pouvez payer de nouveau."
         }
       }
+    },
+    "manage": {
+      "form": {
+        "intro": "Retrouvez votre réservation avec sa référence (PNR) et le nom de famille d'un des voyageurs.",
+        "reference": "Référence de réservation (PNR)",
+        "reference-hint": "6 caractères, dans l'e-mail de confirmation",
+        "reference-invalid": "Référence invalide : lettres et chiffres uniquement.",
+        "last-name": "Nom de famille",
+        "submit": "Retrouver ma réservation"
+      },
+      "errors": {
+        "booking-not-found": "Aucune réservation ne correspond à cette référence et à ce nom.",
+        "booking-expired": "Cette réservation n'est plus consultable en ligne (plus de deux mois après le dernier vol).",
+        "cancellation-unavailable": "Cette réservation ne peut pas être annulée en ligne. Contactez-nous.",
+        "cancellation-refused": "La compagnie a refusé l'annulation. Réessayez ou contactez-nous.",
+        "cancellation-not-found": "Ce devis d'annulation n'est plus valable. Recommencez l'annulation.",
+        "unavailable": "Service momentanément indisponible. Réessayez dans quelques instants."
+      },
+      "details": {
+        "title": "Ma réservation",
+        "another": "Autre réservation",
+        "retry": "Réessayer",
+        "back": "Retour",
+        "reference": "Référence (PNR)",
+        "flights": "Vols",
+        "passengers": "Voyageurs",
+        "paid": "Montant payé"
+      },
+      "status": {
+        "confirmed": "Confirmée",
+        "changed": "Modifiée par la compagnie",
+        "cancellation_pending": "Annulation en cours",
+        "cancelled": "Annulée"
+      },
+      "cancel": {
+        "open": "Annuler ma réservation",
+        "offline": "Cette réservation ne peut pas être annulée en ligne. Contactez-nous pour toute modification.",
+        "title": "Annuler la réservation",
+        "refund": "Remboursement annoncé par la compagnie :",
+        "no-refund": "Aucun remboursement",
+        "refund-note": "Montant remboursé par la compagnie selon les conditions de votre billet. Notre équipe vous confirme le remboursement par e-mail.",
+        "expires": "Offre d'annulation valable jusqu'à {{time}}.",
+        "keep": "Garder ma réservation",
+        "confirm": "Confirmer l'annulation",
+        "done": "Votre réservation est annulée. Un e-mail de confirmation vous a été envoyé."
+      }
     }
   },
   "home": {
@@ -493,7 +539,8 @@
     "tabs": {
       "label": "Que recherchez-vous ?",
       "flights": "Vols",
-      "stays": "Hébergement"
+      "stays": "Hébergement",
+      "manage": "Gérer mon vol"
     }
   },
   "stay": {

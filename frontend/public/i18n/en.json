@@ -485,6 +485,52 @@
           "released": "The booking did not go through. Nothing was charged: you can pay again."
         }
       }
+    },
+    "manage": {
+      "form": {
+        "intro": "Find your booking with its reference (PNR) and the last name of one of the travellers.",
+        "reference": "Booking reference (PNR)",
+        "reference-hint": "6 characters, in your confirmation e-mail",
+        "reference-invalid": "Invalid reference: letters and digits only.",
+        "last-name": "Last name",
+        "submit": "Find my booking"
+      },
+      "errors": {
+        "booking-not-found": "No booking matches this reference and name.",
+        "booking-expired": "This booking can no longer be managed online (more than two months after the last flight).",
+        "cancellation-unavailable": "This booking cannot be cancelled online. Please contact us.",
+        "cancellation-refused": "The airline refused the cancellation. Try again or contact us.",
+        "cancellation-not-found": "This cancellation offer is no longer valid. Please start again.",
+        "unavailable": "Service temporarily unavailable. Please try again shortly."
+      },
+      "details": {
+        "title": "My booking",
+        "another": "Another booking",
+        "retry": "Try again",
+        "back": "Back",
+        "reference": "Reference (PNR)",
+        "flights": "Flights",
+        "passengers": "Travellers",
+        "paid": "Amount paid"
+      },
+      "status": {
+        "confirmed": "Confirmed",
+        "changed": "Changed by the airline",
+        "cancellation_pending": "Cancellation in progress",
+        "cancelled": "Cancelled"
+      },
+      "cancel": {
+        "open": "Cancel my booking",
+        "offline": "This booking cannot be cancelled online. Contact us for any change.",
+        "title": "Cancel the booking",
+        "refund": "Refund announced by the airline:",
+        "no-refund": "No refund",
+        "refund-note": "Amount refunded by the airline under your ticket's conditions. Our team will confirm your refund by e-mail.",
+        "expires": "Cancellation offer valid until {{time}}.",
+        "keep": "Keep my booking",
+        "confirm": "Confirm cancellation",
+        "done": "Your booking is cancelled. A confirmation e-mail has been sent to you."
+      }
     }
   },
   "home": {
@@ -493,7 +539,8 @@
     "tabs": {
       "label": "What are you looking for?",
       "flights": "Flights",
-      "stays": "Stays"
+      "stays": "Stays",
+      "manage": "Manage my flight"
     }
   },
   "stay": {
