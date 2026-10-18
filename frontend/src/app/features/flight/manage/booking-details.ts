@@ -16,7 +16,7 @@ const STATUS_TONES: Record<TBookingStatus, BadgeTone> = {
 
 /**
  * Page d'une réservation retrouvée (PNR + nom) : vols, voyageurs, montant payé et annulation en deux temps (devis
- * de la compagnie, puis confirmation). Rechargée, la page relit la réservation avec l'accès gardé dans l'onglet.
+ * de la compagnie, puis confirmation). Rechargée, elle renvoie au formulaire : l'accès n'est gardé qu'en mémoire.
  */
 @Component({
   selector: 'bip-booking-details',
@@ -49,7 +49,7 @@ export class BookingDetails implements OnInit {
       void this.router.navigate(['/flight', 'manage']);
       return;
     }
-    // Arrivée depuis le formulaire : déjà chargée. Rechargement de la page : relue (le cache serveur évite Duffel).
+    // Arrivée depuis le formulaire : déjà chargée ; sinon relue (le cache serveur évite Duffel).
     if (this.view()?.order.booking_reference.toUpperCase() !== this.access.booking_reference.toUpperCase()) {
       this.reload();
     }

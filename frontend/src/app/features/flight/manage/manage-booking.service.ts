@@ -55,11 +55,10 @@ export interface ICancellationQuote {
   readonly expires_at?: string | null;
 }
 
-const KEY = 'bip.booking-access';
-
 /**
- * « Gérer mon vol ». L'accès (PNR + nom) est gardé dans l'onglet (`sessionStorage`) pour recharger la page de la
- * réservation ; il est renvoyé à chaque appel, le serveur ne faisant confiance à rien d'autre.
+ * « Gérer mon vol ». L'accès (PNR + nom) n'est gardé qu'en mémoire, jamais dans le stockage du navigateur : un
+ * rechargement de la page de la réservation renvoie au formulaire. Il est renvoyé à chaque appel, le serveur ne
+ * faisant confiance à rien d'autre.
  */
 @Injectable({ providedIn: 'root' })
 export class ManageBookingService {
@@ -67,35 +66,22 @@ export class ManageBookingService {
   private readonly url = `${inject(APP_CONFIG).apiBaseUrl}/flights/bookings`;
   /** Dernière réservation consultée : la page s'affiche sans second appel après le formulaire. */
   readonly current = signal<IBookingView | null>(null);
+  private readonly _access = signal<IBookingAccess | null>(null);
 
   access(): IBookingAccess | null {
-    try {
-      const raw = sessionStorage.getItem(KEY);
-      const access = raw ? (JSON.parse(raw) as Partial<IBookingAccess>) : null;
-      return access?.booking_reference && access.last_name ? { booking_reference: access.booking_reference, last_name: access.last_name } : null;
-    } catch {
-      return null;
-    }
+    return this._access();
   }
 
   forget(): void {
     this.current.set(null);
-    try {
-      sessionStorage.removeItem(KEY);
-    } catch {
-      // Stockage bloqué : rien à effacer.
-    }
+    this._access.set(null);
   }
 
   lookup(access: IBookingAccess): Observable<IBookingView> {
     return this.http.post<IBookingView>(`${this.url}/lookup`, access).pipe(
       tap((view) => {
         this.current.set(view);
-        try {
-          sessionStorage.setItem(KEY, JSON.stringify(access));
-        } catch {
-          // Stockage plein ou bloqué : la page marchera tant qu'elle n'est pas rechargée.
-        }
+        this._access.set({ booking_reference: access.booking_reference, last_name: access.last_name });
       }),
     );
   }
