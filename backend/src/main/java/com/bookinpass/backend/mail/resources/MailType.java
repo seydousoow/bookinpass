@@ -10,7 +10,7 @@ public enum MailType {
     BOOKING_CONFIRMATION("mail/booking-confirmed.ftl"),
     BOOKING_CHANGE("mail/booking-changed.ftl"),
     BOOKING_CANCELLATION("mail/booking-cancelled.ftl"),
-    BOOKING_INVOICE("mail/booking-invoice.ftl");
+    BOOKING_RECEIPT("mail/booking-receipt.ftl");
 
     private final String template;
 }

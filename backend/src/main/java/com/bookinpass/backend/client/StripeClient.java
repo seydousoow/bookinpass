@@ -99,86 +99,18 @@ public class StripeClient {
     }
 
     /**
-     * {@code POST /v1/customers} — client Stripe porteur de la facture : nom, e-mail et adresse de facturation saisis
-     * dans Checkout, langue des factures.
-     *
-     * @param address {@code customer_details.address} de la session (champs Stripe : line1, city, country…)
+     * {@code GET /v1/payment_intents/{id}}, charge dépliée : sa {@code receipt_url} (page du reçu) et son
+     * {@code receipt_number}. Chaque lecture rend un lien valable (Stripe fait expirer les anciens après 30 jours).
      */
-    public JsonNode createCustomer(String email, String name, JsonNode address, String locale, Map<String, String> metadata,
-                                   String idempotencyKey) {
-        MultiValueMap<String, String> form = new LinkedMultiValueMap<>();
-        addIfPresent(form, "email", email);
-        addIfPresent(form, "name", name);
-        for (String field : new String[]{"line1", "line2", "city", "postal_code", "state", "country"}) {
-            addIfPresent(form, "address[" + field + "]", address.path(field).asString(""));
-        }
-        form.add("preferred_locales[0]", locale);
-        metadata.forEach((key, value) -> form.add("metadata[" + key + "]", value));
-        return post("/v1/customers", form, idempotencyKey, "customer");
-    }
-
-    /**
-     * {@code POST /v1/invoices} — facture brouillon, sans prélèvement : {@code send_invoice}, échue le jour même, ni
-     * envoi ni encaissement automatiques ({@code auto_advance=false}). Elle est ensuite marquée payée hors Stripe, le
-     * paiement ayant eu lieu par Checkout.
-     */
-    public JsonNode createInvoice(String customerId, String currency, String description, String footer, Map<String, String> metadata,
-                                  String idempotencyKey) {
-        MultiValueMap<String, String> form = new LinkedMultiValueMap<>();
-        form.add("customer", customerId);
-        form.add("currency", currency.toLowerCase());
-        form.add("collection_method", "send_invoice");
-        form.add("days_until_due", "0");
-        form.add("auto_advance", "false");
-        form.add("pending_invoice_items_behavior", "exclude");
-        form.add("description", description);
-        addIfPresent(form, "footer", footer);
-        metadata.forEach((key, value) -> form.add("metadata[" + key + "]", value));
-        return post("/v1/invoices", form, idempotencyKey, "invoice");
-    }
-
-    /** {@code POST /v1/invoiceitems} — une ligne de la facture brouillon, montant en plus petite unité de la devise. */
-    public JsonNode createInvoiceItem(String customerId, String invoiceId, String currency, long amount, String description,
-                                      String idempotencyKey) {
-        MultiValueMap<String, String> form = new LinkedMultiValueMap<>();
-        form.add("customer", customerId);
-        form.add("invoice", invoiceId);
-        form.add("currency", currency.toLowerCase());
-        form.add("amount", Long.toString(amount));
-        form.add("description", description);
-        return post("/v1/invoiceitems", form, idempotencyKey, "invoice item");
-    }
-
-    /** {@code POST /v1/invoices/{id}/finalize} — numéro attribué, PDF disponible. */
-    public JsonNode finalizeInvoice(String invoiceId, String idempotencyKey) {
-        MultiValueMap<String, String> form = new LinkedMultiValueMap<>();
-        form.add("auto_advance", "false");
-        return post("/v1/invoices/" + invoiceId + "/finalize", form, idempotencyKey, "invoice finalization");
-    }
-
-    /** {@code POST /v1/invoices/{id}/pay} avec {@code paid_out_of_band} : payée (par Checkout), rien n'est prélevé. */
-    public JsonNode markInvoicePaid(String invoiceId, String idempotencyKey) {
-        MultiValueMap<String, String> form = new LinkedMultiValueMap<>();
-        form.add("paid_out_of_band", "true");
-        return post("/v1/invoices/" + invoiceId + "/pay", form, idempotencyKey, "invoice payment");
-    }
-
-    /** {@code GET /v1/invoices/{id}} — facture à jour, dont le lien {@code invoice_pdf}. */
-    public JsonNode retrieveInvoice(String invoiceId) {
+    public JsonNode retrievePaymentIntent(String paymentIntentId) {
         String body = client.get()
-                .uri("/v1/invoices/{id}", invoiceId)
+                .uri(uri -> uri.path("/v1/payment_intents/{id}").queryParam("expand[]", "latest_charge").build(paymentIntentId))
                 .retrieve()
                 .onStatus(HttpStatusCode::isError, (_, res) -> {
-                    throw failure(res, "invoice retrieval");
+                    throw failure(res, "payment intent retrieval");
                 })
                 .body(String.class);
         return json.readTree(body);
-    }
-
-    private static void addIfPresent(MultiValueMap<String, String> form, String key, String value) {
-        if (value != null && !value.isBlank()) {
-            form.add(key, value);
-        }
     }
 
     private JsonNode post(String path, MultiValueMap<String, String> form, String idempotencyKey, String what) {

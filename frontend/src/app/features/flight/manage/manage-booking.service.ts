@@ -100,9 +100,9 @@ export class ManageBookingService {
     );
   }
 
-  /** Lien du PDF de la facture Stripe (relu à chaque demande : le lien n'est pas gardé). */
-  invoiceUrl(access: IBookingAccess): Observable<string> {
-    return this.http.post<{ url: string }>(`${this.url}/invoice`, access).pipe(map((r) => r.url));
+  /** Page du reçu Stripe du dernier paiement (téléchargeable en PDF depuis la page). */
+  receiptUrl(access: IBookingAccess): Observable<string> {
+    return this.http.post<{ url: string }>(`${this.url}/receipt`, access).pipe(map((r) => r.url));
   }
 
   quoteCancellation(access: IBookingAccess): Observable<ICancellationQuote> {

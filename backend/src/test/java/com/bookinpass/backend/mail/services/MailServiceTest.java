@@ -93,13 +93,13 @@ class MailServiceTest {
     }
 
     @Test
-    void invoiceMailRendersInBothLanguages() throws Exception {
+    void receiptMailRendersInBothLanguages() throws Exception {
         for (MailLang lang : MailLang.values()) {
-            MailService.Rendered mail = service(false).render(com.bookinpass.backend.mail.resources.BookingInvoiceMailProperties.builder()
+            MailService.Rendered mail = service(false).render(com.bookinpass.backend.mail.resources.BookingReceiptMailProperties.builder()
                     .name("Amina").lang(lang).pnr("RZPNX8").segments(List.of()).passengers(List.of())
-                    .invoiceNumber("UETH08BJ-0001").amount("260.42 EUR").invoiceUrl("https://pay.stripe.com/invoice/x/pdf").build());
+                    .receiptNumber("1234-5678").amount("260.42 EUR").receiptUrl("https://pay.stripe.com/receipts/payment/x").build());
             assertThat(mail.subject()).contains("RZPNX8");
-            assertThat(mail.body()).contains("UETH08BJ-0001", "260.42 EUR", "https://pay.stripe.com/invoice/x/pdf");
+            assertThat(mail.body()).contains("1234-5678", "260.42 EUR", "https://pay.stripe.com/receipts/payment/x");
         }
     }
 

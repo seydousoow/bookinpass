@@ -46,13 +46,13 @@ public class FlightBookingController {
         return bookings.lookup(request.bookingReference(), request.lastName());
     }
 
-    @PostMapping("invoice")
-    @Operation(summary = "Facture de la réservation",
-            description = "Lien du PDF de la facture Stripe (`invoice_pdf`) : émise après l'encaissement, payée hors Stripe (le paiement est celui de Checkout).")
-    @ApiResponse(responseCode = "200", description = "`{url}` — lien de téléchargement du PDF")
-    @ApiResponse(responseCode = "409", description = "Pas de paiement encaissé pour cette réservation (`invoice-unavailable`)", content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE, schema = @Schema(implementation = ProblemDetail.class)))
-    public Map<String, String> invoice(@Valid @RequestBody BookingAccessRequest request) {
-        return Map.of("url", bookings.invoiceUrl(request.bookingReference(), request.lastName()));
+    @PostMapping("receipt")
+    @Operation(summary = "Reçu de la réservation",
+            description = "Lien du reçu Stripe (`receipt_url`) du dernier paiement encaissé, téléchargeable en PDF depuis la page du reçu.")
+    @ApiResponse(responseCode = "200", description = "`{url}` — page du reçu")
+    @ApiResponse(responseCode = "409", description = "Pas de paiement encaissé pour cette réservation (`receipt-unavailable`)", content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE, schema = @Schema(implementation = ProblemDetail.class)))
+    public Map<String, String> receipt(@Valid @RequestBody BookingAccessRequest request) {
+        return Map.of("url", bookings.receiptUrl(request.bookingReference(), request.lastName()));
     }
 
     @PostMapping("cancellation")

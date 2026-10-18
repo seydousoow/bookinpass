@@ -57,11 +57,11 @@
         </div>
       </bip-card>
 
-      @if (invoiceError(); as error) {
+      @if (receiptError(); as error) {
         <p class="text-state-error mt-4 text-sm" role="alert">{{ t(error) }}</p>
       }
       <div class="mt-6 flex flex-wrap justify-end gap-3">
-        <bip-button (clicked)="downloadInvoice()" [loading]="invoiceBusy()" variant="outline">{{ t('flight.manage.details.invoice') }}</bip-button>
+        <bip-button (clicked)="downloadReceipt()" [loading]="receiptBusy()" variant="outline">{{ t('flight.manage.details.receipt') }}</bip-button>
         @if (cancellable()) {
           <bip-button (clicked)="openCancellation()" variant="outline">{{ t('flight.manage.cancel.open') }}</bip-button>
         }

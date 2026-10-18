@@ -43,9 +43,9 @@ export class BookingDetails implements OnInit {
   protected readonly cancelBusy = signal(false);
   protected readonly cancelError = signal<string | null>(null);
   protected readonly cancelled = signal(false);
-  /** Facture : lien demandé au serveur, puis téléchargement du PDF. */
-  protected readonly invoiceBusy = signal(false);
-  protected readonly invoiceError = signal<string | null>(null);
+  /** Reçu : lien demandé au serveur, page du reçu Stripe ouverte dans un nouvel onglet. */
+  protected readonly receiptBusy = signal(false);
+  protected readonly receiptError = signal<string | null>(null);
   private readonly document = inject(DOCUMENT);
 
   ngOnInit(): void {
@@ -107,21 +107,28 @@ export class BookingDetails implements OnInit {
     });
   }
 
-  protected downloadInvoice(): void {
-    if (!this.access || this.invoiceBusy()) {
+  protected downloadReceipt(): void {
+    if (!this.access || this.receiptBusy()) {
       return;
     }
-    this.invoiceBusy.set(true);
-    this.invoiceError.set(null);
-    this.bookings.invoiceUrl(this.access).subscribe({
+    // Onglet ouvert dès le clic (sinon bloqué comme fenêtre surgissante), puis dirigé vers le reçu.
+    const tab = this.document.defaultView?.open('', '_blank');
+    this.receiptBusy.set(true);
+    this.receiptError.set(null);
+    this.bookings.receiptUrl(this.access).subscribe({
       next: (url) => {
-        this.invoiceBusy.set(false);
-        // Lien Stripe (`invoice_pdf`) : le PDF se télécharge, la page reste ouverte.
-        this.document.location.assign(url);
+        this.receiptBusy.set(false);
+        if (tab) {
+          tab.opener = null;
+          tab.location.href = url;
+        } else {
+          this.document.location.assign(url);
+        }
       },
       error: (error: unknown) => {
-        this.invoiceBusy.set(false);
-        this.invoiceError.set(`flight.manage.errors.${errorCode(error)}`);
+        this.receiptBusy.set(false);
+        tab?.close();
+        this.receiptError.set(`flight.manage.errors.${errorCode(error)}`);
       },
     });
   }

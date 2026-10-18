@@ -90,16 +90,16 @@ public class StripePayment {
     @Column(name = "refunded_at")
     private Instant refundedAt;
 
-    /** Facture Stripe ({@code in_…}) émise pour ce paiement, une fois encaissé. */
-    @Column(name = "invoice_id")
-    private String invoiceId;
+    /** Charge Stripe ({@code ch_…}) du paiement encaissé : porteuse du reçu. */
+    @Column(name = "charge_id")
+    private String chargeId;
 
-    /** Lien du PDF de la facture, réutilisé jusqu'à {@link #invoicePdfExpiresAt}. */
-    @Column(name = "invoice_pdf_url")
-    private String invoicePdfUrl;
+    /** Page du reçu Stripe, réutilisée jusqu'à {@link #receiptUrlExpiresAt} (Stripe fait expirer ses liens). */
+    @Column(name = "receipt_url")
+    private String receiptUrl;
 
-    @Column(name = "invoice_pdf_expires_at")
-    private Instant invoicePdfExpiresAt;
+    @Column(name = "receipt_url_expires_at")
+    private Instant receiptUrlExpiresAt;
 
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
@@ -127,14 +127,11 @@ public class StripePayment {
         this.customerName = customerName;
     }
 
-    public void invoiced(String invoiceId) {
-        this.invoiceId = invoiceId;
-    }
-
-    /** Lien du PDF lu chez Stripe, gardé jusqu'à {@code expiresAt}. */
-    public void invoicePdf(String url, Instant expiresAt) {
-        this.invoicePdfUrl = url;
-        this.invoicePdfExpiresAt = expiresAt;
+    /** Reçu de la charge lu chez Stripe, gardé jusqu'à {@code expiresAt}. */
+    public void receipt(String chargeId, String url, Instant expiresAt) {
+        this.chargeId = chargeId;
+        this.receiptUrl = url;
+        this.receiptUrlExpiresAt = expiresAt;
     }
 
     public void attachTo(FlightOrder order) {

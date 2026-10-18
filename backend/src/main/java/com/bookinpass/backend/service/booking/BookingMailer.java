@@ -3,7 +3,7 @@ package com.bookinpass.backend.service.booking;
 import com.bookinpass.backend.mail.resources.BookingCancellationMailProperties;
 import com.bookinpass.backend.mail.resources.BookingChangeMailProperties;
 import com.bookinpass.backend.mail.resources.BookingConfirmationMailProperties;
-import com.bookinpass.backend.mail.resources.BookingInvoiceMailProperties;
+import com.bookinpass.backend.mail.resources.BookingReceiptMailProperties;
 import com.bookinpass.backend.mail.resources.BookingMailProperties;
 import com.bookinpass.backend.mail.resources.MailLang;
 import com.bookinpass.backend.mail.services.MailService;
@@ -48,22 +48,14 @@ public class BookingMailer {
                 .build());
     }
 
-    /**
-     * Facture payée : PDF en pièce jointe (s'il a pu être téléchargé) et lien.
-     *
-     * @param pdf contenu du PDF, {@code null} pour n'envoyer que le lien
-     */
-    public void invoiceIssued(String to, String travellerName, JsonNode order, String invoiceNumber, String amount, String invoiceUrl,
-                              byte[] pdf, String lang) {
-        BookingInvoiceMailProperties mail = BookingInvoiceMailProperties.builder()
+    /** Paiement encaissé (réservation, ou modification payante) : lien du reçu Stripe. */
+    public void receiptIssued(String to, String travellerName, JsonNode order, String amount, String receiptUrl, String receiptNumber,
+                              String lang) {
+        mails.sendMail(BookingReceiptMailProperties.builder()
                 .destination(to).name(travellerName).lang(MailLang.of(lang))
                 .pnr(pnr(order)).segments(BookingMailProperties.segmentsOf(order)).passengers(BookingMailProperties.passengersOf(order))
-                .invoiceNumber(invoiceNumber).amount(amount).invoiceUrl(invoiceUrl)
-                .build();
-        if (pdf != null && pdf.length > 0) {
-            mail.getAttachments().put("facture-" + invoiceNumber + ".pdf", pdf);
-        }
-        mails.sendMail(mail);
+                .amount(amount).receiptUrl(receiptUrl).receiptNumber(receiptNumber)
+                .build());
     }
 
     private static String pnr(JsonNode order) {
