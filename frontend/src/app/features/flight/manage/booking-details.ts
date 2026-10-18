@@ -1,5 +1,5 @@
 import { Component, computed, inject, OnInit, signal } from '@angular/core';
-import { DatePipe } from '@angular/common';
+import { DatePipe, DOCUMENT } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { Badge, BadgeTone, Button, Card, Modal, Spinner } from '@shared/ui';
@@ -43,6 +43,10 @@ export class BookingDetails implements OnInit {
   protected readonly cancelBusy = signal(false);
   protected readonly cancelError = signal<string | null>(null);
   protected readonly cancelled = signal(false);
+  /** Facture : lien demandé au serveur, puis téléchargement du PDF. */
+  protected readonly invoiceBusy = signal(false);
+  protected readonly invoiceError = signal<string | null>(null);
+  private readonly document = inject(DOCUMENT);
 
   ngOnInit(): void {
     if (!this.access) {
@@ -99,6 +103,25 @@ export class BookingDetails implements OnInit {
       error: (error: unknown) => {
         this.cancelBusy.set(false);
         this.cancelError.set(`flight.manage.errors.${errorCode(error)}`);
+      },
+    });
+  }
+
+  protected downloadInvoice(): void {
+    if (!this.access || this.invoiceBusy()) {
+      return;
+    }
+    this.invoiceBusy.set(true);
+    this.invoiceError.set(null);
+    this.bookings.invoiceUrl(this.access).subscribe({
+      next: (url) => {
+        this.invoiceBusy.set(false);
+        // Lien Stripe (`invoice_pdf`) : le PDF se télécharge, la page reste ouverte.
+        this.document.location.assign(url);
+      },
+      error: (error: unknown) => {
+        this.invoiceBusy.set(false);
+        this.invoiceError.set(`flight.manage.errors.${errorCode(error)}`);
       },
     });
   }

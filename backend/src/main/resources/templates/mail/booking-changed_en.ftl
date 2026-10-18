@@ -6,7 +6,8 @@
 <tr>
     <td class="mail-content">
         <p>Hello ${name},</p>
-        <p>The airline has changed your booking (schedule or flight). Please check your new itinerary below and contact us if it does not suit you.</p>
+        <p>The airline has changed your booking (schedule or flight). Please check your new itinerary below and contact us if it does not suit
+            you.</p>
         <@layout.booking lang="en"/>
     </td>
 </tr>

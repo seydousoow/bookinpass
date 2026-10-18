@@ -6,6 +6,7 @@ import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 import lombok.experimental.SuperBuilder;
 import tools.jackson.databind.json.JsonMapper;
 
@@ -32,7 +33,11 @@ public abstract class BaseMailProperties {
     private String name;
     private String destination;
     private Set<String> bccRecipients;
-    /** Origine du site, posée par {@code MailService}. */
+    /** Origine du site, posée par {@code MailService}.
+     * -- SETTER --
+     * Lien posé une fois l'objet construit (origine du site, configuration).
+     */
+    @Setter
     private String siteUrl;
 
     @JsonIgnore
@@ -41,7 +46,7 @@ public abstract class BaseMailProperties {
     /** Variables du gabarit : tous les champs (classe fille comprise), sans les valeurs nulles. */
     @SuppressWarnings("unchecked")
     public Map<String, Object> toHashMap() {
-        Map<String, Object> map = new HashMap<>(MAPPER.convertValue(this, Map.class));
+        Map<String, Object> map = new HashMap<String, Object>(MAPPER.convertValue(this, Map.class));
         map.remove("destination");
         map.remove("bccRecipients");
         map.put("baseUrl", siteUrl == null ? "" : siteUrl.replaceAll("/+$", ""));
@@ -49,8 +54,4 @@ public abstract class BaseMailProperties {
         return map;
     }
 
-    /** Lien posé une fois l'objet construit (origine du site, configuration). */
-    public void setSiteUrl(String siteUrl) {
-        this.siteUrl = siteUrl;
-    }
 }

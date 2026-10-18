@@ -47,7 +47,7 @@ class FlightBookingServiceTest {
     private Clock clock = Clock.fixed(Instant.parse("2027-02-20T10:00:00Z"), ZoneOffset.UTC);
 
     private FlightBookingService service() {
-        return new FlightBookingService(orders, duffel, cache, recorder, mailer, json, clock);
+        return new FlightBookingService(orders, duffel, cache, recorder, mailer, mock(FlightInvoiceService.class), json, clock);
     }
 
     private static FlightOrder order(LocalDate lastTravel) {

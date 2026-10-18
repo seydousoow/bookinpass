@@ -501,7 +501,8 @@
         "cancellation-unavailable": "Cette réservation ne peut pas être annulée en ligne. Contactez-nous.",
         "cancellation-refused": "La compagnie a refusé l'annulation. Réessayez ou contactez-nous.",
         "cancellation-not-found": "Ce devis d'annulation n'est plus valable. Recommencez l'annulation.",
-        "unavailable": "Service momentanément indisponible. Réessayez dans quelques instants."
+        "unavailable": "Service momentanément indisponible. Réessayez dans quelques instants.",
+        "invoice-unavailable": "La facture n'est pas encore disponible pour cette réservation. Réessayez dans quelques minutes ou contactez-nous."
       },
       "details": {
         "title": "Ma réservation",
@@ -511,7 +512,8 @@
         "reference": "Référence (PNR)",
         "flights": "Vols",
         "passengers": "Voyageurs",
-        "paid": "Montant payé"
+        "paid": "Montant payé",
+        "invoice": "Télécharger la facture"
       },
       "status": {
         "confirmed": "Confirmée",

@@ -88,7 +88,7 @@ bookinpass:
     secret-key: ${STRIPE_SECRET_KEY:}
     publishable-key: ${STRIPE_PUBLISHABLE_KEY:}
     # ui_mode=form (formulaire Checkout intégré) : Dahlia ou plus récent.
-    api-version: 2026-03-25.dahlia
+    api-version: 2026-09-30.endiv
     webhook-secret: ${STRIPE_WEBHOOK_SECRET:}
     frontend-url: ${FRONTEND_URL:http://localhost:4200}
   duffel:

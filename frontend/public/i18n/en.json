@@ -501,7 +501,8 @@
         "cancellation-unavailable": "This booking cannot be cancelled online. Please contact us.",
         "cancellation-refused": "The airline refused the cancellation. Try again or contact us.",
         "cancellation-not-found": "This cancellation offer is no longer valid. Please start again.",
-        "unavailable": "Service temporarily unavailable. Please try again shortly."
+        "unavailable": "Service temporarily unavailable. Please try again shortly.",
+        "invoice-unavailable": "The invoice is not available yet for this booking. Try again in a few minutes or contact us."
       },
       "details": {
         "title": "My booking",
@@ -511,7 +512,8 @@
         "reference": "Reference (PNR)",
         "flights": "Flights",
         "passengers": "Travellers",
-        "paid": "Amount paid"
+        "paid": "Amount paid",
+        "invoice": "Download invoice"
       },
       "status": {
         "confirmed": "Confirmed",

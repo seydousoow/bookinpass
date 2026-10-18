@@ -52,6 +52,7 @@ public class FlightBookingService {
     private final FlightOrderCache cache;
     private final BookingRecorder recorder;
     private final BookingMailer mailer;
+    private final FlightInvoiceService invoices;
     private final JsonMapper json;
     private final Clock clock;
 
@@ -111,6 +112,11 @@ public class FlightBookingService {
         ObjectNode view = view(orders.findByDuffelOrderId(orderId).orElse(order), duffelOrder);
         view.set("cancellation", cancellation);
         return view;
+    }
+
+    /** Lien du PDF de la facture Stripe de cette réservation (émise à la première demande si besoin). */
+    public String invoiceUrl(String bookingReference, String lastName) {
+        return invoices.pdfUrl(authorise(bookingReference, lastName).getDuffelOrderId());
     }
 
     /** E-mail d'annulation au titulaire de la réservation (annulation depuis le site ou signalée par webhook). */

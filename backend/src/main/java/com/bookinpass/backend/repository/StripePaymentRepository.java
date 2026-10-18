@@ -12,4 +12,7 @@ public interface StripePaymentRepository extends JpaRepository<StripePayment, In
     Optional<StripePayment> findByCheckoutSessionId(String checkoutSessionId);
 
     Optional<StripePayment> findByPaymentIntentId(String paymentIntentId);
+
+    /** Paiement encaissé d'une commande (le plus récent s'il y en a eu plusieurs tentatives). */
+    Optional<StripePayment> findFirstByOrderDuffelOrderIdAndAmountCapturedGreaterThanOrderByCapturedAtDesc(String duffelOrderId, long amount);
 }

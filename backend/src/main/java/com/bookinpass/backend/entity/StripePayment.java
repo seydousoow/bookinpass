@@ -90,6 +90,10 @@ public class StripePayment {
     @Column(name = "refunded_at")
     private Instant refundedAt;
 
+    /** Facture Stripe ({@code in_…}) émise pour ce paiement, une fois encaissé. */
+    @Column(name = "invoice_id")
+    private String invoiceId;
+
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
@@ -114,6 +118,10 @@ public class StripePayment {
         this.cardLast4 = cardLast4;
         this.customerEmail = customerEmail;
         this.customerName = customerName;
+    }
+
+    public void invoiced(String invoiceId) {
+        this.invoiceId = invoiceId;
     }
 
     public void attachTo(FlightOrder order) {

@@ -16,10 +16,11 @@
 
     <properties>
         <java.version>25</java.version>
-        <spring-cloud-aws.version>4.1.1</spring-cloud-aws.version>
+        <spring-cloud-aws.version>4.2.0</spring-cloud-aws.version>
         <commons-validator.version>1.11.0</commons-validator.version>
         <dnsjava.version>3.6.5</dnsjava.version>
     </properties>
+
     <dependencyManagement>
         <dependencies>
             <dependency>
@@ -31,6 +32,7 @@
             </dependency>
         </dependencies>
     </dependencyManagement>
+
     <dependencies>
         <dependency>
             <groupId>org.springframework.boot</groupId>

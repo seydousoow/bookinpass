@@ -57,12 +57,17 @@
         </div>
       </bip-card>
 
-      @if (cancellable()) {
-        <div class="mt-6 flex justify-end">
+      @if (invoiceError(); as error) {
+        <p class="text-state-error mt-4 text-sm" role="alert">{{ t(error) }}</p>
+      }
+      <div class="mt-6 flex flex-wrap justify-end gap-3">
+        <bip-button (clicked)="downloadInvoice()" [loading]="invoiceBusy()" variant="outline">{{ t('flight.manage.details.invoice') }}</bip-button>
+        @if (cancellable()) {
           <bip-button (clicked)="openCancellation()" variant="outline">{{ t('flight.manage.cancel.open') }}</bip-button>
-        </div>
-      } @else if (booking.status !== 'cancelled') {
-        <p class="text-muted mt-6 text-sm">{{ t('flight.manage.cancel.offline') }}</p>
+        }
+      </div>
+      @if (!cancellable() && booking.status !== 'cancelled') {
+        <p class="text-muted mt-4 text-sm">{{ t('flight.manage.cancel.offline') }}</p>
       }
     } @else {
       <div class="flex justify-center py-16"><bip-spinner showLabel size="md"/></div>

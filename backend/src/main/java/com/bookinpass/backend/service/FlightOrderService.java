@@ -12,6 +12,7 @@ import com.bookinpass.backend.exception.DuffelException;
 import com.bookinpass.backend.exception.PaymentException;
 import com.bookinpass.backend.service.PaymentService.FlightQuote;
 import com.bookinpass.backend.service.booking.BookingMailer;
+import com.bookinpass.backend.service.booking.FlightInvoiceService;
 import com.bookinpass.backend.service.booking.FlightOrderCache;
 import com.bookinpass.backend.service.pricing.FlightPricing;
 import lombok.RequiredArgsConstructor;
@@ -65,6 +66,7 @@ public class FlightOrderService {
     private final DuffelCustomerService customers;
     private final FlightOrderCache orderCache;
     private final BookingMailer mailer;
+    private final FlightInvoiceService invoices;
     /** Une réservation à la fois par session (double clic, onglet dupliqué) ; une seule instance aujourd'hui. */
     private final Set<String> inProgress = ConcurrentHashMap.newKeySet();
 
@@ -156,6 +158,8 @@ public class FlightOrderService {
             }
         });
         capture(intentId, request.checkoutSessionId(), session.path("amount_total").asLong(), order);
+        // Facture Stripe émise en arrière-plan (sinon au premier téléchargement).
+        safely("invoice of " + orderId, () -> invoices.prepare(orderId));
         safely("confirmation mail of " + orderId, () -> {
             FlightOrderRequest.Passenger first = request.passengers().getFirst();
             mailer.bookingConfirmed(request.email(), first.givenName() + " " + first.familyName(), order,
