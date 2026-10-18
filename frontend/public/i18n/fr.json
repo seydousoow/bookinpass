@@ -504,14 +504,30 @@
         "unavailable": "Service momentanément indisponible. Réessayez dans quelques instants."
       },
       "details": {
-        "title": "Ma réservation",
+        "title": "Gérer votre réservation",
         "another": "Autre réservation",
         "retry": "Réessayer",
         "back": "Retour",
-        "reference": "Référence (PNR)",
-        "flights": "Vols",
-        "passengers": "Voyageurs",
-        "paid": "Montant payé"
+        "reference": "Référence de réservation",
+        "paid": "Montant payé",
+        "kinds": {
+          "one-way": "aller simple",
+          "return": "aller-retour",
+          "multi": "multi-destinations"
+        },
+        "departure": "Départ",
+        "return": "Retour",
+        "countdown": "Départ dans",
+        "countdown-value": "{{days}} jours {{hours}} heures",
+        "conditions": "Conditions du billet",
+        "condition": {
+          "change": "Modification avant le départ",
+          "refund": "Remboursement avant le départ",
+          "not-allowed": "non autorisé",
+          "free": "autorisé sans frais",
+          "penalty": "autorisé, frais de {{amount}}",
+          "unknown": "Conditions non communiquées par la compagnie."
+        }
       },
       "status": {
         "confirmed": "Confirmée",
@@ -530,6 +546,75 @@
         "keep": "Garder ma réservation",
         "confirm": "Confirmer l'annulation",
         "done": "Votre réservation est annulée. Un e-mail de confirmation vous a été envoyé."
+      },
+      "slice": {
+        "label": "{{n}}. Vol",
+        "status": "Statut du vol",
+        "statuses": {
+          "confirmed": "Confirmé",
+          "changed": "Horaires modifiés",
+          "cancelled": "Annulé"
+        },
+        "direct": "Direct",
+        "duration": "Durée du vol",
+        "details": "Détails du voyage"
+      },
+      "preferences": {
+        "title": "Préférences des passagers",
+        "tabs": {
+          "passengers": "Passagers",
+          "seats": "Siège",
+          "bags": "Bagages",
+          "meals": "Repas"
+        },
+        "passenger": "Passager",
+        "loyalty": "Programme de fidélité / Numéro d'adhérent",
+        "no-loyalty": "Aucun programme de fidélité",
+        "ticket": "Numéro de billet",
+        "ticket-pending": "en cours d'émission",
+        "titles": {
+          "mr": "M.",
+          "ms": "Mme",
+          "mrs": "Mme",
+          "miss": "Mlle",
+          "dr": "Dr"
+        },
+        "types": {
+          "adult": "Adulte",
+          "child": "Enfant",
+          "infant_without_seat": "Bébé"
+        },
+        "no-seat": "Non attribué",
+        "bag-types": {
+          "checked": "bagage en soute",
+          "carry_on": "bagage cabine"
+        },
+        "bought": "acheté",
+        "no-bag": "Aucun bagage inclus",
+        "meals": {
+          "baby_meal": "Repas bébé",
+          "bland_meal": "Repas léger",
+          "asian_vegetarian_meal": "Végétarien asiatique",
+          "diabetic_meal": "Repas diabétique",
+          "gluten_free_meal": "Sans gluten",
+          "hindu_meal": "Repas hindou",
+          "kosher_meal": "Repas casher",
+          "muslim_meal": "Repas halal",
+          "vegan_meal": "Végétalien",
+          "vegetarian_lacto_ovo_meal": "Végétarien lacto-ovo",
+          "traditional_meal": "Repas traditionnel",
+          "low_fat_meal": "Pauvre en graisses",
+          "low_salt_meal": "Pauvre en sel",
+          "lactose_free_meal": "Sans lactose",
+          "healthy_meal": "Repas équilibré",
+          "swiss_cold_meal": "Repas froid suisse",
+          "swiss_brunch": "Brunch suisse",
+          "japanese_meal": "Repas japonais",
+          "child_meal": "Repas enfant",
+          "allergen_meal": "Sans allergènes",
+          "vegetarian_meal": "Végétarien",
+          "meal": "Repas"
+        }
       }
     }
   },

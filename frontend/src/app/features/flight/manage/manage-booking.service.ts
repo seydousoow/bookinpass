@@ -2,6 +2,7 @@ import { inject, Injectable, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, tap } from 'rxjs';
 import { APP_CONFIG } from '@core/config/app-config.token';
+import { IFlightSegment, IOfferSlice } from '@shared/models';
 
 /** Accès à une réservation : PNR + nom de famille d'un voyageur (vérifiés par le serveur à chaque appel). */
 export interface IBookingAccess {
@@ -9,31 +10,61 @@ export interface IBookingAccess {
   readonly last_name: string;
 }
 
-interface IPlace {
-  readonly iata_code: string;
-  readonly name?: string;
-  readonly city_name?: string | null;
+/** Condition du billet (`conditions.change_before_departure`…) ; `null` : inconnue de la compagnie. */
+export interface IBookedCondition {
+  readonly allowed: boolean;
+  readonly penalty_amount: string | null;
+  readonly penalty_currency: string | null;
 }
 
-export interface IBookedSegment {
-  readonly id?: string;
-  readonly origin: IPlace;
-  readonly destination: IPlace;
-  /** Heures locales des aéroports, sans fuseau (`2026-12-10T10:15:00`). */
-  readonly departing_at: string;
-  readonly arriving_at: string;
-  readonly marketing_carrier?: { readonly name?: string; readonly iata_code?: string };
-  readonly marketing_carrier_flight_number?: string;
+export interface IBookedPassenger {
+  readonly id: string;
+  readonly title?: string | null;
+  readonly given_name: string;
+  readonly family_name: string;
+  readonly type?: string | null;
+  readonly infant_passenger_id?: string | null;
+  readonly loyalty_programme_accounts?: readonly { readonly airline_iata_code: string; readonly account_number: string }[];
 }
 
-/** Commande Duffel (`GET /air/orders/{id}`), réduite à ce que la page affiche. */
+/** Siège retenu sur un segment (`segments[].passengers[].seat`). */
+export interface IBookedSeat {
+  readonly designator: string;
+  readonly name?: string | null;
+}
+
+/** Service acheté (bagage, siège, repas…), rattaché à des segments et des passagers. */
+export interface IBookedService {
+  readonly id: string;
+  readonly type: string;
+  readonly quantity: number;
+  readonly passenger_ids: readonly string[];
+  readonly segment_ids: readonly string[];
+  readonly metadata?: Readonly<Record<string, unknown>> | null;
+}
+
+export type IBookedSegment = Omit<IFlightSegment, 'passengers'> & {
+  readonly passengers: readonly (IFlightSegment['passengers'][number] & { readonly seat?: IBookedSeat | null })[];
+};
+
+export type IBookedSlice = Omit<IOfferSlice, 'segments'> & { readonly segments: readonly IBookedSegment[] };
+
+/** Commande Duffel (`GET /air/orders/{id}`), sans métadonnées ni clients (retirés par le serveur). */
 export interface IBookedOrder {
   readonly id: string;
   readonly booking_reference: string;
   readonly cancelled_at?: string | null;
   readonly available_actions?: readonly string[];
-  readonly slices: readonly { readonly origin: IPlace; readonly destination: IPlace; readonly segments: readonly IBookedSegment[] }[];
-  readonly passengers: readonly { readonly id?: string; readonly given_name: string; readonly family_name: string; readonly type?: string }[];
+  readonly airline_initiated_changes?: readonly unknown[];
+  readonly owner?: { readonly name: string; readonly logo_symbol_url?: string | null };
+  readonly slices: readonly IBookedSlice[];
+  readonly passengers: readonly IBookedPassenger[];
+  readonly documents?: readonly { readonly type: string; readonly unique_identifier: string; readonly passenger_ids: readonly string[] }[];
+  readonly services?: readonly IBookedService[];
+  readonly conditions?: {
+    readonly change_before_departure?: IBookedCondition | null;
+    readonly refund_before_departure?: IBookedCondition | null;
+  };
 }
 
 export type TBookingStatus = 'confirmed' | 'changed' | 'cancellation_pending' | 'cancelled';

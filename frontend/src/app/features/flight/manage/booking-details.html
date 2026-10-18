@@ -1,9 +1,6 @@
 <ng-container *transloco="let t">
-  <div class="mx-auto max-w-4xl px-4 py-8">
-    <div class="mb-6 flex flex-wrap items-center justify-between gap-3">
-      <h1 class="text-2xl font-bold">{{ t('flight.manage.details.title') }}</h1>
-      <bip-button (clicked)="another()" variant="outline">{{ t('flight.manage.details.another') }}</bip-button>
-    </div>
+  <div class="mx-auto max-w-5xl px-4 py-8">
+    <h1 class="mb-6 text-3xl font-light md:text-4xl">{{ t('flight.manage.details.title') }}</h1>
 
     @if (loadError(); as error) {
       <bip-card>
@@ -18,53 +15,86 @@
         <p class="rounded-card bg-state-success-soft mb-4 p-4 text-sm" role="status">{{ t('flight.manage.cancel.done') }}</p>
       }
 
-      <bip-card>
-        <div class="flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <p class="text-muted text-xs">{{ t('flight.manage.details.reference') }}</p>
-            <p class="text-xl font-bold tracking-widest">{{ booking.order.booking_reference }}</p>
-          </div>
-          <bip-badge [tone]="statusTone()">{{ t('flight.manage.status.' + booking.status) }}</bip-badge>
-        </div>
-
-        <h2 class="mt-6 font-semibold">{{ t('flight.manage.details.flights') }}</h2>
-        <ol class="mt-2 space-y-3">
-          @for (slice of booking.order.slices; track $index) {
-            <li class="rounded-card border-border-subtle border p-3">
-              <p class="font-semibold">{{ slice.origin.city_name || slice.origin.iata_code }} → {{ slice.destination.city_name || slice.destination.iata_code }}</p>
-              <ul class="mt-2 space-y-1 text-sm">
-                @for (segment of slice.segments; track segment.id ?? $index) {
-                  <li class="flex flex-wrap justify-between gap-x-4">
-                    <span>{{ segment.origin.iata_code }} {{ segment.departing_at | date: 'EEE d MMM, HH:mm' }} → {{ segment.destination.iata_code }} {{ segment.arriving_at | date: 'HH:mm' }}</span>
-                    <span class="text-muted">{{ segment.marketing_carrier?.name }} {{ segment.marketing_carrier?.iata_code }}{{ segment.marketing_carrier_flight_number }}</span>
-                  </li>
+      <!-- En-tête : trajet et dates, PNR, actions possibles, temps avant le départ. -->
+      <section class="rounded-card border-border-subtle bg-surface-page border p-4 md:p-8">
+        <div class="flex flex-wrap items-start justify-between gap-6">
+          <div class="min-w-0">
+            <h2 class="text-2xl md:text-3xl">{{ route() }} {{ t('flight.manage.details.kinds.' + kind()) }}</h2>
+            @if (departure(); as departing) {
+              <p class="text-brand-primary mt-2 font-semibold">
+                {{ t('flight.manage.details.departure') }} : {{ departing | date: 'EEEE d MMMM' }}
+                @if (returnDate(); as returning) {
+                  - {{ t('flight.manage.details.return') }} : {{ returning | date: 'EEEE d MMMM' }}
                 }
-              </ul>
-            </li>
-          }
-        </ol>
-
-        <h2 class="mt-6 font-semibold">{{ t('flight.manage.details.passengers') }}</h2>
-        <ul class="mt-2 space-y-1 text-sm">
-          @for (passenger of booking.order.passengers; track passenger.id ?? $index) {
-            <li>{{ passenger.given_name }} {{ passenger.family_name }}</li>
-          }
-        </ul>
-
-        <div class="border-border-subtle mt-6 flex items-baseline justify-between gap-4 border-t pt-4">
-          <p class="font-semibold">{{ t('flight.manage.details.paid') }}</p>
-          <p class="text-lg font-bold">{{ money(booking.paid_amount, booking.paid_currency) }}</p>
+              </p>
+            }
+          </div>
+          <div class="text-right">
+            <p class="text-4xl font-bold tracking-wider">{{ booking.order.booking_reference }}</p>
+            <p>{{ t('flight.manage.details.reference') }}</p>
+            <bip-badge [tone]="statusTone()" class="mt-2">{{ t('flight.manage.status.' + booking.status) }}</bip-badge>
+          </div>
         </div>
-      </bip-card>
 
-      @if (cancellable()) {
-        <div class="mt-6 flex justify-end">
-          <bip-button (clicked)="openCancellation()" variant="outline">{{ t('flight.manage.cancel.open') }}</bip-button>
+        <div class="mt-6 flex flex-wrap items-end justify-between gap-4">
+          <div class="rounded-card bg-surface-card text-muted flex flex-wrap items-center divide-x divide-border-subtle px-2 py-3 text-sm">
+            @if (cancellable()) {
+              <button (click)="openCancellation()" class="hover:text-ink flex cursor-pointer items-center gap-2 px-4" type="button">
+                <ng-icon name="heroXCircle" size="1.1rem"/>{{ t('flight.manage.cancel.open') }}
+              </button>
+            }
+            <button (click)="another()" class="hover:text-ink flex cursor-pointer items-center gap-2 px-4" type="button">
+              <ng-icon name="heroArrowPath" size="1.1rem"/>{{ t('flight.manage.details.another') }}
+            </button>
+          </div>
+          @if (countdown(); as left) {
+            <p class="text-right text-sm">
+              {{ t('flight.manage.details.countdown') }}<br/>
+              <span class="font-semibold">{{ t('flight.manage.details.countdown-value', { days: left.days, hours: left.hours }) }}</span>
+            </p>
+          }
         </div>
-      }
-      @if (!cancellable() && booking.status !== 'cancelled') {
-        <p class="text-muted mt-4 text-sm">{{ t('flight.manage.cancel.offline') }}</p>
-      }
+        @if (!cancellable() && booking.status !== 'cancelled') {
+          <p class="text-muted mt-4 text-xs">{{ t('flight.manage.cancel.offline') }}</p>
+        }
+      </section>
+
+      <div class="mt-8 space-y-6">
+        @for (slice of booking.order.slices; track slice.id; let i = $index) {
+          <bip-booked-slice [position]="i + 1" [slice]="slice" [status]="sliceStatus()"/>
+        }
+      </div>
+
+      <div class="mt-10">
+        <bip-passenger-preferences [order]="booking.order"/>
+      </div>
+
+      <!-- Conditions du billet et paiement. -->
+      <section class="rounded-card bg-surface-card shadow-card mt-10 grid grid-cols-1 gap-6 p-4 md:grid-cols-[1fr_auto] md:p-6">
+        <div>
+          <h2 class="font-semibold">{{ t('flight.manage.details.conditions') }}</h2>
+          <ul class="mt-2 space-y-1 text-sm">
+            @for (entry of conditions(); track entry[0]) {
+              <li>
+                <span class="font-semibold">{{ t('flight.manage.details.condition.' + entry[0]) }} :</span>
+                @if (!entry[1].allowed) {
+                  {{ t('flight.manage.details.condition.not-allowed') }}
+                } @else if (entry[1].penalty_amount && entry[1].penalty_currency && +entry[1].penalty_amount > 0) {
+                  {{ t('flight.manage.details.condition.penalty', { amount: money(entry[1].penalty_amount, entry[1].penalty_currency) }) }}
+                } @else {
+                  {{ t('flight.manage.details.condition.free') }}
+                }
+              </li>
+            } @empty {
+              <li class="text-muted">{{ t('flight.manage.details.condition.unknown') }}</li>
+            }
+          </ul>
+        </div>
+        <div class="md:border-border-subtle md:border-l md:pl-6 md:text-right">
+          <p class="text-muted text-sm">{{ t('flight.manage.details.paid') }}</p>
+          <p class="text-2xl font-bold">{{ money(booking.paid_amount, booking.paid_currency) }}</p>
+        </div>
+      </section>
     } @else {
       <div class="flex justify-center py-16"><bip-spinner showLabel size="md"/></div>
     }

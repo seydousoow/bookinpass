@@ -2,10 +2,15 @@ import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { TranslocoDirective } from '@jsverse/transloco';
+import { NgIcon, provideIcons } from '@ng-icons/core';
+import { heroArrowPath, heroXCircle } from '@ng-icons/heroicons/outline';
 import { Badge, BadgeTone, Button, Card, Modal, Spinner } from '@shared/ui';
 import { TranslocoLocaleService } from '@jsverse/transloco-locale';
 import { formatMoney } from '@core/money/money';
-import { errorCode, IBookingAccess, ICancellationQuote, ManageBookingService, TBookingStatus } from './manage-booking.service';
+import { errorCode, IBookedCondition, IBookingAccess, ICancellationQuote, ManageBookingService, TBookingStatus } from './manage-booking.service';
+import { BookedSlice, TSliceStatus } from './booked-slice';
+import { PassengerPreferences } from './passenger-preferences';
+import { cityOf, tripKind, untilDeparture } from './booking-view.util';
 
 const STATUS_TONES: Record<TBookingStatus, BadgeTone> = {
   confirmed: 'success',
@@ -15,12 +20,14 @@ const STATUS_TONES: Record<TBookingStatus, BadgeTone> = {
 };
 
 /**
- * Page d'une réservation retrouvée (PNR + nom) : vols, voyageurs, montant payé et annulation en deux temps (devis
- * de la compagnie, puis confirmation). Rechargée, elle renvoie au formulaire : l'accès n'est gardé qu'en mémoire.
+ * Page d'une réservation retrouvée (PNR + nom) : en-tête (trajet, dates, PNR, actions possibles), un bloc par trajet,
+ * préférences des passagers, conditions du billet et montant payé ; annulation en deux temps (devis de la compagnie,
+ * puis confirmation). Seul ce que la commande Duffel porte est affiché. Rechargée, elle renvoie au formulaire : l'accès n'est gardé qu'en mémoire.
  */
 @Component({
   selector: 'bip-booking-details',
-  imports: [TranslocoDirective, DatePipe, RouterLink, Badge, Button, Card, Modal, Spinner],
+  imports: [TranslocoDirective, DatePipe, RouterLink, NgIcon, Badge, Button, Card, Modal, Spinner, BookedSlice, PassengerPreferences],
+  providers: [provideIcons({ heroArrowPath, heroXCircle })],
   templateUrl: './booking-details.html',
 })
 export class BookingDetails implements OnInit {
@@ -35,6 +42,40 @@ export class BookingDetails implements OnInit {
   protected readonly cancellable = computed(() => {
     const view = this.view();
     return !!view && view.status !== 'cancelled' && !view.order.cancelled_at && !!view.order.available_actions?.includes('cancel');
+  });
+
+  protected readonly kind = computed(() => {
+    const view = this.view();
+    return view ? tripKind(view.order) : 'one-way';
+  });
+  /** `Johannesburg - Paris` : origine et destination du premier trajet. */
+  protected readonly route = computed(() => {
+    const first = this.view()?.order.slices[0];
+    return first ? `${cityOf(first.origin)} - ${cityOf(first.destination)}` : '';
+  });
+  protected readonly departure = computed(() => this.view()?.order.slices[0]?.segments[0]?.departing_at ?? null);
+  /** Retour d'un aller-retour ; un multi-destinations n'affiche que son départ. */
+  protected readonly returnDate = computed(() => (this.kind() === 'return' ? (this.view()?.order.slices[1]?.segments[0]?.departing_at ?? null) : null));
+  protected readonly countdown = computed(() => {
+    const view = this.view();
+    return view && view.status !== 'cancelled' ? untilDeparture(view.order) : null;
+  });
+  protected readonly sliceStatus = computed((): TSliceStatus => {
+    const view = this.view();
+    if (!view || view.status === 'cancelled' || view.order.cancelled_at) {
+      return 'cancelled';
+    }
+    return view.status === 'changed' || !!view.order.airline_initiated_changes?.length ? 'changed' : 'confirmed';
+  });
+  /** Conditions du billet que la compagnie communique (modification, remboursement avant le départ). */
+  protected readonly conditions = computed(() => {
+    const conditions = this.view()?.order.conditions;
+    return (
+      [
+        ['change', conditions?.change_before_departure],
+        ['refund', conditions?.refund_before_departure],
+      ] as const
+    ).filter((entry): entry is readonly ['change' | 'refund', IBookedCondition] => !!entry[1]);
   });
 
   /** Annulation : devis affiché dans la modale, puis confirmation. */

@@ -1,0 +1,89 @@
+<section *transloco="let t; prefix: 'flight.manage.slice'" class="rounded-card bg-surface-card shadow-card p-4 md:p-6">
+  <div class="flex flex-wrap items-start justify-between gap-4">
+    <div class="min-w-0">
+      <span class="bg-brand-primary text-onbrand inline-block rounded-field px-6 py-1 text-sm font-semibold">{{ t('label', { n: position() }) }}</span>
+      <p class="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1">
+        <span class="font-semibold">{{ cityOf(slice().origin) }} ({{ slice().origin.iata_code }})</span>
+        <span aria-hidden="true" class="text-muted">✈</span>
+        <span class="font-semibold">{{ cityOf(slice().destination) }} ({{ slice().destination.iata_code }})</span>
+        <span class="text-muted text-sm">{{ first().departing_at | date: 'EEEE d MMMM y' }}</span>
+      </p>
+      @if (cabin()) {
+        <p class="text-brand-primary mt-1 font-semibold">
+          {{ cabin() }}@if (slice().fare_brand_name; as brand) { · {{ brand }} }
+        </p>
+      }
+    </div>
+    <div class="text-right">
+      <p class="text-muted text-sm font-semibold">{{ t('status') }}</p>
+      <bip-badge [tone]="tone()" class="mt-1">{{ t('statuses.' + status()) }}</bip-badge>
+    </div>
+  </div>
+
+  <div class="rounded-card border-border-subtle mt-4 border">
+    <div class="grid grid-cols-1 items-center gap-4 p-4 md:grid-cols-[1fr_auto_auto]">
+      <!-- Frise : départ, escales (au-dessus), compagnie de chaque tronçon (en dessous), arrivée. -->
+      <div class="grid grid-cols-[auto_1fr_auto] items-center gap-3">
+        <div>
+          <p class="text-lg font-bold leading-none">{{ first().departing_at | date: 'HH:mm' }}</p>
+          <p class="text-muted font-semibold">{{ first().origin.iata_code }}</p>
+          <p class="text-muted text-xs">{{ cityOf(first().origin) }}</p>
+        </div>
+
+        <div class="flex flex-col gap-1">
+          <div class="text-muted flex justify-around text-xs">
+            @for (stop of stops(); track $index) {
+              <span>{{ stop }}</span>
+            } @empty {
+              <span>{{ t('direct') }}</span>
+            }
+          </div>
+          <div class="flex items-center">
+            <span class="bg-ink size-2 rounded-full"></span>
+            @for (carrier of carriers(); track $index; let lastLeg = $last) {
+              <span class="bg-border-strong h-px flex-1"></span>
+              @if (!lastLeg) {
+                <span class="border-ink bg-surface-card size-3 rounded-full border"></span>
+              }
+            }
+            <span class="bg-ink size-2 rounded-full"></span>
+          </div>
+          <div class="flex justify-around">
+            @for (carrier of carriers(); track $index) {
+              @if (carrier.logo; as logo) {
+                <span class="relative size-5" [title]="carrier.name"><img [alt]="carrier.name" [ngSrc]="logo" class="object-contain" fill/></span>
+              } @else {
+                <span class="text-muted text-xs">{{ carrier.name }}</span>
+              }
+            }
+          </div>
+        </div>
+
+        <div class="text-right">
+          <p class="text-lg font-bold leading-none">{{ last().arriving_at | date: 'HH:mm' }}</p>
+          <p class="text-muted font-semibold">{{ last().destination.iata_code }}</p>
+          <p class="text-muted text-xs">{{ cityOf(last().destination) }}</p>
+        </div>
+      </div>
+
+      <div class="md:border-border-subtle text-center md:border-x md:px-6">
+        <p class="text-muted text-xs">{{ t('duration') }}</p>
+        <p class="font-bold">{{ duration() }}</p>
+      </div>
+
+      <button (click)="open.update((o) => !o)"
+              [attr.aria-expanded]="open()"
+              class="flex cursor-pointer items-center justify-center gap-1 text-sm font-semibold"
+              type="button">
+        {{ t('details') }}
+        <ng-icon [class.rotate-180]="open()" class="transition-transform" name="heroChevronDown"/>
+      </button>
+    </div>
+
+    @if (open()) {
+      <div class="border-border-subtle border-t p-4">
+        <bip-flight-segment [segments]="slice().segments"/>
+      </div>
+    }
+  </div>
+</section>
