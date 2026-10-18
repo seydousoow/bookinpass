@@ -84,12 +84,23 @@ class MailServiceTest {
         given(verifier.isValid("amina@example.com")).willReturn(true);
 
         service(false).sendMail(confirmation(MailLang.FR, "Amina"));
-        verify(sender, never()).sendEmailWithRetry(anyString(), anyString(), anyString(), anyString(), any(), anyString(), anyString(), any());
+        verify(sender, never()).sendEmailWithRetry(anyString(), anyString(), anyString(), anyString(), any(), anyString(), anyString(), any(), any());
 
         service(true).sendMail(confirmation(MailLang.FR, "Amina"));
         verify(sender).sendEmailWithRetry(org.mockito.ArgumentMatchers.eq("BOOKING_CONFIRMATION"), org.mockito.ArgumentMatchers.eq("reservations@bookinpass.com"),
                 org.mockito.ArgumentMatchers.eq("Book In Pass"), org.mockito.ArgumentMatchers.eq("amina@example.com"), any(),
-                org.mockito.ArgumentMatchers.eq("Votre réservation RZPNX8 est confirmée"), anyString(), any());
+                org.mockito.ArgumentMatchers.eq("Votre réservation RZPNX8 est confirmée"), anyString(), any(), any());
+    }
+
+    @Test
+    void invoiceMailRendersInBothLanguages() throws Exception {
+        for (MailLang lang : MailLang.values()) {
+            MailService.Rendered mail = service(false).render(com.bookinpass.backend.mail.resources.BookingInvoiceMailProperties.builder()
+                    .name("Amina").lang(lang).pnr("RZPNX8").segments(List.of()).passengers(List.of())
+                    .invoiceNumber("UETH08BJ-0001").amount("260.42 EUR").invoiceUrl("https://pay.stripe.com/invoice/x/pdf").build());
+            assertThat(mail.subject()).contains("RZPNX8");
+            assertThat(mail.body()).contains("UETH08BJ-0001", "260.42 EUR", "https://pay.stripe.com/invoice/x/pdf");
+        }
     }
 
     @Test
@@ -98,6 +109,6 @@ class MailServiceTest {
 
         service(true).sendMail(confirmation(MailLang.FR, "Amina"));
 
-        verify(sender, never()).sendEmailWithRetry(anyString(), anyString(), anyString(), anyString(), any(), anyString(), anyString(), any());
+        verify(sender, never()).sendEmailWithRetry(anyString(), anyString(), anyString(), anyString(), any(), anyString(), anyString(), any(), any());
     }
 }

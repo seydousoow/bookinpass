@@ -94,6 +94,13 @@ public class StripePayment {
     @Column(name = "invoice_id")
     private String invoiceId;
 
+    /** Lien du PDF de la facture, réutilisé jusqu'à {@link #invoicePdfExpiresAt}. */
+    @Column(name = "invoice_pdf_url")
+    private String invoicePdfUrl;
+
+    @Column(name = "invoice_pdf_expires_at")
+    private Instant invoicePdfExpiresAt;
+
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
@@ -122,6 +129,12 @@ public class StripePayment {
 
     public void invoiced(String invoiceId) {
         this.invoiceId = invoiceId;
+    }
+
+    /** Lien du PDF lu chez Stripe, gardé jusqu'à {@code expiresAt}. */
+    public void invoicePdf(String url, Instant expiresAt) {
+        this.invoicePdfUrl = url;
+        this.invoicePdfExpiresAt = expiresAt;
     }
 
     public void attachTo(FlightOrder order) {

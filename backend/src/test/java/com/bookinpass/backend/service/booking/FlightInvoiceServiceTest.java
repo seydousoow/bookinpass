@@ -14,7 +14,9 @@ import org.springframework.transaction.support.TransactionTemplate;
 import tools.jackson.databind.json.JsonMapper;
 
 import java.math.BigDecimal;
+import java.time.Clock;
 import java.time.Instant;
+import java.time.ZoneOffset;
 import java.util.Optional;
 import java.util.function.Consumer;
 
@@ -42,7 +44,18 @@ class FlightInvoiceServiceTest {
     private final StripePaymentRepository payments = mock(StripePaymentRepository.class);
     private final FlightOrderCache cache = mock(FlightOrderCache.class);
     private final TransactionTemplate transactions = mock(TransactionTemplate.class);
-    private final FlightInvoiceService invoices = new FlightInvoiceService(stripe, payments, cache, json, transactions);
+    private final BookingMailer mailer = mock(BookingMailer.class);
+    private Clock clock = Clock.fixed(Instant.parse("2026-10-18T10:00:00Z"), ZoneOffset.UTC);
+
+    private FlightInvoiceService invoices() {
+        // Sans réseau : le PDF « téléchargé » est un contenu fixe.
+        return new FlightInvoiceService(stripe, payments, cache, json, transactions, mailer, clock) {
+            @Override
+            byte[] download(String url) {
+                return "%PDF-1.4".getBytes();
+            }
+        };
+    }
 
     @Test
     @DisplayName("Lignes = prix de vente enregistré : billet, frais BIP, services majorés ; total = montant encaissé")
@@ -87,16 +100,41 @@ class FlightInvoiceServiceTest {
                 "{\"customer_details\":{\"email\":\"amina@example.com\",\"name\":\"Amina Sow\",\"address\":{\"country\":\"SN\"}}}"));
         given(stripe.createCustomer(anyString(), anyString(), any(), anyString(), any(), anyString())).willReturn(json.readTree("{\"id\":\"cus_1\"}"));
         given(stripe.createInvoice(anyString(), anyString(), anyString(), any(), any(), anyString())).willReturn(json.readTree("{\"id\":\"in_1\"}"));
-        given(stripe.retrieveInvoice("in_1")).willReturn(json.readTree("{\"invoice_pdf\":\"https://pay.stripe.com/invoice/x/pdf\"}"));
+        given(stripe.markInvoicePaid("in_1", "bip-invoice-pay-cs_1")).willReturn(json.readTree(
+                "{\"id\":\"in_1\",\"status\":\"paid\",\"number\":\"UETH08BJ-0001\",\"invoice_pdf\":\"https://pay.stripe.com/invoice/x/pdf\"}"));
         given(cache.get("ord_1")).willReturn("{\"data\":{\"slices\":[]}}");
 
-        assertThat(invoices.pdfUrl("ord_1")).isEqualTo("https://pay.stripe.com/invoice/x/pdf");
+        assertThat(invoices().pdfUrl("ord_1")).isEqualTo("https://pay.stripe.com/invoice/x/pdf");
 
         verify(stripe).createInvoiceItem("cus_1", "in_1", "EUR", 22516, "Billet d'avion", "bip-invoice-item-cs_1-0");
         verify(stripe).finalizeInvoice("in_1", "bip-invoice-finalize-cs_1");
         // Payée hors Stripe : le paiement Checkout n'est pas refait.
         verify(stripe).markInvoicePaid("in_1", "bip-invoice-pay-cs_1");
         assertThat(payment.getInvoiceId()).isEqualTo("in_1");
+        // Lien gardé un mois ; facture valide : e-mail au titulaire avec le numéro et le montant payé.
+        assertThat(payment.getInvoicePdfUrl()).isEqualTo("https://pay.stripe.com/invoice/x/pdf");
+        assertThat(payment.getInvoicePdfExpiresAt()).isEqualTo(Instant.parse("2026-11-17T10:00:00Z"));
+        verify(stripe, never()).retrieveInvoice(anyString());
+        verify(mailer).invoiceIssued(any(), any(), any(), eq("UETH08BJ-0001"), eq("260.42 EUR"), eq("https://pay.stripe.com/invoice/x/pdf"), any(), eq("fr"));
+    }
+
+    @Test
+    @DisplayName("Lien gardé moins d'un mois : servi depuis la base ; passé un mois : relu chez Stripe et gardé de nouveau")
+    void storedLinkIsReusedForAMonth() {
+        transactionsRunInline();
+        StripePayment payment = captured("in_9");
+        payment.invoicePdf("https://pay.stripe.com/invoice/old/pdf", Instant.parse("2026-11-01T00:00:00Z"));
+        given(payments.findFirstByOrderDuffelOrderIdAndAmountCapturedGreaterThanOrderByCapturedAtDesc("ord_1", 0)).willReturn(Optional.of(payment));
+        given(payments.findByCheckoutSessionId("cs_1")).willReturn(Optional.of(payment));
+
+        assertThat(invoices().pdfUrl("ord_1")).endsWith("/old/pdf");
+        verify(stripe, never()).retrieveInvoice(anyString());
+
+        clock = Clock.fixed(Instant.parse("2026-11-02T00:00:00Z"), ZoneOffset.UTC);
+        given(stripe.retrieveInvoice("in_9")).willReturn(json.readTree("{\"invoice_pdf\":\"https://pay.stripe.com/invoice/new/pdf\"}"));
+        assertThat(invoices().pdfUrl("ord_1")).endsWith("/new/pdf");
+        assertThat(payment.getInvoicePdfExpiresAt()).isEqualTo(Instant.parse("2026-12-02T00:00:00Z"));
+        verify(mailer, never()).invoiceIssued(any(), any(), any(), any(), any(), any(), any(), any());
     }
 
     @Test
@@ -105,7 +143,7 @@ class FlightInvoiceServiceTest {
         given(payments.findFirstByOrderDuffelOrderIdAndAmountCapturedGreaterThanOrderByCapturedAtDesc("ord_1", 0)).willReturn(Optional.of(captured("in_9")));
         given(stripe.retrieveInvoice("in_9")).willReturn(json.readTree("{\"invoice_pdf\":\"https://pay.stripe.com/invoice/9/pdf\"}"));
 
-        assertThat(invoices.pdfUrl("ord_1")).endsWith("/9/pdf");
+        assertThat(invoices().pdfUrl("ord_1")).endsWith("/9/pdf");
         verify(stripe, never()).createInvoice(anyString(), anyString(), anyString(), any(), any(), anyString());
         verify(stripe, never()).createInvoiceItem(anyString(), anyString(), anyString(), anyLong(), anyString(), eq("x"));
     }
@@ -115,6 +153,6 @@ class FlightInvoiceServiceTest {
         transactionsRunInline();
         given(payments.findFirstByOrderDuffelOrderIdAndAmountCapturedGreaterThanOrderByCapturedAtDesc("ord_1", 0)).willReturn(Optional.empty());
 
-        assertThatThrownBy(() -> invoices.pdfUrl("ord_1")).isInstanceOf(PaymentException.class).hasFieldOrPropertyWithValue("code", "invoice-unavailable");
+        assertThatThrownBy(() -> invoices().pdfUrl("ord_1")).isInstanceOf(PaymentException.class).hasFieldOrPropertyWithValue("code", "invoice-unavailable");
     }
 }

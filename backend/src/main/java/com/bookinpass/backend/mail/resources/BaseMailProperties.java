@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -39,6 +40,10 @@ public abstract class BaseMailProperties {
      */
     @Setter
     private String siteUrl;
+    /** Pièces jointes (nom du fichier → contenu), 8 Mo au plus chacune ; hors des variables du gabarit. */
+    @JsonIgnore
+    @Builder.Default
+    private Map<String, byte[]> attachments = new HashMap<>();
 
     @JsonIgnore
     public abstract MailType getMailType();
@@ -49,6 +54,7 @@ public abstract class BaseMailProperties {
         Map<String, Object> map = new HashMap<String, Object>(MAPPER.convertValue(this, Map.class));
         map.remove("destination");
         map.remove("bccRecipients");
+        map.remove("attachments");
         map.put("baseUrl", siteUrl == null ? "" : siteUrl.replaceAll("/+$", ""));
         map.put("lang", (lang == null ? MailLang.FR : lang).name().toLowerCase(java.util.Locale.ROOT));
         return map;

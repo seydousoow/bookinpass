@@ -2,7 +2,9 @@ package com.bookinpass.backend.service.booking;
 
 import com.bookinpass.backend.client.StripeClient;
 import com.bookinpass.backend.entity.FlightOrder;
+import com.bookinpass.backend.entity.FlightOrderPassenger;
 import com.bookinpass.backend.entity.StripePayment;
+import com.bookinpass.backend.entity.User;
 import com.bookinpass.backend.exception.PaymentException;
 import com.bookinpass.backend.repository.StripePaymentRepository;
 import com.bookinpass.backend.service.pricing.FlightPricing;
@@ -15,8 +17,16 @@ import org.springframework.transaction.support.TransactionTemplate;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.json.JsonMapper;
 
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.time.Clock;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -31,8 +41,11 @@ import java.util.Optional;
  *   <li>lignes : le détail du prix de vente enregistré avec la commande ({@code flight_order.pricing}) — billet, frais
  *       de service BIP, chaque service majoré ; leur total est le montant encaissé ;</li>
  *   <li>client : nom, e-mail et adresse de facturation saisis dans Checkout ;</li>
- *   <li>émise en arrière-plan après l'encaissement, ou à la première demande de téléchargement (réservations plus
- *       anciennes, échec précédent) ; clés d'idempotence par session Checkout : jamais deux factures.</li>
+ *   <li>émise en arrière-plan à la création de la commande (après l'encaissement), ou à la première demande de
+ *       téléchargement (réservations plus anciennes, échec précédent) ; clés d'idempotence par session Checkout :
+ *       jamais deux factures. Une fois payée, elle part par e-mail au titulaire (PDF joint et lien) ;</li>
+ *   <li>lien du PDF gardé en base un mois ({@link #PDF_LINK_VALIDITY}) : les téléchargements suivants ne rappellent
+ *       pas Stripe.</li>
  * </ul>
  */
 @Slf4j
@@ -40,11 +53,18 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class FlightInvoiceService {
 
+    /** Durée pendant laquelle le lien du PDF est réutilisé sans relire la facture chez Stripe. */
+    public static final Duration PDF_LINK_VALIDITY = Duration.ofDays(30);
+    private static final HttpClient PDF_DOWNLOADS = HttpClient.newBuilder()
+            .followRedirects(HttpClient.Redirect.NORMAL).connectTimeout(Duration.ofSeconds(10)).build();
+
     private final StripeClient stripe;
     private final StripePaymentRepository payments;
     private final FlightOrderCache orderCache;
     private final JsonMapper json;
     private final TransactionTemplate transactions;
+    private final BookingMailer mailer;
+    private final Clock clock;
 
     /** Après l'encaissement : la facture est prête avant que le voyageur ne la demande. */
     @Async
@@ -56,25 +76,47 @@ public class FlightInvoiceService {
         }
     }
 
-    /** Lien du PDF ({@code invoice_pdf}), relu chez Stripe à chaque demande. */
+    /** Lien du PDF ({@code invoice_pdf}) : celui gardé en base s'il a moins d'un mois, sinon relu chez Stripe. */
     public String pdfUrl(String orderId) {
-        String url = stripe.retrieveInvoice(invoiceId(orderId)).path("invoice_pdf").asString("");
+        Billing billing = billing(orderId);
+        if (billing.invoiceId() == null) {
+            return issue(orderId, billing).pdfUrl();
+        }
+        if (billing.invoicePdfUrl() != null && billing.invoicePdfExpiresAt() != null && clock.instant().isBefore(billing.invoicePdfExpiresAt())) {
+            return billing.invoicePdfUrl();
+        }
+        String url = stripe.retrieveInvoice(billing.invoiceId()).path("invoice_pdf").asString("");
         if (url.isEmpty()) {
             throw unavailable();
         }
+        remember(billing.checkoutSessionId(), billing.invoiceId(), url);
         return url;
     }
 
-    private String invoiceId(String orderId) {
-        Billing billing = Optional.ofNullable(transactions.execute(_ -> payments
+    private void invoiceId(String orderId) {
+        Billing billing = billing(orderId);
+        if (billing.invoiceId() == null) {
+            issue(orderId, billing);
+        }
+    }
+
+    private Billing billing(String orderId) {
+        return Optional.ofNullable(transactions.execute(_ -> payments
                         .findFirstByOrderDuffelOrderIdAndAmountCapturedGreaterThanOrderByCapturedAtDesc(orderId, 0)
                         .map(Billing::of)
                         .orElse(null)))
                 .orElseThrow(FlightInvoiceService::unavailable);
-        return billing.invoiceId() != null ? billing.invoiceId() : issue(orderId, billing);
     }
 
-    private String issue(String orderId, Billing billing) {
+    private void remember(String sessionId, String invoiceId, String url) {
+        Instant expiresAt = clock.instant().plus(PDF_LINK_VALIDITY);
+        transactions.executeWithoutResult(_ -> payments.findByCheckoutSessionId(sessionId).ifPresent(p -> {
+            p.invoiced(invoiceId);
+            p.invoicePdf(url, expiresAt);
+        }));
+    }
+
+    private Issued issue(String orderId, Billing billing) {
         String sessionId = billing.checkoutSessionId();
         JsonNode customer = stripe.retrieveCheckoutSession(sessionId).path("customer_details");
         String customerId = stripe.createCustomer(customer.path("email").asString(""), customer.path("name").asString(""),
@@ -93,10 +135,42 @@ public class FlightInvoiceService {
                     "bip-invoice-item-" + sessionId + "-" + i);
         }
         stripe.finalizeInvoice(invoiceId, "bip-invoice-finalize-" + sessionId);
-        stripe.markInvoicePaid(invoiceId, "bip-invoice-pay-" + sessionId);
-        transactions.executeWithoutResult(_ -> payments.findByCheckoutSessionId(sessionId).ifPresent(p -> p.invoiced(invoiceId)));
+        JsonNode paid = stripe.markInvoicePaid(invoiceId, "bip-invoice-pay-" + sessionId);
+        String url = paid.path("invoice_pdf").asString("");
+        remember(sessionId, invoiceId, url.isEmpty() ? null : url);
         log.info("Invoice {} issued for order {}", invoiceId, orderId);
-        return invoiceId;
+        if ("paid".equals(paid.path("status").asString()) && !url.isEmpty()) {
+            mail(orderId, billing, paid, url);
+        }
+        return new Issued(invoiceId, url);
+    }
+
+    /** Facture valide (payée) : e-mail au titulaire, PDF joint ; sans PDF téléchargeable, le lien seul. */
+    private void mail(String orderId, Billing billing, JsonNode invoice, String url) {
+        try {
+            JsonNode order = json.readTree(orderCache.get(orderId)).path("data");
+            String amount = BigDecimal.valueOf(billing.amountCaptured()).movePointLeft(FlightPricing.decimals(billing.currency())).toPlainString()
+                    + " " + billing.currency().toUpperCase();
+            mailer.invoiceIssued(billing.contactEmail(), billing.contactName(), order, invoice.path("number").asString(""), amount, url,
+                    download(url), billing.lang());
+        } catch (RuntimeException e) {
+            log.error("Invoice mail for order {} not sent", orderId, e);
+        }
+    }
+
+    /** PDF de la facture (le lien Stripe redirige vers le fichier) ; {@code null} s'il n'a pas pu être lu. */
+    byte[] download(String url) {
+        try {
+            HttpResponse<byte[]> response = PDF_DOWNLOADS.send(HttpRequest.newBuilder(URI.create(url)).timeout(Duration.ofSeconds(20)).GET().build(),
+                    HttpResponse.BodyHandlers.ofByteArray());
+            return response.statusCode() == 200 ? response.body() : null;
+        } catch (IOException e) {
+            log.warn("Invoice PDF could not be downloaded: {}", e.getMessage());
+            return null;
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            return null;
+        }
     }
 
     /**
@@ -154,14 +228,21 @@ public class FlightInvoiceService {
     record Line(String description, long amount) {
     }
 
+    private record Issued(String invoiceId, String pdfUrl) {
+    }
+
     /** Ce qu'il faut de la commande et du paiement, lu dans une transaction courte (jamais pendant un appel Stripe). */
-    private record Billing(String checkoutSessionId, String paymentIntentId, String invoiceId, long amountCaptured, String currency,
-                           String pricing, String pnr, String lang) {
+    private record Billing(String checkoutSessionId, String paymentIntentId, String invoiceId, String invoicePdfUrl,
+                           Instant invoicePdfExpiresAt, long amountCaptured, String currency, String pricing, String pnr, String lang,
+                           String contactEmail, String contactName) {
         static Billing of(StripePayment payment) {
             FlightOrder order = payment.getOrder();
+            Optional<User> booker = order.getPassengers().stream().map(FlightOrderPassenger::getUser).findFirst();
             return new Billing(payment.getCheckoutSessionId(), payment.getPaymentIntentId(), payment.getInvoiceId(),
-                    payment.getAmountCaptured(), payment.getCurrency(), order.getPricing(),
-                    order.getBookingReference() == null ? "" : order.getBookingReference(), order.getLang());
+                    payment.getInvoicePdfUrl(), payment.getInvoicePdfExpiresAt(), payment.getAmountCaptured(), payment.getCurrency(),
+                    order.getPricing(), order.getBookingReference() == null ? "" : order.getBookingReference(), order.getLang(),
+                    booker.map(User::getEmail).orElse(payment.getCustomerEmail()),
+                    booker.map(u -> u.getFirstName() + " " + u.getLastName()).orElse(payment.getCustomerName()));
         }
     }
 

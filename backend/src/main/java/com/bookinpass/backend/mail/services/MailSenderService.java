@@ -2,6 +2,7 @@ package com.bookinpass.backend.mail.services;
 
 import io.awspring.cloud.ses.SimpleEmailServiceJavaMailSender;
 import jakarta.mail.MessagingException;
+import jakarta.mail.util.ByteArrayDataSource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.mail.javamail.MimeMessageHelper;
@@ -22,6 +23,7 @@ public class MailSenderService {
 
     private static final int MAX_RETRIES = 3;
     private static final long RETRY_BACKOFF_MS = 500;
+    private static final int MAX_ATTACHMENT_SIZE_BYTES = 8_000_000;
 
     private final ObjectProvider<SimpleEmailServiceJavaMailSender> javaMailSender;
 
@@ -34,7 +36,7 @@ public class MailSenderService {
      * @return {@code true} si SES a accepté l'e-mail
      */
     public boolean sendEmailWithRetry(String type, String from, String personal, String to, Set<String> bcc, String subject,
-                                      String body, Map<String, String> tags) {
+                                      String body, Map<String, String> tags, Map<String, byte[]> attachments) {
         SimpleEmailServiceJavaMailSender sender = javaMailSender.getIfAvailable();
         if (sender == null) {
             log.warn("Mail [{}] not sent: SES is not configured (MAIL_ENABLED=false)", type);
@@ -42,7 +44,7 @@ public class MailSenderService {
         }
         for (int attempt = 1; attempt <= MAX_RETRIES; attempt++) {
             try {
-                send(sender, from, personal, to, bcc, subject, body, tags);
+                send(sender, from, personal, to, bcc, subject, body, tags, attachments);
                 log.info("Mail [{}] sent", type);
                 return true;
             } catch (Exception e) {
@@ -60,7 +62,8 @@ public class MailSenderService {
     }
 
     private static void send(SimpleEmailServiceJavaMailSender sender, String from, String personal, String to, Set<String> bcc,
-                             String subject, String body, Map<String, String> tags) throws MessagingException {
+                             String subject, String body, Map<String, String> tags, Map<String, byte[]> attachments)
+            throws MessagingException {
         var message = sender.createMimeMessage();
         var helper = new MimeMessageHelper(message, MimeMessageHelper.MULTIPART_MODE_MIXED_RELATED, StandardCharsets.UTF_8.name());
         try {
@@ -75,6 +78,16 @@ public class MailSenderService {
             String[] hidden = bcc.stream().filter(b -> b != null && !b.isBlank()).toArray(String[]::new);
             if (hidden.length > 0) {
                 helper.setBcc(hidden);
+            }
+        }
+        if (attachments != null) {
+            for (Map.Entry<String, byte[]> attachment : attachments.entrySet()) {
+                if (attachment.getValue().length > MAX_ATTACHMENT_SIZE_BYTES) {
+                    log.warn("Attachment {} skipped: {} bytes", attachment.getKey(), attachment.getValue().length);
+                    continue;
+                }
+                String type = attachment.getKey().toLowerCase().endsWith(".pdf") ? "application/pdf" : "application/octet-stream";
+                helper.addAttachment(attachment.getKey(), new ByteArrayDataSource(attachment.getValue(), type));
             }
         }
         if (tags != null && !tags.isEmpty()) {

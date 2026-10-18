@@ -9,7 +9,8 @@ import lombok.RequiredArgsConstructor;
 public enum MailType {
     BOOKING_CONFIRMATION("mail/booking-confirmed.ftl"),
     BOOKING_CHANGE("mail/booking-changed.ftl"),
-    BOOKING_CANCELLATION("mail/booking-cancelled.ftl");
+    BOOKING_CANCELLATION("mail/booking-cancelled.ftl"),
+    BOOKING_INVOICE("mail/booking-invoice.ftl");
 
     private final String template;
 }

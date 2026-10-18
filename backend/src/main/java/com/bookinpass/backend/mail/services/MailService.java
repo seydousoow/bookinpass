@@ -76,7 +76,7 @@ public class MailService {
             return;
         }
         mailSenderService.sendEmailWithRetry(type, awsSesProperties.sender(), awsSesProperties.alias(), properties.getDestination(),
-                properties.getBccRecipients(), mail.subject(), mail.body(), Map.of("mailType", type));
+                properties.getBccRecipients(), mail.subject(), mail.body(), Map.of("mailType", type), properties.getAttachments());
     }
 
     public record Rendered(String subject, String body) {
