@@ -23,27 +23,36 @@ interface ISortTab {
   providers: [provideIcons({ heroInformationCircle })],
   host: { class: 'block' },
   template: `
-    <div *transloco="let t" [attr.aria-label]="t('search.sort.label')" class="rounded-card bg-surface-card border-border-subtle flex border" role="tablist">
-      @for (tab of tabs(); track tab.sort; let last = $last) {
-        <!-- Pas d'overflow-hidden sur la barre : il couperait l'infobulle ; les coins sont arrondis onglet par onglet. -->
-        <button (click)="value.set(tab.sort)"
-                [attr.aria-describedby]="tab.sort === 'best' ? 'flight-sort-best-info' : null"
-                [attr.aria-selected]="value() === tab.sort"
-                [class.text-ink]="value() === tab.sort"
-                [class.text-muted]="value() !== tab.sort"
-                [class.border-r]="!last"
-                class="group/tab border-border-subtle first:rounded-l-card last:rounded-r-card relative flex min-w-0 flex-1 flex-col items-start gap-0.5 px-3 py-3 text-left transition-colors hover:bg-brand-soft/40 bip-focusable md:px-5"
-                role="tab"
-                type="button">
+    <div
+      *transloco="let t"
+      [attr.aria-label]="t('search.sort.label')"
+      class="rounded-card bg-surface-card border-border-subtle flex border"
+      role="tablist">
+      @for (tab of tabs(); track tab.sort; let last = $last; let first = $first) {
+        <button
+          (click)="value.set(tab.sort)"
+          [attr.aria-describedby]="tab.sort === 'best' ? 'flight-sort-best-info' : null"
+          [attr.aria-selected]="value() === tab.sort"
+          [class.text-ink]="value() === tab.sort"
+          [class.text-muted]="value() !== tab.sort"
+          [class.border-r]="!last"
+          [class.rounded-bl]="first"
+          [class.rounded-br]="last"
+          class="group/tab border-border-subtle first:rounded-l-card last:rounded-r-card hover:bg-brand-soft/40 bip-focusable relative flex min-w-0
+          flex-1 flex-col items-start gap-0.5 px-3 py-3 text-left transition-colors md:px-5
+          {{ value() === tab.sort ? 'border-b-brand-primary border-b-4' : '' }}"
+          role="tab"
+          type="button">
           <span class="flex items-center gap-1.5 text-sm font-bold md:text-base">
             {{ t('search.sort.' + tab.sort) }}
             @if (tab.sort === 'best') {
               <!-- Infobulle : au survol de l'icône, ou au focus clavier de l'onglet ; lue via aria-describedby. -->
               <span class="group/info relative flex">
-                <ng-icon aria-hidden="true" class="cursor-help" name="heroInformationCircle" size="1.1rem"/>
-                <span class="bg-ink text-surface-card pointer-events-none invisible absolute top-full left-1/2 z-30 mt-2 w-72 max-w-[calc(100vw-2rem)] -translate-x-1/2 rounded-lg p-3 text-left text-xs font-normal leading-relaxed opacity-0 shadow-panel transition-opacity group-hover/info:visible group-hover/info:opacity-100 group-focus-visible/tab:visible group-focus-visible/tab:opacity-100"
-                      id="flight-sort-best-info"
-                      role="tooltip">
+                <ng-icon aria-hidden="true" class="cursor-help" name="heroInformationCircle" size="1.1rem" />
+                <span
+                  class="bg-ink text-surface-card shadow-panel pointer-events-none invisible absolute top-full left-1/2 z-30 mt-2 w-72 max-w-[calc(100vw-2rem)] -translate-x-1/2 rounded-lg p-3 text-left text-xs leading-relaxed font-normal opacity-0 transition-opacity group-hover/info:visible group-hover/info:opacity-100 group-focus-visible/tab:visible group-focus-visible/tab:opacity-100"
+                  id="flight-sort-best-info"
+                  role="tooltip">
                   <span class="block">{{ t('search.sort.best-info') }}</span>
                   <span class="mt-2 block font-semibold">{{ t('search.sort.how.title') }}</span>
                   <span class="mt-1 block">
@@ -60,10 +69,9 @@ interface ISortTab {
             }
           </span>
           @if (tab.top; as top) {
-            <span class="truncate text-xs md:text-sm">{{ price(top) | bipMoney: top.total_currency }} • {{ t('search.sort.duration', duration(top)) }}</span>
-          }
-          @if (value() === tab.sort) {
-            <span aria-hidden="true" class="bg-brand-primary absolute inset-x-3 bottom-0 h-1 rounded-t md:inset-x-5"></span>
+            <span class="truncate text-xs md:text-sm">
+              {{ price(top) | bipMoney: top.total_currency }} • {{ t('search.sort.duration', duration(top)) }}
+            </span>
           }
         </button>
       }

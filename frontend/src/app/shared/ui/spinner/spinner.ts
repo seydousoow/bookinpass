@@ -14,7 +14,7 @@ import { NgIcon } from '@ng-icons/core';
 export class Spinner {
   readonly size = input<'xxs' | 'xs' | 'sm' | 'md' | 'lg'>('xs');
   readonly showLabel = input(false, { transform: booleanAttribute });
-  readonly label = input('loading-in-progress');
+  readonly label = input('common.loading-in-progress');
   readonly sizes = { xxs: '1rem', xs: '1.5rem', sm: '2.5rem', md: '3.5rem', lg: '4.5rem' } as const;
 
   protected readonly hostClass = computed(() => {

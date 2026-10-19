@@ -207,13 +207,13 @@ export class FlightSearch {
   /** Nouveau tri : retour en tête de liste (la page revient à la première). */
   protected changeSort(sort: TFlightSort): void {
     this.sort.set(sort);
-    this.offerList()?.nativeElement.scrollTo({ top: 0 });
+    this.offerList()?.nativeElement.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
   /** Changement de page : la page et la liste repartent du haut. */
   protected goToPage(page: number): void {
     this.page.set(page);
-    this.offerList()?.nativeElement.scrollTo({ top: 0 });
+    this.offerList()?.nativeElement.scrollTo({ top: 0, behavior: 'smooth' });
     this.viewportScroller.scrollToPosition([0, 0], { behavior: 'smooth' });
   }
 

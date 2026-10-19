@@ -9,7 +9,7 @@
           }
         </p>
         @if (line.fareBasis) {
-          <p class="text-xs text-ink">{{ t('fare-basis', { code: line.fareBasis }) }}</p>
+          <p class="text-xs text-ink">{{ t('fare-basis', {code: line.fareBasis}) }}</p>
         }
 
         @if (line.amenities; as amenities) {
@@ -24,23 +24,23 @@
                       <p>{{ t('seat.' + key(seat.type)) }}</p>
                     }
                     @if (legroom) {
-                      <p [class.text-xs]="seat.type" [class.text-ink]="seat.type">{{ t('legroom.' + legroom) }}</p>
+                      <p [class.text-ink]="seat.type" [class.text-xs]="seat.type">{{ t('legroom.' + legroom) }}</p>
                     }
                     @if (line.pitchCm) {
-                      <p [class.text-xs]="seat.type || legroom" [class.text-ink]="seat.type || legroom">{{ t('pitch', { inches: seat.pitch, cm: line.pitchCm }) }}</p>
+                      <p [class.text-ink]="seat.type || legroom" [class.text-xs]="seat.type || legroom">{{ t('pitch', {inches: seat.pitch, cm: line.pitchCm}) }}</p>
                     }
                   </div>
                 </li>
               }
             }
             @if (amenities.wifi; as wifi) {
-              <li class="flex gap-3" [class.text-muted]="!wifi.available">
+              <li [class.text-muted]="!wifi.available" class="flex gap-3">
                 <ng-icon class="mt-0.5 shrink-0" name="heroWifi" size="1.25rem"/>
                 <p>{{ t(wifi.available ? 'wifi.' + key(wifi.cost) : 'wifi.none') }}</p>
               </li>
             }
             @if (amenities.power; as power) {
-              <li class="flex gap-3" [class.text-muted]="!power.available">
+              <li [class.text-muted]="!power.available" class="flex gap-3">
                 <ng-icon class="mt-0.5 shrink-0" name="heroBolt" size="1.25rem"/>
                 <p>{{ t(power.available ? 'power.yes' : 'power.no') }}</p>
               </li>

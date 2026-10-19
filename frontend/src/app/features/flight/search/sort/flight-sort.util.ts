@@ -10,7 +10,13 @@ export type TFlightSort = (typeof FLIGHT_SORTS)[number];
  * Poids du « meilleur choix » : tarif, temps de trajet, escales et bagages, chacun ramené entre 0 (le mieux parmi
  * les offres affichées) et 1 (le moins bien). Le prix pèse le plus : c'est le premier critère de choix.
  */
-export const BEST_WEIGHTS = { price: 0.45, duration: 0.3, stops: 0.15, baggage: 0.1 } as const;
+export interface IFlightWeightAlgorithm {
+  price: number;
+  duration: number;
+  stops: number;
+  baggage: number;
+}
+export const BEST_WEIGHTS: IFlightWeightAlgorithm = { price: 0.45, duration: 0.3, stops: 0.15, baggage: 0.1 } as const;
 
 /** Durée ISO 8601 de Duffel (`PT8H20M`, `P1DT2H5M`) en minutes ; 0 si illisible. */
 export function durationMinutes(duration: string | null | undefined): number {
