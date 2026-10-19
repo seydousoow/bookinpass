@@ -65,7 +65,7 @@
               } @else if (!quote()) {
                 <p class="text-muted mt-4 text-sm">{{ t('stay.pay.quote-needed') }}</p>
               } @else if (checkoutSession(); as session) {
-                <bip-payment-form (authorised)="authorisation.set($event)" [session]="session" class="mt-4"/>
+                <bip-payment-form (authorised)="onAuthorised($event)" [session]="session" class="mt-4"/>
               } @else if (checkoutError(); as error) {
                 <p class="text-state-error mt-4 text-sm" role="alert">
                   {{ t(error) }}

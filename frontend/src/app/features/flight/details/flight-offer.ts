@@ -195,8 +195,9 @@ export class FlightOffer {
   /** Offre en cours de bascule, et échec éventuel de la dernière. */
   protected readonly pendingFare = signal<string | null>(null);
   protected readonly fareFailed = signal(false);
-  /** Passage à l'étape suivante refusé : voyageurs ou coordonnés incomplets. */
-  protected readonly incomplete = signal(false);
+  /** Passage à l'étape suivante refusé faute de saisie ; le message suit ensuite la saisie (il disparaît une fois complète). */
+  private readonly attempted = signal(false);
+  protected readonly incomplete = computed(() => this.attempted() && !this.infoFilled());
   /** Inactivité prolongée : la page se fige derrière une modale qui renvoie à la recherche. */
   protected readonly idle = signal(false);
   private readonly paymentService = inject(PaymentService);
@@ -209,13 +210,18 @@ export class FlightOffer {
   private readonly currentOfferId = computed(() => this.offer()?.id);
   /** Coordonnées : celles de la réservation précédente dans l'onglet, s'il y en a (`bip-phone-input` rend du E.164). */
   private readonly contact = signal<IContact>(loadContact() ?? { email: '', phone: '' });
-  protected readonly contactForm = form(this.contact, (path) => {
-    required(path.email, { message: 'common.required-field' });
-    email(path.email, { message: 'flight.offer.contact.email-invalid' });
-    // Duffel l'exige pour chaque voyageur, au format international.
-    required(path.phone, { message: 'common.required-field' });
-    validate(path.phone, ({ value }) => (!value() || isValidPhone(value()) ? null : { kind: 'phone', message: 'flight.offer.contact.phone-invalid' }));
-  });
+  // Nom racine `contact` : champs `contact.email` / `contact.phone`, reconnus par la saisie automatique des navigateurs.
+  protected readonly contactForm = form(
+    this.contact,
+    (path) => {
+      required(path.email, { message: 'common.required-field' });
+      email(path.email, { message: 'flight.offer.contact.email-invalid' });
+      // Duffel l'exige pour chaque voyageur, au format international.
+      required(path.phone, { message: 'common.required-field' });
+      validate(path.phone, ({ value }) => (!value() || isValidPhone(value()) ? null : { kind: 'phone', message: 'flight.offer.contact.phone-invalid' }));
+    },
+    { name: 'contact' },
+  );
   private readonly apiBaseUrl = inject(APP_CONFIG).apiBaseUrl;
   private readonly api = inject(FlightOfferService);
   private readonly scroller = inject(ViewportScroller);
@@ -287,6 +293,9 @@ export class FlightOffer {
   private readonly searchStore = inject(SearchStore);
 
   constructor() {
+    // Sortie de la page de l'offre (navigation dans l'application) : la réservation en cours est oubliée.
+    // Un rechargement ou la redirection Stripe ne détruisent pas le composant : le brouillon reste pour la reprise.
+    this.destroyRef.onDestroy(() => clearDraft(this.offerId()));
     effect(() => {
       const base = this.baseOffer();
       if (base && !this.restored()) {
@@ -294,7 +303,8 @@ export class FlightOffer {
       }
     });
     effect(() => {
-      if (this.restored() && !this.idle() && !this.order()) {
+      // Paiement autorisé ou réservation faite : plus de brouillon (un paiement libéré relance l'enregistrement).
+      if (this.restored() && !this.idle() && !this.order() && !this.paymentAuthorisation()) {
         saveDraft(this.offerId(), {
           step: this.activeStep(),
           fareOfferId: this.upgrade()?.id ?? null,
@@ -391,11 +401,11 @@ export class FlightOffer {
       return;
     }
     if (this.activeStep() === 'info' && !this.infoComplete()) {
-      this.incomplete.set(true);
-      this.contactForm.email().markAsTouched();
+      this.attempted.set(true);
+      this.contactForm().markAsTouched();
       return;
     }
-    this.incomplete.set(false);
+    this.attempted.set(false);
     const steps = this.steps();
     const following = steps[steps.indexOf(this.activeStep()) + 1];
     if (following) {
@@ -457,6 +467,7 @@ export class FlightOffer {
   /** Paiement autorisé : la réservation part aussitôt ; le paiement n'est encaissé que si elle aboutit. */
   protected onAuthorised(authorisation: IPaymentAuthorisation): void {
     this.paymentAuthorisation.set(authorisation);
+    clearDraft(this.offerId());
     this.book();
   }
 
@@ -687,8 +698,8 @@ export class FlightOffer {
         this.fareFailed.set(true);
       }
       if (target !== 'info' && !this.infoFilled()) {
-        this.incomplete.set(true);
-        this.contactForm.email().markAsTouched();
+        this.attempted.set(true);
+        this.contactForm().markAsTouched();
         this.step.set('info');
       } else {
         this.step.set(target);

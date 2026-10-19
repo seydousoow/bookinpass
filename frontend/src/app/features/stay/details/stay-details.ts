@@ -75,7 +75,9 @@ export class StayDetails {
   protected readonly rateLost = signal(false);
   /** « Continuer » sans tarif choisi, ou voyageurs incomplets. */
   protected readonly missingRate = signal(false);
-  protected readonly incomplete = signal(false);
+  /** « Continuer » refusé faute de saisie ; le message disparaît dès que les voyageurs et coordonnées sont complets. */
+  private readonly attempted = signal(false);
+  protected readonly incomplete = computed(() => this.attempted() && this.guestForm()?.valid() !== true);
   protected readonly details = signal<IStayGuestDetails>(EMPTY_DETAILS);
   /** Un formulaire par voyageur de la recherche : adultes puis enfants, avec leur âge. */
   protected readonly slots = computed((): IGuestSlot[] => {
@@ -128,6 +130,9 @@ export class StayDetails {
   private readonly searchStore = inject(StaySearchStore);
 
   constructor() {
+    // Sortie de la page (navigation dans l'application) : la réservation en cours est oubliée ; un rechargement ou la
+    // redirection Stripe ne détruisent pas le composant.
+    this.destroyRef.onDestroy(() => clearStayDraft(this.resultId()));
     effect(() => {
       const result = this.result();
       if (result && !this.restored()) {
@@ -135,7 +140,7 @@ export class StayDetails {
       }
     });
     effect(() => {
-      if (this.restored() && !this.idle()) {
+      if (this.restored() && !this.idle() && !this.authorisation()) {
         saveStayDraft(this.resultId(), { step: this.step(), rateId: this.rateId(), details: this.details() });
       }
     });
@@ -221,10 +226,10 @@ export class StayDetails {
         return;
       case 'guests':
         if (!this.guestForm()?.check()) {
-          this.incomplete.set(true);
+          this.attempted.set(true);
           return;
         }
-        this.incomplete.set(false);
+        this.attempted.set(false);
         this.goTo('pay');
         return;
     }
@@ -304,6 +309,12 @@ export class StayDetails {
     this.goTo('room');
   }
 
+  /** Paiement autorisé : le brouillon est effacé, il n'y a plus rien à reprendre. */
+  protected onAuthorised(authorisation: IPaymentAuthorisation): void {
+    this.authorisation.set(authorisation);
+    clearStayDraft(this.resultId());
+  }
+
   private expireSession(): void {
     this.idle.set(true);
     clearStayDraft(this.resultId());
@@ -339,7 +350,7 @@ export class StayDetails {
     }
     const complete = this.details().guests.every((g) => g.given_name && g.family_name) && !!this.details().email && !!this.details().phone;
     if (draft.step === 'pay' && !complete) {
-      this.incomplete.set(true);
+      this.attempted.set(true);
     }
     this.verifyRate(draft.step === 'pay' && complete ? 'pay' : 'guests');
   }

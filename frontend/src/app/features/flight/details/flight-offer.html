@@ -155,7 +155,7 @@
             }
           }
           @case ('extras') {
-            <bip-extra-bags [(selection)]="bags" [travelers]="extrasTravelers()"/>
+            <bip-extra-bags (selectionChange)="bags.set($event)" [selection]="bags()" [travelers]="extrasTravelers()"/>
           }
           @case ('pay') {
             @if (order(); as confirmed) {
@@ -178,43 +178,43 @@
                 <bip-spinner label="flight.offer.booking.in-progress" showLabel size="md"/>
               </div>
             } @else {
-            <section>
-              <h2 class="text-2xl font-bold">{{ t('flight.offer.steps.pay') }}</h2>
-              @if (bookingError(); as failure) {
-                <p class="text-state-error mt-4 text-sm" role="alert">
-                  {{ t(failure.key) }}
-                  @if (failure.retry) {
-                    <button (click)="book()" class="font-semibold underline" type="button">{{ t('flight.offer.traveler.retry') }}</button>
-                  } @else if (failure.key === 'flight.offer.booking.errors.rejected') {
-                    <button (click)="editTravelers()" class="font-semibold underline" type="button">{{ t('flight.offer.booking.edit-travelers') }}</button>
-                  }
-                </p>
-              }
-              @if (pricing()) {
-                <div class="flex min-h-40 items-center justify-center">
-                  <bip-spinner label="flight.offer.pay.pricing" showLabel size="md"/>
-                </div>
-              } @else if (pricingFailed()) {
-                <p class="text-state-error mt-4 text-sm" role="alert">
-                  {{ t('flight.offer.pay.failed') }}
-                  <button (click)="retryPricing()" class="font-semibold underline" type="button">{{ t('flight.offer.traveler.retry') }}</button>
-                </p>
-              } @else {
-                <p class="text-state-success mt-4 text-sm" role="status">{{ t('flight.offer.pay.confirmed') }}</p>
-                @if (checkoutSession(); as session) {
-                  <bip-payment-form (authorised)="onAuthorised($event)" [session]="session" class="mt-4"/>
-                } @else if (checkoutSessionError(); as error) {
+              <section>
+                <h2 class="text-2xl font-bold">{{ t('flight.offer.steps.pay') }}</h2>
+                @if (bookingError(); as failure) {
                   <p class="text-state-error mt-4 text-sm" role="alert">
-                    {{ t(error) }}
-                    <button (click)="retryPayment()" class="font-semibold underline" type="button">{{ t('flight.offer.traveler.retry') }}</button>
+                    {{ t(failure.key) }}
+                    @if (failure.retry) {
+                      <button (click)="book()" class="font-semibold underline" type="button">{{ t('flight.offer.traveler.retry') }}</button>
+                    } @else if (failure.key === 'flight.offer.booking.errors.rejected') {
+                      <button (click)="editTravelers()" class="font-semibold underline" type="button">{{ t('flight.offer.booking.edit-travelers') }}</button>
+                    }
+                  </p>
+                }
+                @if (pricing()) {
+                  <div class="flex min-h-40 items-center justify-center">
+                    <bip-spinner label="flight.offer.pay.pricing" showLabel size="md"/>
+                  </div>
+                } @else if (pricingFailed()) {
+                  <p class="text-state-error mt-4 text-sm" role="alert">
+                    {{ t('flight.offer.pay.failed') }}
+                    <button (click)="retryPricing()" class="font-semibold underline" type="button">{{ t('flight.offer.traveler.retry') }}</button>
                   </p>
                 } @else {
-                  <div class="flex min-h-24 items-center justify-center">
-                    <bip-spinner label="payment.loading" showLabel size="md"/>
-                  </div>
+                  <p class="text-state-success mt-4 text-sm" role="status">{{ t('flight.offer.pay.confirmed') }}</p>
+                  @if (checkoutSession(); as session) {
+                    <bip-payment-form (authorised)="onAuthorised($event)" [session]="session" class="mt-4"/>
+                  } @else if (checkoutSessionError(); as error) {
+                    <p class="text-state-error mt-4 text-sm" role="alert">
+                      {{ t(error) }}
+                      <button (click)="retryPayment()" class="font-semibold underline" type="button">{{ t('flight.offer.traveler.retry') }}</button>
+                    </p>
+                  } @else {
+                    <div class="flex min-h-24 items-center justify-center">
+                      <bip-spinner label="payment.loading" showLabel size="md"/>
+                    </div>
+                  }
                 }
-              }
-            </section>
+              </section>
             }
           }
           @case ('seat') {

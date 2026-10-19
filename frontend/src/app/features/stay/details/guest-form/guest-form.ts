@@ -1,4 +1,4 @@
-import { Component, input, model } from '@angular/core';
+import { Component, computed, input, model } from '@angular/core';
 import { applyEach, email, form, FormField, maxLength, pattern, required, validate } from '@angular/forms/signals';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { NgIcon, provideIcons } from '@ng-icons/core';
@@ -33,22 +33,30 @@ export class GuestForm {
   readonly slots = input.required<readonly IGuestSlot[]>();
   readonly value = model.required<IStayGuestDetails>();
 
-  protected readonly guestForm = form(this.value, (path) => {
-    applyEach(path.guests, (guest) => {
-      required(guest.given_name, { message: 'common.required-field' });
-      required(guest.family_name, { message: 'common.required-field' });
-      pattern(guest.given_name, NAME_PATTERN, { message: 'stay.guest-form.errors.name' });
-      pattern(guest.family_name, NAME_PATTERN, { message: 'stay.guest-form.errors.name' });
-      maxLength(guest.given_name, 50, { message: 'stay.guest-form.errors.name-length' });
-      maxLength(guest.family_name, 50, { message: 'stay.guest-form.errors.name-length' });
-    });
-    required(path.email, { message: 'common.required-field' });
-    email(path.email, { message: 'stay.guest-form.errors.email' });
-    required(path.phone, { message: 'common.required-field' });
-    // Numéro international (E.164) rendu par `bip-phone-input`.
-    validate(path.phone, ({ value }) => (!value() || isValidPhone(value()) ? null : { kind: 'phone', message: 'stay.guest-form.errors.phone' }));
-    maxLength(path.requests, 500);
-  });
+  // Nom racine `guest` : champs `guest.email`, `guest.phone`…, reconnus par la saisie automatique des navigateurs.
+  protected readonly guestForm = form(
+    this.value,
+    (path) => {
+      applyEach(path.guests, (guest) => {
+        required(guest.given_name, { message: 'common.required-field' });
+        required(guest.family_name, { message: 'common.required-field' });
+        pattern(guest.given_name, NAME_PATTERN, { message: 'stay.guest-form.errors.name' });
+        pattern(guest.family_name, NAME_PATTERN, { message: 'stay.guest-form.errors.name' });
+        maxLength(guest.given_name, 50, { message: 'stay.guest-form.errors.name-length' });
+        maxLength(guest.family_name, 50, { message: 'stay.guest-form.errors.name-length' });
+      });
+      required(path.email, { message: 'common.required-field' });
+      email(path.email, { message: 'stay.guest-form.errors.email' });
+      required(path.phone, { message: 'common.required-field' });
+      // Numéro international (E.164) rendu par `bip-phone-input`.
+      validate(path.phone, ({ value }) => (!value() || isValidPhone(value()) ? null : { kind: 'phone', message: 'stay.guest-form.errors.phone' }));
+      maxLength(path.requests, 500);
+    },
+    { name: 'guest' },
+  );
+
+  /** Saisie complète (voyageurs et coordonnées valides). */
+  readonly valid = computed(() => this.guestForm().valid());
 
   /** Affiche toutes les erreurs ; `true` si la saisie est complète. */
   check(): boolean {
