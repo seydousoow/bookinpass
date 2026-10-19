@@ -6,7 +6,8 @@ spring:
       enabled: true
   # Aucun identifiant ici : tout vient de l'environnement (compose.yaml, ou le profil dev pour l'IDE).
   datasource:
-    url: ${DATABASE_URL}
+    # URL JDBC complète, ou à défaut hôte, port et base séparés (ce que fournissent les hébergeurs, ex. Render).
+    url: ${DATABASE_URL:jdbc:postgresql://${DATABASE_HOST:localhost}:${DATABASE_PORT:5432}/${DATABASE_NAME:bookinpass}}
     username: ${DATABASE_USER}
     password: ${DATABASE_PASSWORD}
   jpa:
