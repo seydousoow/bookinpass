@@ -126,6 +126,9 @@ bookinpass:
   mail:
     enabled: ${MAIL_ENABLED:false}
     site-url: ${FRONTEND_URL:http://localhost:4200}
+  # Origines du front autorisées (CORS), séparées par des virgules ; par défaut celle de FRONTEND_URL.
+  cors:
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:${FRONTEND_URL:http://localhost:4200}}
 
 # Expéditeur SES : adresse vérifiée dans SES (domaine ou adresse), nom affiché, région du compte SES. Identifiants :
 # chaîne AWS habituelle (AWS_ACCESS_KEY_ID / AWS_SECRET_ACCESS_KEY, profil, rôle IAM).
