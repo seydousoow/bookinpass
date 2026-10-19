@@ -6,6 +6,7 @@ import { Button } from '../button/button';
 import { CurrencySelector } from '../currency-selector/currency-selector';
 import { NgIcon, provideIcons } from '@ng-icons/core';
 import { heroBars3Solid, heroShoppingCartSolid } from '@ng-icons/heroicons/solid';
+import { NgOptimizedImage } from '@angular/common';
 
 export interface NavEntry {
   readonly labelKey: string;
@@ -15,7 +16,7 @@ export interface NavEntry {
 
 @Component({
   selector: 'bip-header',
-  imports: [RouterLink, RouterLinkActive, TranslocoDirective, Button, CurrencySelector, NgIcon],
+  imports: [RouterLink, RouterLinkActive, TranslocoDirective, Button, CurrencySelector, NgIcon, NgOptimizedImage],
   host: { class: 'block' },
   templateUrl: './header.html',
   providers: [provideIcons({ heroBars3Solid, heroShoppingCartSolid })],

@@ -1,8 +1,7 @@
 <header *transloco="let t" class="border-border-subtle bg-surface-card/95 sticky top-0 z-20 border-b backdrop-blur">
-  <div class="mx-auto flex min-h-16 max-w-7xl items-center gap-3 px-4 py-2">
-    <a class="bip-focusable rounded-button flex shrink-0 items-center gap-2 px-1 py-1" routerLink="/">
-      <span class="bg-brand-primary text-onbrand rounded-button grid h-9 w-9 place-items-center font-bold"> B </span>
-      <span class="text-xl text-brand-dark hidden font-bold sm:block">Book In Pass</span>
+  <div class="mx-auto flex min-h-16 max-w-7xl items-center gap-3">
+    <a class="relative min-h-16 w-64" routerLink="/">
+      <img ngSrc="/images/bip-transparent-logo.png" fill alt="Book In Pass" priority/>
     </a>
 
     <nav [attr.aria-label]="t('nav.main')" class="ml-2 hidden flex-1 items-center gap-1 lg:flex">
