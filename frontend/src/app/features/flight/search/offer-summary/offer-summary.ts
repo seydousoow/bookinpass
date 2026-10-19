@@ -1,12 +1,11 @@
-import { Component, computed, effect, inject, input, output } from '@angular/core';
-import { DOCUMENT } from '@angular/common';
+import { Component, computed, input, output } from '@angular/core';
 import { CdkTrapFocus } from '@angular/cdk/a11y';
 import { NgIcon, provideIcons } from '@ng-icons/core';
 import { heroCheckCircle, heroHeart, heroPencilSquare, heroShare, heroXMark } from '@ng-icons/heroicons/outline';
 
 import { TranslocoDirective } from '@jsverse/transloco';
 
-import { Button, formatDuration, Overlay } from '@shared/ui';
+import { Button, formatDuration, lockScrollWhile, Overlay } from '@shared/ui';
 import { IFlightOffer, IOfferSlice } from '@shared/models/flight.model';
 import { FlightSegmentComponent } from '@features/flight/search/offer-summary/flight-segment';
 import { CabinAmenities } from '@features/flight/search/offer-summary/cabin-amenities/cabin-amenities';
@@ -60,12 +59,8 @@ export class FlightOfferDetails {
     return penalty && !Number.isNaN(penalty) ? Number(penalty) : 0;
   });
 
-  private readonly document = inject(DOCUMENT);
-
   constructor() {
-    effect(() => {
-      this.document.body.style.overflow = this.opened() ? 'hidden' : '';
-    });
+    lockScrollWhile(this.opened);
   }
 
   protected close(): void {

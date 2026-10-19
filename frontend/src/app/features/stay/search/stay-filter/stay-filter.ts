@@ -1,11 +1,10 @@
 import { Component, computed, effect, inject, input, model, signal, untracked } from '@angular/core';
-import { DOCUMENT } from '@angular/common';
 import { CdkTrapFocus } from '@angular/cdk/a11y';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { NgIcon, provideIcons } from '@ng-icons/core';
 import { heroXMarkSolid } from '@ng-icons/heroicons/solid';
 import { IStayResult, TStayAmenity } from '@shared/models';
-import { Badge, Button, Checkbox, Overlay, Viewport } from '@shared/ui';
+import { Badge, Button, Checkbox, lockScrollWhile, Overlay, Viewport } from '@shared/ui';
 import { PriceRange, Slider } from '@shared/ui/slider/slider';
 import { CurrencyStore } from '@core/money/currency.store';
 import { isFiltering, IStayFilter, NO_STAY_FILTER, REVIEW_THRESHOLDS } from './stay-filter.util';
@@ -58,7 +57,6 @@ export class StayFilter {
   private readonly viewport = inject(Viewport);
   protected readonly isSheetActive = computed(() => this.viewport.isMobile() && this.open());
   protected readonly isSheetHidden = computed(() => this.viewport.isMobile() && !this.open());
-  private readonly document = inject(DOCUMENT);
 
   constructor() {
     // Autre devise d'affichage : l'ancien plafond n'a plus de sens.
@@ -69,9 +67,7 @@ export class StayFilter {
       }
     });
     // Verrou de défilement de la page tant que la feuille mobile est ouverte.
-    effect(() => {
-      this.document.body.style.overflow = this.isSheetActive() ? 'hidden' : '';
-    });
+    lockScrollWhile(this.isSheetActive);
   }
 
   toggle(): void {

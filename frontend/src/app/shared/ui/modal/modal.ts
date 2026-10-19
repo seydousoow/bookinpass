@@ -1,10 +1,10 @@
 // noinspection ES6PreferShortImport
 
-import { DOCUMENT } from '@angular/common';
-import { booleanAttribute, Component, DestroyRef, effect, inject, input, model, output } from '@angular/core';
+import { booleanAttribute, Component, input, model, output } from '@angular/core';
 import { CdkTrapFocus } from '@angular/cdk/a11y';
 import { Overlay } from '../overlay/overlay';
 import { Button } from '../button/button';
+import { lockScrollWhile } from '../scroll-lock/scroll-lock';
 import { NgIcon, provideIcons } from '@ng-icons/core';
 import { heroXMarkSolid } from '@ng-icons/heroicons/solid';
 import { TranslocoPipe } from '@jsverse/transloco';
@@ -28,22 +28,9 @@ export class Modal {
   readonly backdropDismissible = input(true, { transform: booleanAttribute });
   readonly closed = output<void>();
 
-  private readonly document = inject(DOCUMENT);
-  /** Vrai tant que cette modale tient le verrou de défilement du body. */
-  private locked = false;
-
   constructor() {
-    // Verrou de défilement du body tant que la modale est ouverte.
-    effect(() => {
-      this.locked = this.opened();
-      this.document.body.style.overflow = this.locked ? 'hidden' : '';
-    });
-    // Une modale retirée du DOM (ex. sous un `@if`) ne repasse jamais par l'effet : on libère le verrou ici.
-    inject(DestroyRef).onDestroy(() => {
-      if (this.locked) {
-        this.document.body.style.overflow = '';
-      }
-    });
+    // Verrou de défilement du body tant que la modale est ouverte, rendu aussi si elle est retirée du DOM.
+    lockScrollWhile(this.opened);
   }
 
   open(): void {
@@ -52,11 +39,6 @@ export class Modal {
 
   close(): void {
     this.opened.set(false);
-    // Libération immédiate : le parent peut détruire la modale avant que l'effet ne repasse.
-    if (this.locked) {
-      this.locked = false;
-      this.document.body.style.overflow = '';
-    }
     this.closed.emit();
   }
 

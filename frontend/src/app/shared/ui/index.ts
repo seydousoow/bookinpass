@@ -17,6 +17,7 @@ export * from './pagination/pagination';
 export * from './people-selector/passenger-selector';
 export * from './people-selector/passenger.helper';
 export * from './radio-group/radio-group';
+export * from './scroll-lock/scroll-lock';
 export * from './select/select';
 export * from './spinner/spinner';
 export * from './system-state/system-state';

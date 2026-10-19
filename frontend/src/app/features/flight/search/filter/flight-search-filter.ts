@@ -1,8 +1,7 @@
 import { Component, computed, effect, inject, input, model, signal, untracked } from '@angular/core';
-import { DOCUMENT } from '@angular/common';
 import { IAirlineFilter, ISelectOption } from '@shared/models';
 import { CdkTrapFocus } from '@angular/cdk/a11y';
-import { Badge, Button, Checkbox, Overlay, RadioGroup, Viewport } from '@shared/ui';
+import { Badge, Button, Checkbox, lockScrollWhile, Overlay, RadioGroup, Viewport } from '@shared/ui';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { IFlightOffer } from '@shared/models/flight.model';
 import { CurrencyStore } from '@core/money/currency.store';
@@ -79,7 +78,6 @@ export class FlightSearchFilter {
   /** Sans plafond choisi, le curseur couvre toute la fourchette des offres. */
   protected readonly budget = computed((): PriceRange => this.value().price ?? { min: 0, max: this.maxPrice() });
 
-  private readonly document = inject(DOCUMENT);
 
   constructor() {
     effect(() => {
@@ -98,9 +96,7 @@ export class FlightSearchFilter {
     });
 
     // Verrou de défilement de la page tant que la feuille mobile est ouverte.
-    effect(() => {
-      this.document.body.style.overflow = this.isSheetActive() ? 'hidden' : '';
-    });
+    lockScrollWhile(this.isSheetActive);
   }
 
   toggle(): void {
