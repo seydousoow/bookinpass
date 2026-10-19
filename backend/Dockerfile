@@ -47,13 +47,17 @@ RUN apt-get update \
  && apt-get install -y --no-install-recommends curl \
  && rm -rf /var/lib/apt/lists/* \
  && useradd --system --uid 10001 app
+
 WORKDIR /app
+
 COPY --from=jvm-build /workspace/target/extracted/dependencies/ ./
 COPY --from=jvm-build /workspace/target/extracted/spring-boot-loader/ ./
 COPY --from=jvm-build /workspace/target/extracted/snapshot-dependencies/ ./
 COPY --from=jvm-build /workspace/target/extracted/application/ ./
+
 USER app
 EXPOSE 8080
+
 HEALTHCHECK --interval=10s --timeout=3s --start-period=20s --retries=5 \
   CMD curl -fsS http://localhost:8080/api/actuator/health/readiness || exit 1
 ENTRYPOINT ["java", "-XX:MaxRAMPercentage=75", "org.springframework.boot.loader.launch.JarLauncher"]

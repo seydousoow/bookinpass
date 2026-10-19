@@ -37,13 +37,14 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      # Cible native, linux/amd64 (machines Render). Option -Ob : build plus court, binaire un peu moins optimisé.
+      # Cible native, linux/amd64 (machines Render). -Ob : build plus court ; -march=compatibility : binaire qui
+      # tourne sur tout processeur x86-64 (la valeur par défaut, x86-64-v3, exige AVX2 et planterait au démarrage sans).
       - uses: docker/build-push-action@v6
         with:
           context: backend
           target: native
           platforms: linux/amd64
-          build-args: NATIVE_IMAGE_OPTIONS=-J-Xmx12g -Ob
+          build-args: NATIVE_IMAGE_OPTIONS=-J-Xmx12g -Ob -march=compatibility
           push: true
           tags: |
             ${{ env.IMAGE }}:latest
