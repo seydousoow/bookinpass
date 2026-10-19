@@ -1,0 +1,82 @@
+# Blueprint Render : API Book In Pass (offre gratuite). Render → New → Blueprint → ce dépôt.
+#
+# L'image native est construite par GitHub Actions (.github/workflows/backend-image.yml) et publiée sur GHCR :
+# Render ne fait que la tirer (pas de build Docker sur ses machines gratuites, trop petites pour GraalVM).
+# Les secrets (sync: false) sont demandés à la création du Blueprint, puis modifiables dans le tableau de bord.
+
+services:
+  - type: web
+    name: bookinpass-api
+    runtime: image
+    image:
+      url: ghcr.io/seydousoow/bookinpass-backend:latest
+    plan: free
+    region: frankfurt
+    healthCheckPath: /api/actuator/health/readiness
+    envVars:
+      - key: DATABASE_HOST
+        fromDatabase: { name: bookinpass-db, property: host }
+      - key: DATABASE_PORT
+        fromDatabase: { name: bookinpass-db, property: port }
+      - key: DATABASE_NAME
+        fromDatabase: { name: bookinpass-db, property: database }
+      - key: DATABASE_USER
+        fromDatabase: { name: bookinpass-db, property: user }
+      - key: DATABASE_PASSWORD
+        fromDatabase: { name: bookinpass-db, property: password }
+      - key: REDIS_HOST
+        fromService: { type: keyvalue, name: bookinpass-cache, property: host }
+      - key: REDIS_PORT
+        fromService: { type: keyvalue, name: bookinpass-cache, property: port }
+
+      # Site (Vercel) : retour Stripe, liens des e-mails, CORS (autres origines : CORS_ALLOWED_ORIGINS).
+      - key: FRONTEND_URL
+        sync: false
+      - key: CORS_ALLOWED_ORIGINS
+        sync: false
+
+      - key: DUFFEL_BASE_URL
+        value: https://api.duffel.com
+      - key: DUFFEL_ACCESS_TOKEN
+        sync: false
+      - key: DUFFEL_WEBHOOK_SECRET
+        sync: false
+      - key: DUFFEL_STAYS_ENABLED
+        value: "true"
+
+      - key: STRIPE_SECRET_KEY
+        sync: false
+      - key: STRIPE_PUBLISHABLE_KEY
+        sync: false
+      - key: STRIPE_WEBHOOK_SECRET
+        sync: false
+
+      # E-mails par AWS SES ; false = rendus et journalisés, jamais envoyés.
+      - key: MAIL_ENABLED
+        value: "false"
+      - key: AWS_REGION
+        value: eu-west-1
+      - key: AWS_ACCESS_KEY_ID
+        sync: false
+      - key: AWS_SECRET_ACCESS_KEY
+        sync: false
+      - key: AWS_SES_SENDER
+        value: reservations@bookinpass.com
+      - key: AWS_SES_ALIAS
+        value: Book In Pass
+
+  # Cache (compatible Redis), joignable seulement depuis les services Render.
+  - type: keyvalue
+    name: bookinpass-cache
+    plan: free
+    region: frankfurt
+    maxmemoryPolicy: allkeys-lru
+    ipAllowList: []
+
+databases:
+  - name: bookinpass-db
+    plan: free
+    region: frankfurt
+    databaseName: bookinpass
+    user: bookinpass
+    ipAllowList: []
