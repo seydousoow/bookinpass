@@ -1,44 +1,66 @@
 <ng-container *transloco="let t">
-  @if (invalid()) {
-    <bip-modal [backdropDismissible]="false" [dismissible]="false" [opened]="true" [title]="t('search.error.invalid-title')">
-      <p class="text-sm text-muted">{{ t('search.error.invalid-message') }}</p>
-      <div modalFooter>
-        <bip-button (clicked)="backToHome()" variant="primary">{{ t('search.error.back-home') }}</bip-button>
-      </div>
-    </bip-modal>
-  } @else if (loading()) {
+  @if (search(); as criteria) {
+    <div class="mx-auto mb-2 w-full max-w-6xl shrink-0 pt-2">
+      <bip-search-summary [editing]="editing()" (editingChange)="editing.set($event)" [disabled]="loading()" [search]="criteria"/>
+    </div>
+  }
+
+  @if (loading()) {
     <bip-search-skeleton/>
+  } @else if (failed()) {
+    <div class="mx-auto flex max-w-md flex-col items-center gap-4 px-4 py-16 text-center">
+      <p class="text-lg font-semibold">{{ t('search.error.failed-title') }}</p>
+      <p class="text-sm text-muted">{{ t('search.error.failed-message') }}</p>
+      <div class="flex gap-2">
+        <bip-button (clicked)="retry()" variant="primary">{{ t('search.error.retry') }}</bip-button>
+        <bip-button (clicked)="backToHome()" variant="outline">{{ t('search.error.back-home') }}</bip-button>
+      </div>
+    </div>
   } @else if (!hasOffers()) {
-    no offers
+    <div class="mx-auto flex max-w-md flex-col items-center gap-4 px-4 py-16 text-center">
+      <ng-icon class="text-4xl text-muted" name="heroMagnifyingGlass"/>
+      <p class="text-lg font-semibold">{{ t('search.empty.title') }}</p>
+      <p class="text-sm text-muted">{{ t('search.empty.message') }}</p>
+      <bip-button (clicked)="editing.set(true)" variant="primary">{{ t('search.summary.edit') }}</bip-button>
+    </div>
   } @else {
-    <div class="mx-auto max-w-6xl bg-surface-card/95 grid grid-cols-1 py-2 h-full">
+    <div class="mx-auto w-full max-w-6xl bg-surface-card/95 grid grid-cols-1 py-2 flex-1 min-h-0 rounded-card">
       @defer (on idle) {
-        <div class="flex flex-col md:flex-row justify-start items-baseline gap-2">
-          <bip-flight-search-filter #filter [loading]="loading()" [offers]="offers()" [querySelection]="airlineParam()"/>
+        <div class="flex flex-col md:flex-row justify-start items-start gap-2">
+          <bip-flight-search-filter #filterPanel
+                                    (valueChange)="filter.set($event)"
+                                    [disabled]="applyingFilter()"
+                                    [loading]="loading()"
+                                    [offers]="offers()!"
+                                    [querySelection]="airlineParam()"
+                                    [value]="filter()"/>
 
-          <div class="not-md:w-full md:w-3/4 h-full flex flex-1 flex-col gap-2 not-md:px-2 md:pr-2">
-            <bip-search-summary (invalidChange)="onSearchInvalid($event)"
-                                [(value)]="search"
-                                [adults]="adults()"
-                                [cabin]="cabin()"
-                                [children]="children()"
-                                [destination]="destination()"
-                                [from]="from()"
-                                [infants]="infants()"
-                                [origin]="origin()"
-                                [to]="to()"
-                                [tripType]="tripType()"/>
+          <div class="not-md:w-full md:w-3/4 h-full relative flex flex-1 flex-col gap-2 not-md:px-2 md:pr-2">
+            @if (applyingFilter()) {
+              <div class="absolute inset-0 z-10 flex items-start justify-center bg-surface-card/70 pt-24">
+                <bip-spinner label="search.filter.applying" showLabel size="md"/>
+              </div>
+            }
 
-            <bip-button (clicked)="filter.toggle()" class="w-full flex justify-center items-center gap-3 text-base! font-bold! md:hidden" variant="outline">
+            <bip-button (clicked)="filterPanel.toggle()" class="w-full flex justify-center items-center gap-3 text-base! font-bold! md:hidden" variant="outline">
               <ng-icon name="heroFunnel"/>
               <span>{{ t('search.filter.title') }}</span>
             </bip-button>
 
-            <cdk-virtual-scroll-viewport [itemSize]="168" appendOnly class="h-full not-md:gap-y-2">
-              <ng-container *cdkVirtualFor="let offer of offers(); trackBy: trackOffer; let last = last">
-                <bip-flight-offer-card (selected)="openOfferSummary(offer)" [attr.data-offer-id]="offer.id" [class.mb-3]="!last" [offer]="offer"/>
-              </ng-container>
-            </cdk-virtual-scroll-viewport>
+            @if (!shownOffers().length) {
+              <div class="flex flex-col items-center gap-3 px-4 py-12 text-center">
+                <p class="text-sm text-muted">{{ t('search.filter.no-match') }}</p>
+                <bip-button (clicked)="filterPanel.reset()" size="sm" variant="outline">{{ t('search.filter.reset') }}</bip-button>
+              </div>
+            } @else {
+              <bip-flight-sort (valueChange)="changeSort($event)" [sorted]="sortedOffers()" [value]="sort()" class="shrink-0"/>
+            }
+            <div #offerList class="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto">
+              @for (offer of pageOffers(); track offer.id) {
+                <bip-flight-offer-card (selected)="openOfferSummary(offer)" [attr.data-offer-id]="offer.id" [offer]="offer"/>
+              }
+            </div>
+            <bip-pagination (pageChange)="goToPage($event)" [page]="page()" [pageSize]="pageSize" [total]="shownOffers().length" class="mb-5 shrink-0"/>
           </div>
         </div>
       } @placeholder {
@@ -48,4 +70,4 @@
   }
 </ng-container>
 
-<bip-offer-summary (closed)="closeOfferSummary()" [offer]="selected()" (selected)="offerSelection()"/>
+<bip-offer-summary (closed)="closeOfferSummary()" (selected)="offerSelection()" [offer]="selected()"/>

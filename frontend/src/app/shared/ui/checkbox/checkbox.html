@@ -15,7 +15,7 @@
     <p class="sr-only">{{ label() }}</p>
   } @else {
     <div class="min-w-0 flex-1 space-y-0.5">
-      <label [for]="inputId() || name()" class="text-sm text-muted block cursor-pointer font-medium select-none">
+      <label [for]="inputId() || name()" class="text-xs text-muted block cursor-pointer font-medium select-none">
         {{ label() }}
         @if (required()) {
           <span aria-hidden="true" class="text-state-error">*</span>

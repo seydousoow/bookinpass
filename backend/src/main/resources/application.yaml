@@ -26,6 +26,11 @@ spring:
       port: ${REDIS_PORT:6379}
   cache:
     type: redis
+  # Sujets des e-mails (i18n/mail_fr.properties, i18n/mail_en.properties).
+  messages:
+    basename: i18n/mail
+    encoding: UTF-8
+    fallback-to-system-locale: false
   flyway:
     locations: classpath:db/migration
   web:
@@ -34,6 +39,11 @@ spring:
 # Image native : le crochet d'arrêt de Logback n'y a pas sa place (Spring gère l'arrêt).
 logging:
   register-shutdown-hook: false
+  level:
+    # Appels sortants : debug = URL et statut, trace = en-têtes et corps en plus (Authorization masqué).
+    com.bookinpass.backend.client.DuffelClient: ${DUFFEL_LOG_LEVEL:info}
+    com.bookinpass.backend.client.StaysClient: ${STAYS_LOG_LEVEL:info}
+    com.bookinpass.backend.client.ExpediaClient: ${EXPEDIA_LOG_LEVEL:info}
 
 server:
   port: ${PORT:8080}
@@ -72,8 +82,17 @@ springdoc:
   default-produces-media-type: application/json
 
 bookinpass:
+  # Paiement Stripe (Payment Element). Vides = paiement indisponible (503 `payments-unavailable`).
+  stripe:
+    base-url: https://api.stripe.com
+    secret-key: ${STRIPE_SECRET_KEY:}
+    publishable-key: ${STRIPE_PUBLISHABLE_KEY:}
+    # ui_mode=form (formulaire Checkout intégré) : Dahlia ou plus récent.
+    api-version: 2026-09-30.endive
+    webhook-secret: ${STRIPE_WEBHOOK_SECRET:}
+    frontend-url: ${FRONTEND_URL:http://localhost:4200}
   duffel:
-    base-url: ${DUFFEL_BASE_URL:}
+    base-url: ${DUFFEL_BASE_URL:https://api.duffel.com}
     # Vide = mode démo : les réponses viennent des fixtures (fixtures-dir ci-dessous).
     access-token: ${DUFFEL_ACCESS_TOKEN:}
     api-version: v2
@@ -81,6 +100,11 @@ bookinpass:
     read-timeout: 40s
     # Relatif au dossier de lancement (backend/) ; Docker monte le dossier sur /fixtures/duffel.
     fixtures-dir: ${DUFFEL_FIXTURES_DIR:file:fixtures/duffel/}
+    # Duffel Stays est un produit à activer sur le compte : sans lui, /stays/search répond 403.
+    stays-enabled: ${DUFFEL_STAYS_ENABLED:true}
+    stays-radius-km: 50
+    # Rendu une seule fois par POST /air/webhooks (voir README) : vide = webhooks Duffel refusés.
+    webhook-secret: ${DUFFEL_WEBHOOK_SECRET:}
   expedia:
     base-url: ${EXPEDIA_BASE_URL:}
     api-key: ${EXPEDIA_API_KEY:}
@@ -89,5 +113,27 @@ bookinpass:
   cache:
     flight-search-ttl: 10m
     flight-offer-max-ttl: 15m
+    seat-maps-ttl: 10m
     airports-ttl: 24h
+    airlines-ttl: 24h
     rates-ttl: 1h
+    stay-search-ttl: 10m
+    stay-rates-max-ttl: 5m
+    stay-reviews-ttl: 24h
+    flight-order-ttl: 7d
+  # E-mails aux voyageurs (réservation, modification, annulation), envoyés par AWS SES. false = rendus et journalisés,
+  # jamais envoyés (développement sans compte AWS).
+  mail:
+    enabled: ${MAIL_ENABLED:false}
+    site-url: ${FRONTEND_URL:http://localhost:4200}
+  # Origines du front autorisées (CORS), séparées par des virgules ; par défaut celle de FRONTEND_URL.
+  cors:
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:${FRONTEND_URL:http://localhost:4200}}
+
+# Expéditeur SES : adresse vérifiée dans SES (domaine ou adresse), nom affiché, région du compte SES. Identifiants :
+# chaîne AWS habituelle (AWS_ACCESS_KEY_ID / AWS_SECRET_ACCESS_KEY, profil, rôle IAM).
+aws:
+  ses:
+    region: ${AWS_REGION:eu-west-1}
+    sender: ${AWS_SES_SENDER:reservations@bookinpass.com}
+    alias: ${AWS_SES_ALIAS:Book In Pass}

@@ -6,16 +6,16 @@ import { NgIcon } from '@ng-icons/core';
   selector: 'bip-spinner',
   host: { '[class]': 'hostClass()', role: 'status', 'aria-live': 'polite' },
   template: `
-    <ng-icon name="spinner" [size]="sizes[size()]" class="animate-spin" color="var(--color-brand-dark)"/>
-    <span [class.sr-only]="!showLabel()" class="text-sm md:text-base font-semibold text-brand-dark">{{ label() | transloco }}</span>
+    <ng-icon name="spinner" [size]="sizes[size()]" class="animate-spin" color="var(--color-brand-dark)" />
+    <span [class.sr-only]="!showLabel()" class="text-brand-dark text-sm font-semibold md:text-base">{{ label() | transloco }}</span>
   `,
   imports: [TranslocoPipe, NgIcon],
 })
 export class Spinner {
-  readonly size = input<'xs' | 'sm' | 'md' | 'lg'>('sm');
+  readonly size = input<'xxs' | 'xs' | 'sm' | 'md' | 'lg'>('xs');
   readonly showLabel = input(false, { transform: booleanAttribute });
-  readonly label = input('loading-in-progress');
-  readonly sizes = { xs: '1.5rem', sm: '2.5rem', md: '3.5rem', lg: '4.5rem' } as const;
+  readonly label = input('common.loading-in-progress');
+  readonly sizes = { xxs: '1rem', xs: '1.5rem', sm: '2.5rem', md: '3.5rem', lg: '4.5rem' } as const;
 
   protected readonly hostClass = computed(() => {
     return `flex flex-col justify-center items-center gap-2`;

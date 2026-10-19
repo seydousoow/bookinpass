@@ -44,17 +44,14 @@
               {
                 "glob": "**/*",
                 "input": "public"
+              },
+              {
+                "glob": "*.svg",
+                "input": "node_modules/country-flag-icons/3x2",
+                "output": "svg"
               }
             ],
-            "styles": ["src/styles/styles.css"],
-            "server": "src/main.server.ts",
-            "outputMode": "server",
-            "security": {
-              "allowedHosts": ["localhost", "127.0.0.1", "[::1]"]
-            },
-            "ssr": {
-              "entry": "src/server.ts"
-            }
+            "styles": ["src/styles/styles.css"]
           },
           "configurations": {
             "production": {

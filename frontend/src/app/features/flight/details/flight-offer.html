@@ -1,43 +1,10 @@
 @if (isLoading()) {
-  <div class="grid grid-cols-1 md:grid-cols-4 min-h-96 py-4">
-    <div class="flex justify-center items-center col-span-3">
-      <bip-spinner label="search.loading-flight" showLabel size="md"/>
-    </div>
-    <div class="max-md:hidden space-y-4 pt-6 animate-pulse">
-      <div class="grid grid-cols-3 gap-x-4">
-        <div class="col-span-2 h-2.5 rounded bg-gray-300"></div>
-        <div class="h-2.5 rounded bg-gray-300"></div>
-      </div>
-      <div class="grid grid-cols-3 gap-x-4">
-        <div class="col-span-2 h-2.5 rounded bg-gray-300"></div>
-        <div class="h-2.5 rounded bg-gray-300"></div>
-      </div>
-      <div class="grid grid-cols-3 gap-x-4">
-        <div class="col-span-2 h-2.5 rounded bg-gray-300"></div>
-        <div class="h-2.5 rounded bg-gray-300"></div>
-      </div>
-      <div class="grid grid-cols-3 gap-x-4">
-        <div class="col-span-2 h-2.5 rounded bg-gray-300"></div>
-        <div class="h-2.5 rounded bg-gray-300"></div>
-      </div>
-      <div class="grid grid-cols-1 mt-6 space-y-3">
-        <div class="h-2.5 rounded bg-gray-300"></div>
-        <div class="h-2.5 rounded bg-gray-300"></div>
-        <div class="h-2.5 rounded bg-gray-300"></div>
-        <div class="h-2.5 rounded bg-gray-300"></div>
-      </div>
-    </div>
-  </div>
+  <bip-flight-details-loader/>
 } @else if (error()) {
-  <bip-modal #modal (closed)="returnHomePage()"
-             *transloco="let t"
-             [opened]="error()"
-             showFooter="false"
-             showTitle="false"
-             title>
-    <p class="text-2xl font-bold text-center text-brand-primary">{{ t('flight.unavailable.title') }}</p>
-    <p class="text-base font-semibold my-3">{{ t('flight.unavailable.subtitle') }}</p>
-    <div class="flex justify-center items-center">
+  <bip-modal #modal (closed)="returnHomePage()" *transloco="let t" [opened]="error()" showFooter="false" showTitle="false" title>
+    <p class="text-brand-primary text-center text-2xl font-bold">{{ t('flight.unavailable.title') }}</p>
+    <p class="my-3 text-base font-semibold">{{ t('flight.unavailable.subtitle') }}</p>
+    <div class="flex items-center justify-center">
       <bip-button (clicked)="modal.close()" size="lg" variant="primary">{{ t('flight.unavailable.newSearch') }}</bip-button>
     </div>
   </bip-modal>
@@ -46,18 +13,19 @@
     <!-- ============================================================
          Stepper
          ============================================================ -->
-    <nav [attr.aria-label]="t('flight.offer.steps.info')" class="-mx-2 mb-8 bg-surface-muted px-4 py-3">
+    <nav [attr.aria-label]="t('flight.offer.steps.info')" class="bg-surface-muted -mx-2 mb-4 px-4 py-3">
       <ol class="flex items-center gap-3 overflow-x-auto">
-        @for (step of steps; track step; let i = $index, last = $last) {
-          <li [attr.aria-current]="i === currentStep ? 'step' : null"
-              [class.max-md:hidden]="i !== currentStep"
-              class="flex shrink-0 items-center gap-2 text-sm font-semibold text-ink">
-            <span [class]="i === currentStep ? 'bg-brand-primary border-brand-primary text-onbrand' : 'border-ink'"
-                  class="flex size-6 items-center justify-center rounded-full border-2 text-xs">{{ i + 1 }}</span>
+        @for (step of steps(); track step; let i = $index, last = $last) {
+          <li
+            [attr.aria-current]="i === stepIndex() ? 'step' : null"
+            [class.max-md:hidden]="i !== stepIndex()"
+            [class.text-muted]="i > stepIndex()"
+            class="text-ink flex shrink-0 items-center gap-2 text-sm font-semibold">
+            <span [class]="getStepClass(i)" class="flex size-6 items-center justify-center rounded-full border-2 text-xs">{{ i + 1 }}</span>
             {{ t('flight.offer.steps.' + step) }}
           </li>
           @if (!last) {
-            <li aria-hidden="true" class="h-px w-10 shrink-0 bg-border-strong max-md:hidden"></li>
+            <li aria-hidden="true" class="bg-border-strong h-px w-10 shrink-0 max-md:hidden"></li>
           }
         }
       </ol>
@@ -66,15 +34,14 @@
     <!-- ============================================================
          Trip heading
          ============================================================ -->
-    <header class="mb-8">
-      <p class="text-sm text-muted">
-        {{ t(isRoundTrip() ? 'search.round-trip' : 'search.one-way') }}
-        · {{ t('flight.offer.passengers', {count: offer.passengers.length}) }}
+    <header class="mb-4">
+      <p class="text-muted text-sm">
+        {{ t(isRoundTrip() ? 'search.round-trip' : 'search.one-way') }} · {{ t('flight.offer.passengers', {count: offer.passengers.length}) }}
         @if (travelDates(); as dates) {
           · {{ dates }}
         }
       </p>
-      <h1 class="mt-1 text-3xl font-bold">
+      <h1 class="text-2xl font-bold">
         {{ t('flight.offer.route', {origin: firstSlice()!.origin.city_name, destination: firstSlice()!.destination.city_name}) }}
       </h1>
     </header>
@@ -84,164 +51,214 @@
            Travelers + contact
            ========================================================== -->
       <div class="space-y-8 lg:col-span-2">
-        <section>
-          <h2 class="text-2xl font-bold">{{ t('flight.offer.details.title') }}</h2>
-          <p class="mt-1 text-muted">{{ t('flight.offer.details.subtitle') }}</p>
+        @switch (activeStep()) {
+          @case ('info') {
+            <section>
+              <h2 class="text-xl font-bold">{{ t('flight.offer.details.title') }}</h2>
+              <p class="text-muted mt-1 text-xs">{{ t('flight.offer.details.subtitle') }}</p>
 
-          <div class="mt-5 grid grid-cols-1 gap-4 md:grid-cols-2">
-            @for (traveler of travelers(); track traveler.id) {
-              <article class="rounded-card border border-border-subtle bg-surface-card p-4">
-                <h3 class="flex items-center gap-3 text-xl font-bold">
-                  <ng-icon name="heroUser" size="1.5rem"/>
-                  {{ t('flight.offer.traveler.' + traveler.type, {index: traveler.index}) }}
-                </h3>
+              <div class="mt-5 grid grid-cols-1 gap-4 md:grid-cols-2">
+                @for (traveler of travelers(); track traveler.id) {
+                  <article class="rounded-card border-border-subtle bg-surface-card border p-4">
+                    <h3 class="flex items-center gap-3 font-bold">
+                      <ng-icon name="heroUser" size="1.5rem"/>
+                      {{ t('flight.offer.traveler.' + traveler.type, {index: traveler.index}) }}
+                    </h3>
 
-                @if (travelerInfo()[traveler.id]; as info) {
-                  <p class="mt-2 font-semibold">{{ info.given_name }} {{ info.family_name }}</p>
-                  <p class="text-sm text-muted">
-                    {{ t('flight.offer.traveler-form.genders.' + info.gender) }}
-                    @if (birthDates()[traveler.id]; as bornOn) {
-                      · {{ t('flight.offer.traveler.born-on', {date: bornOn}) }}
+                    @if (knownTraveler(traveler); as known) {
+                      <p class="mt-2 font-semibold">{{ known.given_name }} {{ known.family_name }}</p>
+                    }
+                    @if (travelerInfo()[traveler.position]; as info) {
+                      <p class="text-muted text-sm">
+                        {{ t('flight.offer.traveler-form.genders.' + info.gender) }}
+                        @if (birthDates()[traveler.position]; as bornOn) {
+                          · {{ t('flight.offer.traveler.born-on', {date: bornOn}) }}
+                        }
+                      </p>
+                    }
+
+                    @switch (saveState()[traveler.position]) {
+                      @case ('saving') {
+                        <p class="text-muted mt-2 flex items-center gap-2 text-xs" role="status">
+                          <bip-spinner size="xxs"/>
+                          {{ t('flight.offer.traveler.saving') }}
+                        </p>
+                      }
+                      @case ('failed') {
+                        <p class="text-state-error mt-2 text-xs" role="alert">
+                          {{ t('flight.offer.traveler.save-failed') }}
+                          <button (click)="retrySave(traveler.position)" class="font-semibold underline" type="button">{{ t('flight.offer.traveler.retry') }}</button>
+                        </p>
+                      }
+                      @default {
+                        @if (incomplete() && !travelerFilled(traveler.position)) {
+                          <p class="text-state-error mt-2 text-xs" role="alert">{{ t('flight.offer.traveler.missing') }}</p>
+                        }
+                      }
+                    }
+                    <bip-button (clicked)="editing.set(traveler)" block class="mt-4 text-xs" variant="outline">
+                      {{ t(knownTraveler(traveler) ? 'flight.offer.traveler.edit-info' : 'flight.offer.traveler.add-info') }}
+                    </bip-button>
+
+                    @if (traveler.everyFlight.length) {
+                      <p class="mt-4 text-sm font-semibold">{{ t('flight.offer.traveler.every-flight') }}</p>
+                      <bip-included-bags [bags]="traveler.everyFlight"/>
+                    }
+                    @for (slice of traveler.perSlice; track slice.destination) {
+                      <p class="mt-3 text-sm font-semibold">{{ t('search.offer-summary.flight-for', {city: slice.destination}) }}</p>
+                      <bip-included-bags [bags]="slice.bags"/>
+                    }
+                  </article>
+                }
+              </div>
+
+              @if (editing(); as traveler) {
+                <bip-traveler-form (closed)="editing.set(null)"
+                                   (saved)="saveTraveler(traveler, $event)"
+                                   [documentsRequired]="offer.passenger_identity_documents_required"
+                                   [heading]="t('flight.offer.traveler.' + traveler.type, { index: traveler.index })"
+                                   [initial]="knownTraveler(traveler)"
+                                   [lastFlightDate]="lastFlightDate()"
+                                   [loyaltyProgrammes]="offer.supported_loyalty_programmes"
+                                   [passengerType]="traveler.type"/>
+              }
+            </section>
+
+            <section>
+              <h2 class="text-2xl font-bold">{{ t('flight.offer.contact.title') }}</h2>
+              <p class="text-sm"><span aria-hidden="true" class="text-state-error">*</span> {{ t('flight.offer.contact.required') }}</p>
+
+              <form class="rounded-card border-border-subtle bg-surface-card mt-4 grid grid-cols-1 gap-4 border p-4" novalidate>
+                <bip-input [formField]="contactForm.email"
+                           autocomplete="email"
+                           class="md:max-w-md"
+                           hint="flight.offer.contact.email-hint"
+                           label="flight.offer.contact.email"
+                           type="email"/>
+                <bip-phone-input [formField]="contactForm.phone"
+                                 class="md:max-w-md"
+                                 hint="flight.offer.contact.phone-hint"
+                                 label="flight.offer.contact.phone"/>
+              </form>
+            </section>
+          }
+          @case ('ticket') {
+            @if (upsellsLoading()) {
+              <div class="flex min-h-64 items-center justify-center">
+                <bip-spinner label="flight.offer.ticket.loading" showLabel size="md"/>
+              </div>
+            } @else {
+              <bip-fare-options (selected)="selectFare($event)" [options]="fareOptions()" [pendingId]="pendingFare()" [selectedId]="offer.id"/>
+              @if (fareFailed()) {
+                <p class="text-state-error text-sm" role="alert">{{ t('flight.offer.ticket.error') }}</p>
+              }
+            }
+          }
+          @case ('extras') {
+            <bip-extra-bags (selectionChange)="bags.set($event)" [selection]="bags()" [travelers]="extrasTravelers()"/>
+          }
+          @case ('pay') {
+            @if (order(); as confirmed) {
+              <section class="rounded-card border-border-subtle bg-surface-card border p-6" role="status">
+                <h2 class="text-state-success flex items-center gap-2 text-2xl font-bold">
+                  <ng-icon name="heroCheck" size="1.5rem"/>
+                  {{ t('flight.offer.booking.confirmed') }}
+                </h2>
+                <p class="mt-4 text-sm">{{ t('flight.offer.booking.reference') }}</p>
+                <p class="text-3xl font-bold tracking-widest">{{ confirmed.booking_reference }}</p>
+                <p class="text-muted mt-2 text-sm">{{ t('flight.offer.booking.reference-hint') }}</p>
+                <p class="mt-4 text-sm">{{ t('flight.offer.booking.charged', {amount: chargedAmount()}) }}</p>
+                @if (confirmed.operating_carriers.length) {
+                  <p class="mt-2 text-sm">{{ t('flight.offer.booking.operated-by', {carriers: confirmed.operating_carriers.join(', ')}) }}</p>
+                }
+                <bip-button (clicked)="returnHomePage()" class="mt-6" variant="primary">{{ t('flight.offer.booking.new-search') }}</bip-button>
+              </section>
+            } @else if (booking()) {
+              <div class="flex min-h-40 items-center justify-center">
+                <bip-spinner label="flight.offer.booking.in-progress" showLabel size="md"/>
+              </div>
+            } @else {
+              <section>
+                <h2 class="text-2xl font-bold">{{ t('flight.offer.steps.pay') }}</h2>
+                @if (bookingError(); as failure) {
+                  <p class="text-state-error mt-4 text-sm" role="alert">
+                    {{ t(failure.key) }}
+                    @if (failure.retry) {
+                      <button (click)="book()" class="font-semibold underline" type="button">{{ t('flight.offer.traveler.retry') }}</button>
+                    } @else if (failure.key === 'flight.offer.booking.errors.rejected') {
+                      <button (click)="editTravelers()" class="font-semibold underline" type="button">{{ t('flight.offer.booking.edit-travelers') }}</button>
                     }
                   </p>
                 }
-
-                <button (clicked)="editing.set(traveler)" bipButton block class="mt-4" variant="outline">
-                  {{ t(travelerInfo()[traveler.id] ? 'flight.offer.traveler.edit-info' : 'flight.offer.traveler.add-info') }}
-                </button>
-
-                @if (traveler.everyFlight.length) {
-                  <p class="mt-4 font-semibold">{{ t('flight.offer.traveler.every-flight') }}</p>
-                  <ng-container [ngTemplateOutlet]="bagList" [ngTemplateOutletContext]="{bags: traveler.everyFlight}"/>
-                }
-                @for (slice of traveler.perSlice; track slice.destination) {
-                  <p class="mt-3 font-semibold">{{ t('search.offer-summary.flight-for', {city: slice.destination}) }}</p>
-                  <ng-container [ngTemplateOutlet]="bagList" [ngTemplateOutletContext]="{bags: slice.bags}"/>
-                }
-              </article>
-            }
-          </div>
-
-          @if (editing(); as traveler) {
-            <bip-traveler-form (closed)="editing.set(null)"
-                               (saved)="saveTraveler(traveler.id, $event)"
-                               [heading]="t('flight.offer.traveler.' + traveler.type, {index: traveler.index})"
-                               [initial]="travelerInfo()[traveler.id]"
-                               [lastFlightDate]="lastFlightDate()"
-                               [passengerType]="traveler.type"/>
-          }
-
-          <ng-template #bagList let-bags="bags">
-            <ul class="mt-2 space-y-3">
-              @for (bag of bags; track bag.type) {
-                <li class="flex gap-4">
-                  @if (bag.quantity > 0) {
-                    <ng-icon [name]="bag.type === 'checked' ? 'suitcase' : 'trolley'" class="mt-0.5 shrink-0" size="1.5rem"/>
-                    <div>
-                      <p>{{ t(bag.type === 'checked' ? 'search.offer-summary.baggage.checked' : 'search.offer-summary.baggage.carry-on', {count: bag.quantity}) }}</p>
-                      <p class="text-state-success">{{ t('common.included') }}</p>
-                    </div>
+                @if (pricing()) {
+                  <div class="flex min-h-40 items-center justify-center">
+                    <bip-spinner label="flight.offer.pay.pricing" showLabel size="md"/>
+                  </div>
+                } @else if (pricingFailed()) {
+                  <p class="text-state-error mt-4 text-sm" role="alert">
+                    {{ t('flight.offer.pay.failed') }}
+                    <button (click)="retryPricing()" class="font-semibold underline" type="button">{{ t('flight.offer.traveler.retry') }}</button>
+                  </p>
+                } @else {
+                  <p class="text-state-success mt-4 text-sm" role="status">{{ t('flight.offer.pay.confirmed') }}</p>
+                  @if (checkoutSession(); as session) {
+                    <bip-payment-form (authorised)="onAuthorised($event)" [session]="session" class="mt-4"/>
+                  } @else if (checkoutSessionError(); as error) {
+                    <p class="text-state-error mt-4 text-sm" role="alert">
+                      {{ t(error) }}
+                      <button (click)="retryPayment()" class="font-semibold underline" type="button">{{ t('flight.offer.traveler.retry') }}</button>
+                    </p>
                   } @else {
-                    <ng-icon class="mt-0.5 shrink-0 text-muted" name="heroNoSymbol" size="1.5rem"/>
-                    <p class="text-muted">{{ t(bag.type === 'checked' ? 'flight.offer.traveler.no-checked' : 'flight.offer.traveler.no-carry-on') }}</p>
+                    <div class="flex min-h-24 items-center justify-center">
+                      <bip-spinner label="payment.loading" showLabel size="md"/>
+                    </div>
                   }
-                </li>
-              }
-            </ul>
-          </ng-template>
-        </section>
+                }
+              </section>
+            }
+          }
+          @case ('seat') {
+            <bip-flight-seat-selection (selectionChange)="seats.set($event)" [offer]="offer" [selection]="seats()" [travelers]="seatTravelers()"/>
+          }
+          @default {
+            <section class="rounded-card border-border-strong border border-dashed p-8 text-center">
+              <h2 class="text-xl font-bold">{{ t('flight.offer.steps.' + activeStep()) }}</h2>
+              <p class="text-muted mt-2 text-sm">{{ t('flight.offer.coming-soon') }}</p>
+            </section>
+          }
+        }
 
-        <section>
-          <h2 class="text-2xl font-bold">{{ t('flight.offer.contact.title') }}</h2>
-          <p class="text-sm"><span aria-hidden="true" class="text-state-error">*</span> {{ t('flight.offer.contact.required') }}</p>
-
-          <form class="mt-4 grid grid-cols-1 gap-4 rounded-card border border-border-subtle bg-surface-card p-4" novalidate>
-            <bip-input [formField]="contactForm.email"
-                       autocomplete="email"
-                       class="md:max-w-md"
-                       hint="flight.offer.contact.email-hint"
-                       label="flight.offer.contact.email"
-                       type="email"/>
-            <bip-input [formField]="contactForm.phone"
-                       autocomplete="tel"
-                       class="md:max-w-md"
-                       hint="flight.offer.contact.phone-hint"
-                       label="flight.offer.contact.phone"
-                       type="tel"/>
-          </form>
-        </section>
+        @if (incomplete()) {
+          <p class="text-state-error text-sm" role="alert">{{ t('flight.offer.incomplete') }}</p>
+        }
+        <div class="flex items-center justify-between gap-4 mt-3">
+          @if (stepIndex() > 0 && !order() && !booking()) {
+            <bip-button (clicked)="previous()" [disabled]="!!pendingFare()" variant="outline">{{ t('flight.offer.back') }}</bip-button>
+          } @else {
+            <span></span>
+          }
+          @if (stepIndex() < steps().length - 1) {
+            <bip-button (clicked)="next()" [disabled]="!!pendingFare()" [loading]="saving()" variant="primary">{{ t('common.continue') }}</bip-button>
+          }
+        </div>
       </div>
 
       <!-- ==========================================================
            Fare summary
            ========================================================== -->
-      <aside class="space-y-6 lg:sticky lg:top-4 lg:self-start">
-        <section>
-          <h2 class="text-xl font-bold">{{ t('flight.offer.fare.title') }}</h2>
-
-          <p class="mt-4 font-semibold">{{ t('flight.offer.fare.flight', {count: offer.passengers.length}) }}</p>
-          <ul class="mt-2 space-y-1 text-sm">
-            @for (group of passengerGroups(); track group.type) {
-              <li>{{ t('flight.offer.fare.' + group.type, {count: group.count}) }}</li>
-            }
-          </ul>
-
-          <dl class="mt-3 space-y-2 border-b border-border-strong pb-3 text-sm">
-            <div class="flex justify-between gap-4">
-              <dt>{{ t('flight.offer.fare.base') }}</dt>
-              <dd>{{ offer.base_amount | translocoCurrency: 'narrowSymbol' : {currency: offer.base_currency, minimumFractionDigits: fractionDigits(), maximumFractionDigits: fractionDigits()} }}</dd>
-            </div>
-            @if (offer.tax_amount) {
-              <div class="flex justify-between gap-4">
-                <dt>
-                  <button (click)="taxesOpened.set(!taxesOpened())"
-                          [attr.aria-expanded]="taxesOpened()"
-                          aria-controls="tax-breakdown"
-                          class="flex items-center gap-2 bip-focusable"
-                          type="button">
-                    {{ t('flight.offer.fare.taxes') }}
-                    <ng-icon [class.rotate-180]="taxesOpened()" class="transition-transform" name="heroChevronDown"/>
-                  </button>
-                </dt>
-                <dd>{{ offer.tax_amount | translocoCurrency: 'narrowSymbol' : {currency: offer.tax_currency ?? offer.total_currency, minimumFractionDigits: fractionDigits(), maximumFractionDigits: fractionDigits()} }}</dd>
-              </div>
-              @if (taxesOpened()) {
-                <dd id="tax-breakdown">
-                  <ul class="space-y-1 pl-3 text-xs text-muted">
-                    @for (tax of offer.tax_breakdown; track tax.code + tax.name) {
-                      <li class="flex justify-between gap-4">
-                        <span>{{ tax.name }}</span>
-                        <span>{{ tax.amount | translocoCurrency: 'narrowSymbol' : {currency: tax.currency, minimumFractionDigits: fractionDigits(), maximumFractionDigits: fractionDigits()} }}</span>
-                      </li>
-                    }
-                  </ul>
-                </dd>
-              }
-            }
-          </dl>
-
-          <div class="mt-3 flex items-baseline justify-between gap-4">
-            <p class="text-2xl font-bold">{{ t('flight.offer.fare.total') }}</p>
-            <p class="text-2xl font-bold">
-              {{ offer.total_amount | translocoCurrency: 'narrowSymbol' : {currency: offer.total_currency, minimumFractionDigits: fractionDigits(), maximumFractionDigits: fractionDigits()} }}
-            </p>
-          </div>
-          <p class="text-sm text-muted">{{ t('flight.offer.fare.taxes-included') }}</p>
-
-          <p class="mt-4 flex gap-2 text-sm">
-            <ng-icon class="mt-0.5 shrink-0" name="heroCheck"/>
-            {{ t('flight.offer.fare.no-hidden-fees') }}
-          </p>
-        </section>
-
-        <section class="rounded-card bg-state-info-soft p-4 text-xs">
-          <h2 class="flex gap-2 font-semibold text-state-info">
-            <ng-icon class="shrink-0" name="heroInformationCircle"/>
-            {{ t('flight.offer.assistance.title') }}
-          </h2>
-          <p class="mt-2 leading-relaxed">{{ t('flight.offer.assistance.body') }}</p>
-        </section>
+      <aside class="flex flex-col gap-y-6 lg:self-start">
+        <bip-offer-itinerary [offer]="offer"/>
+        <bip-offer-price-details [bags]="bagLines()" [offer]="offer" [seats]="seats()"/>
       </aside>
     </div>
   </ng-container>
+}
+
+@if (idle()) {
+  <bip-modal *transloco="let t" [backdropDismissible]="false" [dismissible]="false" [opened]="true" [title]="t('flight.offer.idle.title')">
+    <p class="text-sm">{{ t('flight.offer.idle.message') }}</p>
+    <div modalFooter>
+      <bip-button (clicked)="returnHomePage()" variant="primary">{{ t('flight.offer.idle.back') }}</bip-button>
+    </div>
+  </bip-modal>
 }

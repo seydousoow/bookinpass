@@ -35,6 +35,6 @@ export class Viewport {
     );
   }
 
-  /** En dessous de `md:` — SSR : `false` tant qu'aucun `matchMedia` réel n'est disponible. */
+  /** En dessous de `md:`. */
   readonly isMobile = this.observe(MOBILE_QUERY);
 }

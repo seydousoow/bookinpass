@@ -7,7 +7,10 @@ name: bookinpass
 services:
   postgres:
     image: postgres:18.6
+    ports:
+      - "5432:5432"
     networks:
+      - bip-egress
       - bip-internal
     environment:
       POSTGRES_DB: bookinpass
@@ -57,12 +60,31 @@ services:
       REDIS_HOST: redis
       REDIS_PORT: 6379
 
-      DUFFEL_ACCESS_TOKEN: ${DUFFEL_ACCESS_TOKEN:-}
+      DUFFEL_BASE_URL: ${DUFFEL_BASE_URL:?Set DUFFEL_BASE_URL}
+      DUFFEL_ACCESS_TOKEN: ${DUFFEL_ACCESS_TOKEN:?Set DUFFEL_ACCESS_TOKEN}
       DUFFEL_FIXTURES_DIR: file:/fixtures/duffel/
+      DUFFEL_LOG_LEVEL: ${DUFFEL_LOG_LEVEL:-info}
+      DUFFEL_STAYS_ENABLED: ${DUFFEL_STAYS_ENABLED:-true}
+      DUFFEL_WEBHOOK_SECRET: ${DUFFEL_WEBHOOK_SECRET:-}
+      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY:-}
+      STRIPE_PUBLISHABLE_KEY: ${STRIPE_PUBLISHABLE_KEY:-}
+      STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET:-}
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:4200}
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-}
+
+      # E-mails aux voyageurs par AWS SES. MAIL_ENABLED=false : rendus et journalisés, jamais envoyés.
+      MAIL_ENABLED: ${MAIL_ENABLED:-false}
+      AWS_REGION: ${AWS_REGION:-eu-west-1}
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID:-}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY:-}
+      AWS_SES_SENDER: ${AWS_SES_SENDER:-reservations@bookinpass.com}
+      AWS_SES_ALIAS: ${AWS_SES_ALIAS:-Book In Pass}
+      STAYS_LOG_LEVEL: ${STAYS_LOG_LEVEL:-info}
 
       EXPEDIA_BASE_URL: ${EXPEDIA_BASE_URL:-https://test.ean.com/v3}
       EXPEDIA_API_KEY: ${EXPEDIA_API_KEY:-}
       EXPEDIA_SHARED_SECRET: ${EXPEDIA_SHARED_SECRET:-}
+      EXPEDIA_LOG_LEVEL: ${EXPEDIA_LOG_LEVEL:-info}
 
     volumes:
       # Réponses de démo, hors de l'image : elles ne servent qu'en l'absence de jeton.

@@ -87,20 +87,16 @@
       <div class="flex flex-col justify-center items-start gap-2">
         <p class="text-xs font-semibold text-ink">{{ offer().slices[0].segments[0].passengers[0].cabin_class_marketing_name }}</p>
         <ng-icon-stack size="auto">
-          <ng-icon name="bagpack" size="1.5rem"></ng-icon>
+          <ng-icon name="bagpack" size="1.125rem"></ng-icon>
           @if (hasCheckedBaggage(outbound())) {
-            <ng-icon name="trolley" size="1.5rem"></ng-icon>
+            <ng-icon name="trolley" size="1.125rem"></ng-icon>
           }
           @if (hasCabinBaggage(outbound())) {
-            <ng-icon name="suitcase" size="1.5rem"></ng-icon>
+            <ng-icon name="suitcase" size="1.125rem"></ng-icon>
           }
           @if (isChangeable()) {
-            <ng-icon name="hero" size="1.5rem"></ng-icon>
-            <!--        <span class="rounded-full border border-border-subtle px-4 py-2 text-sm text-muted">{{ t('common.editable') }}</span>-->
+            <ng-icon name="flight-change" size="1.125rem"></ng-icon>
           }
-          <!--      @if (isRecommended()) {-->
-          <!--        <span class="rounded-full bg-state-success-soft px-4 py-2 text-sm font-medium text-state-success">{{ t('search.filter.recommanded') }}</span>-->
-          <!--      }-->
         </ng-icon-stack>
       </div>
 
@@ -108,11 +104,11 @@
       <div class="flex flex-col justify-center items-center whitespace-nowrap text-sm font-semibold text-brand-dark -md:pr-2">
         <div class="flex flex-row flex-nowrap justify-center items-center w-fit space-x-1">
           <p>Total</p>
-          <bip-button (clicked)="viewPriceDetails()" variant="ghost" class="p-0! min-h-auto!">
+          <bip-button (clicked)="viewPriceDetails()" class="p-0! min-h-auto!" variant="ghost">
             <ng-icon class="cursor-pointer" color="var(--color-brand-accent)" name="heroQuestionMarkCircleSolid"></ng-icon>
           </bip-button>
         </div>
-        <p class="text-lg md:text-xl font-bold w-full text-center">{{ formatPrice(offer().total_amount, offer().total_currency) }}</p>
+        <p class="text-lg md:text-xl font-bold w-full text-center">{{ total() | bipMoney: offer().total_currency }}</p>
       </div>
     </div>
 

@@ -1,0 +1,22 @@
+<ng-container *transloco="let t">
+  <form [formRoot]="manageForm" class="grid w-full grid-cols-1 gap-y-3">
+    <p class="text-muted text-sm">{{ t('flight.manage.form.intro') }}</p>
+    <div class="grid gap-2 md:grid-cols-2">
+      <bip-input [formField]="manageForm.booking_reference"
+                 autocomplete="off"
+                 hint="flight.manage.form.reference-hint"
+                 label="flight.manage.form.reference"/>
+      <bip-input [formField]="manageForm.last_name"
+                 autocomplete="family-name"
+                 label="flight.manage.form.last-name"/>
+    </div>
+    @if (error(); as error) {
+      <p class="text-state-error text-sm" role="alert">{{ t(error) }}</p>
+    }
+    <div class="flex">
+      <button [loading]="loading()" bipButton class="ml-auto w-full sm:w-auto" size="lg" type="submit" variant="accent">
+        {{ t('flight.manage.form.submit') }}
+      </button>
+    </div>
+  </form>
+</ng-container>

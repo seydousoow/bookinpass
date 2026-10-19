@@ -1,84 +1,49 @@
 import { Component, computed, effect, inject, input, model } from '@angular/core';
-import { provideIcons } from '@ng-icons/core';
-import { IDateRangeValue, IFlightSearch, normalizeCabin, IPersistedFlightSearch, TTripType } from '@shared/models';
-import { SearchStore } from '@core/search/search.store';
-import { IsoDate, isValidPassengerCount, IPassengerCount } from '@shared/ui';
-import { FormValueControl, ValidationError, WithOptionalFieldTree } from '@angular/forms/signals';
+import { TranslocoDirective } from '@jsverse/transloco';
+import { NgIcon, provideIcons } from '@ng-icons/core';
+import { heroArrowRight, heroArrowsRightLeft } from '@ng-icons/heroicons/outline';
+import { DatePipe } from '@core/i18n/date.pipe';
+import { IFlightSearch } from '@shared/models';
+import { Button, Modal, Viewport } from '@shared/ui';
+import { AirportStore } from '@shared/ui/location-field/airport.store';
+import { FlightSearchForm } from '@features/flight/search-form/flight-search-form';
 
+/**
+ * Critères de la recherche en cours (lus de l'URL par la page) et leur modification : formulaire déplié sous le
+ * résumé sur grand écran, dans une modale sur mobile. La soumission change l'URL, ce qui referme l'édition.
+ */
 @Component({
   selector: 'bip-search-summary',
   templateUrl: './search-summary.html',
-  imports: [],
-  host: { class: 'h-12 bg-red border rounded p-2 border-brand-soft' },
-  providers: provideIcons({}),
+  imports: [TranslocoDirective, DatePipe, NgIcon, Button, Modal, FlightSearchForm],
+  host: { class: 'block rounded-card border border-border-subtle bg-surface-card p-3' },
+  providers: provideIcons({ heroArrowRight, heroArrowsRightLeft }),
 })
-export class SearchSummary implements FormValueControl<IFlightSearch> {
-  readonly value = model.required<IFlightSearch>();
-  readonly invalid = model(false);
+export class SearchSummary {
+  readonly search = input.required<IFlightSearch>();
+  readonly disabled = input.required<boolean>();
+  readonly editing = model(false);
 
-  readonly name = model('');
-  readonly touched = model(false);
-  readonly dirty = model(false);
-  readonly required = model(false);
-  readonly disabled = model(false);
-  readonly errors = model<readonly WithOptionalFieldTree<ValidationError>[]>([]);
-
-  readonly tripType = input<TTripType | undefined>(undefined);
-  readonly origin = input<string | undefined>(undefined);
-  readonly destination = input<string | undefined>(undefined);
-  readonly from = input<string | undefined>(undefined);
-  readonly to = input<string | undefined>(undefined);
-  readonly adults = input(1);
-  readonly infants = input(0);
-  readonly children = input(0);
-  readonly cabin = input('economy');
-
-  private readonly urlSearch = computed<IFlightSearch | null>(() => {
-    const tripType = this.tripType();
-    const origin = this.origin();
-    const destination = this.destination();
-    const from = this.from();
-    const to = this.to();
-    const adults = this.adults();
-    const children = this.children();
-    const infants = this.infants();
-
-    if (!tripType || !origin || !destination || !from || !isValidPassengerCount({ adults, children, infants } as IPassengerCount)) {
-      return null;
-    }
-
-    if (tripType !== 'oneway' && tripType !== 'round') {
-      return null;
-    }
-
-    if (tripType === 'round' && !to) {
-      return null;
-    }
-
-    const cabin = normalizeCabin(this.cabin());
-    const dates: IDateRangeValue = { start: from as IsoDate, end: tripType === 'round' ? (to! as IsoDate) : null };
-    return { tripType, origin, destination, dates, passengers: { adults, children, infants }, cabin: [cabin] };
+  protected readonly isMobile = inject(Viewport).isMobile;
+  protected readonly dateFormat: Intl.DateTimeFormatOptions = { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'UTC' };
+  protected readonly travelers = computed(() => {
+    const { adults, children, infants } = this.search().passengers;
+    return adults + children + infants;
   });
 
-  private readonly searchStore = inject(SearchStore);
+  private readonly airports = inject(AirportStore).airports;
 
   constructor() {
+    // Nouvelle recherche (URL changée) : l'édition est terminée.
     effect(() => {
-      const search = this.urlSearch();
-
-      if (!search) {
-        this.invalid.set(true);
-        return;
-      }
-
-      this.invalid.set(false);
-      this.value.set(search);
-
-      this.searchStore.save({ ...search, cabin: search.cabin[0] } satisfies IPersistedFlightSearch);
+      this.search();
+      this.editing.set(false);
     });
   }
 
-  reset(): void {
-    // The URL is the source of truth, so there is nothing to reset here.
+  /** « Dakar » pour DSS ; le code tant que le référentiel charge. */
+  protected cityName(code: string): string {
+    const airport = this.airports().find((a) => a.iata === code || a.cityCode === code);
+    return airport?.cityName ?? code;
   }
 }

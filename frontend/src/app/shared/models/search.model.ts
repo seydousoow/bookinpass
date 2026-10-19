@@ -33,11 +33,6 @@ export interface IAirlineFilter {
   readonly offerCount: number;
 }
 
-export interface IBagFilter {
-  cabin: boolean;
-  hold: boolean;
-}
-
 export interface IDateRangeValue {
   readonly start: IsoDate | null;
   readonly end: IsoDate | null;

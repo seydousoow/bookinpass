@@ -4,7 +4,8 @@ import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
 import { NgIcon, provideIcons } from '@ng-icons/core';
 import { heroXMark } from '@ng-icons/heroicons/outline';
 import { Button, Modal, Select, TextInput, todayIso } from '@shared/ui';
-import { ISelectOption, TPassengerType } from '@shared/models';
+import { COUNTRY_CODES, ILoyaltyProgrammeAccount, ISelectOption, TPassengerType } from '@shared/models';
+import { AirlineStore } from '@core/reference/airline.store';
 
 export type TPassengerTitle = 'mr' | 'ms' | 'miss';
 export type TPassengerGender = 'm' | 'f';
@@ -17,6 +18,26 @@ export interface ITravelerInfo {
   family_name: string;
   /** `YYYY-MM-DD` — exigé par Duffel pour chaque voyageur à la création de la commande. */
   born_on: string;
+  loyalty_programme_accounts: ILoyaltyProgrammeAccount[];
+  /** Passeport, quand l'offre l'exige (`passenger_identity_documents_required`) : transmis à la création de commande. */
+  identity_documents?: IIdentityDocument[];
+}
+
+/** Pièce d'identité au format Duffel (`passengers[].identity_documents[]` de `POST /air/orders`). */
+export interface IIdentityDocument {
+  type: 'passport';
+  /** Numéro du passeport. */
+  unique_identifier: string;
+  /** Pays de délivrance, ISO 3166-1 alpha-2. */
+  issuing_country_code: string;
+  /** `YYYY-MM-DD`. */
+  expires_on: string;
+}
+
+interface IDateParts {
+  day: string;
+  month: number[];
+  year: string;
 }
 
 /** Modèle de saisie : les listes déroulantes travaillent sur des tableaux, la date est éclatée en trois champs. */
@@ -24,11 +45,22 @@ interface ITravelerFormModel {
   given_name: string;
   family_name: string;
   gender: TPassengerGender[];
-  birth: { day: string; month: number[]; year: string };
+  birth: IDateParts;
+  loyalty: { airline: string[]; number: string };
+  passport: { number: string; country: string[]; expiry: IDateParts };
 }
 
-/** Lettres latines (accents compris), espaces, apostrophes et traits d'union — contrainte des compagnies. */
-const NAME_PATTERN = /^[A-Za-zÀ-ÖØ-öø-ÿ' -]+$/;
+/**
+ * Règle Duffel : espaces, apostrophes, traits d'union et lettres ASCII, Latin-1 et Latin étendu A,
+ * sauf Æ æ Ĳ ĳ Œ œ Þ ð. Le backend applique la même.
+ */
+const NAME_PATTERN =
+  /^[A-Za-z\u00C0-\u00C5\u00C7-\u00D6\u00D8-\u00DD\u00DF-\u00E5\u00E7-\u00EF\u00F1-\u00F6\u00F8-\u00FF\u0100-\u0131\u0134-\u0151\u0154-\u017F' -]+$/;
+/** Duffel : 20 caractères au plus pour le prénom comme pour le nom. */
+const NAME_MAX_LENGTH = 20;
+const LOYALTY_NUMBER_PATTERN = /^[A-Za-z0-9-]{1,40}$/;
+/** Numéro de passeport : lettres et chiffres, sans espace. */
+const PASSPORT_NUMBER_PATTERN = /^[A-Za-z0-9]{5,20}$/;
 
 /** Âge accepté pour chaque type de voyageur, à la date du dernier vol. */
 const AGE_RANGES: Record<TPassengerType, { min: number; max: number }> = {
@@ -49,11 +81,15 @@ export class TravelerForm {
   readonly passengerType = input.required<TPassengerType>();
   /** Date du dernier vol (ISO) — référence pour le contrôle d'âge. */
   readonly lastFlightDate = input.required<string>();
-  /** Informations déjà saisies : la modale s'ouvre préremplie. */
-  readonly initial = input<ITravelerInfo | undefined>();
-
+  /** Informations déjà connues (saisies ici, ou nom déjà enregistré chez Duffel) : la modale s'ouvre préremplie. */
+  readonly initial = input<Partial<ITravelerInfo> | undefined>();
+  /** Codes IATA des programmes de fidélité acceptés par l'offre. Vide : pas de champ fidélité. */
+  readonly loyaltyProgrammes = input<readonly string[]>([]);
+  /** L'offre exige une pièce d'identité (`passenger_identity_documents_required`) : passeport demandé. */
+  readonly documentsRequired = input(false);
+  /** Voyageur validé : la page l'enregistre chez Duffel en arrière-plan, la modale se ferme aussitôt. */
   readonly saved = output<ITravelerInfo>();
-  /** Émis à chaque fermeture (✕, Échap ou après enregistrement). */
+  /** Émis à chaque fermeture (✕, Échap ou après « OK »). */
   readonly closed = output<void>();
 
   private readonly transloco = inject(TranslocoService);
@@ -70,6 +106,21 @@ export class TravelerForm {
     return Array.from({ length: 12 }, (_, i) => ({ label: this.transloco.translate(`common.months.${i + 1}`, {}, lang), value: i + 1 }));
   });
 
+  /** Pays de délivrance du passeport, nommés dans la langue active et triés par nom. */
+  protected readonly countries = computed((): readonly ISelectOption[] => {
+    const names = new Intl.DisplayNames([this.lang()], { type: 'region' });
+    return COUNTRY_CODES.map((code) => ({ label: names.of(code) ?? code, value: code })).sort((a, b) => a.label.localeCompare(b.label, this.lang()));
+  });
+
+  private readonly airlines = inject(AirlineStore).byCode;
+  /** « AF · Air France » ; le code seul si la compagnie est absente du référentiel. */
+  protected readonly loyaltyOptions = computed((): readonly ISelectOption[] =>
+    this.loyaltyProgrammes().map((code) => {
+      const name = this.airlines().get(code)?.name;
+      return { label: name ? `${code} · ${name}` : code, value: code };
+    }),
+  );
+
   /** Fermer passe toujours par la modale : elle seule libère le verrou de défilement du body. */
   private readonly modal = viewChild.required(Modal);
 
@@ -83,6 +134,8 @@ export class TravelerForm {
       required(path.family_name, { message: 'common.required-field' });
       pattern(path.given_name, NAME_PATTERN, { message: 'flight.offer.traveler-form.errors.name' });
       pattern(path.family_name, NAME_PATTERN, { message: 'flight.offer.traveler-form.errors.name' });
+      maxLength(path.given_name, NAME_MAX_LENGTH, { message: 'flight.offer.traveler-form.errors.name-length' });
+      maxLength(path.family_name, NAME_MAX_LENGTH, { message: 'flight.offer.traveler-form.errors.name-length' });
       // `required()` ne considère pas un tableau vide comme manquant : on pose l'astérisque et l'erreur à la main.
       metadata(path.gender, REQUIRED, () => true);
       validate(path.gender, ({ value }) => (value().length ? null : { kind: 'required', message: 'common.required-field' }));
@@ -108,13 +161,56 @@ export class TravelerForm {
         }
         return null;
       });
+
+      // Passeport : exigé seulement si l'offre le demande ; valide au moins jusqu'au dernier vol.
+      validate(path.passport.number, ({ value }) => {
+        if (!this.documentsRequired()) {
+          return null;
+        }
+        const number = value().trim();
+        if (!number) {
+          return { kind: 'required', message: 'common.required-field' };
+        }
+        return PASSPORT_NUMBER_PATTERN.test(number) ? null : { kind: 'pattern', message: 'flight.offer.traveler-form.errors.passport-number' };
+      });
+      validate(path.passport.country, ({ value }) =>
+        this.documentsRequired() && !value().length ? { kind: 'required', message: 'common.required-field' } : null,
+      );
+      validate(path.passport.expiry, ({ value }) => {
+        if (!this.documentsRequired()) {
+          return null;
+        }
+        const { day, month, year } = value();
+        if (!day || !month.length || !year) {
+          return { kind: 'required', message: 'common.required-field' };
+        }
+        const expiresOn = toIsoDate(day, month[0], year);
+        if (!expiresOn) {
+          return { kind: 'invalid-date', message: 'flight.offer.traveler-form.errors.invalid-date' };
+        }
+        return expiresOn < this.lastFlightDate().slice(0, 10)
+          ? { kind: 'expired', message: 'flight.offer.traveler-form.errors.passport-expired' }
+          : null;
+      });
+
+      // Fidélité facultative, mais compagnie et numéro vont ensemble.
+      validate(path.loyalty.airline, ({ value, valueOf }) =>
+        !value().length && valueOf(path.loyalty.number).trim() ? { kind: 'required', message: 'common.required-field' } : null,
+      );
+      validate(path.loyalty.number, ({ value, valueOf }) => {
+        const number = value().trim();
+        if (!number) {
+          return valueOf(path.loyalty.airline).length ? { kind: 'required', message: 'common.required-field' } : null;
+        }
+        return LOYALTY_NUMBER_PATTERN.test(number) ? null : { kind: 'pattern', message: 'flight.offer.traveler-form.errors.loyalty-number' };
+      });
     },
     {
       submission: {
-        action: (f) => {
+        action: async (f) => {
           this.saved.emit(this.toTravelerInfo(f().value()));
           this.modal().close();
-          return Promise.resolve(null);
+          return null;
         },
         ignoreValidators: 'none',
         onInvalid: (field) => field().errorSummary()[0]?.fieldTree().focusBoundControl(),
@@ -126,27 +222,53 @@ export class TravelerForm {
     this.modal().close();
   }
 
-  private toTravelerInfo({ given_name, family_name, gender, birth }: ITravelerFormModel): ITravelerInfo {
+  private toTravelerInfo({ given_name, family_name, gender, birth, loyalty, passport }: ITravelerFormModel): ITravelerInfo {
     const sex = gender[0];
+    const identity_documents: IIdentityDocument[] | undefined = this.documentsRequired()
+      ? [
+          {
+            type: 'passport',
+            unique_identifier: passport.number.trim().toUpperCase(),
+            issuing_country_code: passport.country[0],
+            expires_on: toIsoDate(passport.expiry.day, passport.expiry.month[0], passport.expiry.year) ?? '',
+          },
+        ]
+      : undefined;
     return {
+      ...(identity_documents ? { identity_documents } : {}),
       // Civilité déduite du sexe : « Miss » pour une enfant, « Ms » pour une adulte.
       title: sex === 'm' ? 'mr' : this.passengerType() === 'adult' ? 'ms' : 'miss',
       gender: sex,
       given_name: given_name.trim(),
       family_name: family_name.trim(),
       born_on: toIsoDate(birth.day, birth.month[0], birth.year) ?? '',
+      loyalty_programme_accounts:
+        loyalty.airline.length && loyalty.number.trim() ? [{ airline_iata_code: loyalty.airline[0], account_number: loyalty.number.trim() }] : [],
     };
   }
 }
 
-function toFormModel(info: ITravelerInfo | undefined): ITravelerFormModel {
-  const [year = '', month = '', day = ''] = info?.born_on ? info.born_on.split('-') : [];
+function toFormModel(info: Partial<ITravelerInfo> | undefined): ITravelerFormModel {
+  const account = info?.loyalty_programme_accounts?.[0];
+  const passport = info?.identity_documents?.[0];
   return {
     given_name: info?.given_name ?? '',
     family_name: info?.family_name ?? '',
-    gender: info ? [info.gender] : [],
-    birth: { day: day ? String(Number(day)) : '', month: month ? [Number(month)] : [], year },
+    gender: info?.gender ? [info.gender] : [],
+    birth: toDateParts(info?.born_on),
+    loyalty: { airline: account ? [account.airline_iata_code] : [], number: account?.account_number ?? '' },
+    passport: {
+      number: passport?.unique_identifier ?? '',
+      country: passport?.issuing_country_code ? [passport.issuing_country_code] : [],
+      expiry: toDateParts(passport?.expires_on),
+    },
   };
+}
+
+/** `YYYY-MM-DD` éclatée pour les trois champs jour / mois / année. */
+function toDateParts(iso: string | undefined): IDateParts {
+  const [year = '', month = '', day = ''] = iso ? iso.split('-') : [];
+  return { day: day ? String(Number(day)) : '', month: month ? [Number(month)] : [], year };
 }
 
 /** `YYYY-MM-DD` si les trois parties forment une date réelle (pas de 31 février), sinon `null`. */

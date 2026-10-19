@@ -29,11 +29,11 @@ import { ICurrencyOption } from '@shared/models/money.model';
 })
 export class App {
   protected readonly navEntries: readonly NavEntry[] = [
-    { labelKey: 'nav.home', route: '/' },
-    { labelKey: 'nav.flights', route: '/flights', disabled: true },
+    { labelKey: 'nav.home', route: '/', disabled: false },
+    { labelKey: 'nav.flights', route: '/flight', disabled: false },
     { labelKey: 'nav.tourism', route: '/tourism', disabled: true },
-    { labelKey: 'nav.stays', route: '/stays', disabled: true },
-    { labelKey: 'nav.uiKit', route: '/ui-kit' },
+    { labelKey: 'nav.stays', route: '/stays', disabled: false },
+    { labelKey: 'nav.uiKit', route: '/ui-kit', disabled: false },
   ];
   protected readonly footerColumns: readonly FooterColumn[] = [
     {

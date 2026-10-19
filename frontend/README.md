@@ -1,6 +1,6 @@
 # Book In Pass — front
 
-Angular 22 · Tailwind 4 · SSR · signaux · zoneless. Ce dépôt met en œuvre le lot 0 du plan `../docs/02-plan-projet.md`.
+Angular 22 · Tailwind 4 · rendu client · signaux · zoneless. Ce dépôt met en œuvre le lot 0 du plan `../docs/02-plan-projet.md`.
 
 ## Démarrer
 
@@ -8,8 +8,7 @@ Angular 22 · Tailwind 4 · SSR · signaux · zoneless. Ce dépôt met en œuvre
 npm start          # http://localhost:4200
 npm test           # Vitest via @angular/build:unit-test
 npm run lint       # ESLint + règles de dépendance
-npm run build      # build production + SSR
-npm run serve:ssr  # sert le build SSR
+npm run build      # build production
 ```
 
 ## Arborescence
@@ -67,49 +66,9 @@ Les patrons interactifs sont bâtis sur **`@angular/aria`** : `ngCombobox`,
 Cible tactile de 44 px minimum, anneau de focus unique (`.bip-focusable`),
 `prefers-reduced-motion` respecté.
 
-## Rendu serveur (SSR)
+## Rendu
 
-Le mode de rendu est déclaré **par route** dans `src/app/app.routes.server.ts`
-(plan §10.2). L'application n'est donc pas « en SSR » en bloc :
-
-| Route | Mode | Effet |
-|---|---|---|
-| `/` | `Prerender` | HTML figé au build, servi en statique |
-| `/ui-kit` | `Client` | coquille vide, tout est rendu par le navigateur |
-| `**` | `Server` | rendu à la demande |
-
-Deux comportements vérifiés, utiles à connaître avant d'ajouter une route
-`Server` :
-
-- **Les URL relatives fonctionnent au rendu serveur.** Un `http.get('/x.json')`
-  exécuté pendant le SSR est résolu contre la requête entrante.
-- **Les réponses GET sont sérialisées dans le HTML.** `provideClientHydration()`
-  active le cache de transfert par défaut : le navigateur ne refait pas l'appel
-  après hydratation. Ne pas l'utiliser pour des données propres à un
-  utilisateur : elles se retrouveraient dans une page potentiellement mise en
-  cache.
-
-### Hôtes autorisés — à configurer avant tout déploiement
-
-Le serveur SSR rejette toute requête dont l'en-tête `Host` n'est pas déclaré,
-avec un **400 Bad Request**. C'est une protection contre le SSRF, pas un bug —
-mais un déploiement sans configuration ressemble à une panne totale.
-
-`angular.json` n'autorise que les hôtes locaux :
-
-```jsonc
-"security": { "allowedHosts": ["localhost", "127.0.0.1", "[::1]"] }
-```
-
-En production, déclarer les domaines réels via la variable d'environnement
-`NG_ALLOWED_HOSTS`, qui **prime sur** `angular.json` :
-
-```bash
-NG_ALLOWED_HOSTS=bookinpass.sn,www.bookinpass.sn node dist/frontend/server/server.mjs
-```
-
-Derrière un reverse proxy, `NG_TRUST_PROXY_HEADERS` indique les en-têtes de
-transfert à prendre en compte.
+L'application est rendue entièrement côté client (pas de SSR ni d'hydratation).
 
 
 ## Ce qui n'est pas encore là

@@ -1,0 +1,178 @@
+<ng-container *transloco="let t; prefix: 'flight.offer.seats'">
+  <section class="flex flex-col gap-4">
+    <div>
+      <h2 class="text-2xl font-bold">{{ t('title') }}</h2>
+      <p class="text-muted mt-1 text-sm">{{ t('subtitle') }}</p>
+    </div>
+
+    @if (loading()) {
+      <div class="flex min-h-64 items-center justify-center">
+        <bip-spinner label="flight.offer.seats.loading" showLabel size="md"/>
+      </div>
+    } @else if (failed()) {
+      <div class="rounded-card bg-surface-muted flex flex-col items-start gap-3 p-4 text-sm" role="alert">
+        <p>{{ t('failed') }}</p>
+        <bip-button (clicked)="retry()" variant="outline">{{ t('retry') }}</bip-button>
+      </div>
+    } @else if (unavailable()) {
+      <p class="rounded-card bg-surface-muted p-4 text-sm">{{ t('unavailable') }}</p>
+    } @else {
+      <!-- Vols -->
+      @if (segments().length > 1) {
+        <div [attr.aria-label]="t('flights')" class="flex flex-wrap gap-2" role="tablist">
+          @for (segment of segments(); track segment.id) {
+            <button (click)="currentSegment.set(segment.id)"
+                    [attr.aria-selected]="segment.id === currentSegment()"
+                    [class]="segment.id === currentSegment() ? 'border-brand-primary bg-brand-primary text-onbrand' : 'border-border-strong'"
+                    class="bip-focusable rounded-full border px-4 py-1.5 text-sm font-semibold"
+                    role="tab" type="button">
+              {{ segmentLabel(segment) }}
+              @if (!hasMap(segment)) {
+                <span class="font-normal">· {{ t('no-map') }}</span>
+              }
+            </button>
+          }
+        </div>
+      }
+
+      <!-- Voyageurs -->
+      <div [attr.aria-label]="t('travelers')" class="flex flex-wrap gap-2" role="radiogroup">
+        @for (traveler of seatedTravelers(); track traveler.id) {
+          @let choice = segmentChoices().get(traveler.id);
+          <button (click)="currentTraveler.set(traveler.id)"
+                  [attr.aria-checked]="traveler.id === currentTraveler()"
+                  [class]="traveler.id === currentTraveler() ? 'border-brand-primary ring-2 ring-brand-primary' : 'border-border-strong'"
+                  class="bip-focusable rounded-card flex flex-col items-start border px-3 py-2 text-left text-sm"
+                  role="radio" type="button">
+            <span class="font-semibold">{{ traveler.name || t('traveler.' + traveler.type, {index: traveler.index}) }}</span>
+            <span class="text-muted text-xs">{{ choice ? t('seat', {designator: choice.designator}) : t('no-seat') }}</span>
+          </button>
+        }
+      </div>
+
+      @if (currentMap()) {
+        <!-- Légende -->
+        <ul class="text-muted flex flex-wrap gap-x-4 gap-y-1 text-xs">
+          <li class="flex items-center gap-1.5"><span class="border-brand-primary inline-block size-4 rounded border"></span>{{ t('legend.available') }}</li>
+          <li class="flex items-center gap-1.5"><span class="bg-brand-primary inline-block size-4 rounded"></span>{{ t('legend.current') }}</li>
+          <li class="flex items-center gap-1.5"><span class="bg-brand-dark inline-block size-4 rounded"></span>{{ t('legend.party') }}</li>
+          <li class="flex items-center gap-1.5"><span class="bg-surface-muted inline-block size-4 rounded"></span>{{ t('legend.unavailable') }}</li>
+          <li class="flex items-center gap-1.5"><span class="bg-border-strong inline-block h-4 w-1 rounded"></span>{{ t('legend.wing') }}</li>
+        </ul>
+
+        <!-- Plan : défilement horizontal sur mobile plutôt qu'un plan illisible -->
+        <div class="rounded-card border-border-subtle overflow-x-auto border py-4">
+          @for (view of cabins(); track $index) {
+            <div class="mx-auto w-max px-4">
+              <p class="text-muted mb-3 text-center text-xs font-semibold uppercase">
+                {{ t('cabin.' + view.cabin.cabin_class) }}
+                @if (view.cabin.deck > 0) {
+                  · {{ t('upper-deck') }}
+                }
+              </p>
+              @for (row of view.cabin.rows; track $index; let r = $index) {
+                @let wing = overWing(view.cabin, r);
+                <div class="flex items-center gap-2 py-0.5">
+                  <span [class.bg-border-strong]="wing" class="h-9 w-1 shrink-0 rounded"></span>
+                  <span class="text-muted w-5 shrink-0 text-right text-xs">{{ rowNumber(row) }}</span>
+                  @for (section of row.sections; track $index; let s = $index) {
+                    @if (s > 0) {
+                      <span aria-hidden="true" class="w-5 shrink-0"></span>
+                    }
+                    <div [style.gap.rem]="gapRem" [style.width.rem]="view.sectionWidths[s]" class="flex shrink-0 justify-center">
+                      @for (element of section.elements; track $index) {
+                        @if (isSeat(element)) {
+                          @let service = serviceFor(element);
+                          @let holder = occupied().get(element.designator);
+                          <button (click)="toggle(element)"
+                                  [attr.aria-label]="t(holder ? 'aria.taken' : service ? 'aria.available' : 'aria.unavailable', {
+                                    designator: element.designator,
+                                    price: service ? (price(service) | bipMoney: service.total_currency) : ''
+                                  })"
+                                  [attr.aria-pressed]="holder === currentTraveler()"
+                                  [class]="holder ? (holder === currentTraveler() ? 'bg-brand-primary text-onbrand' : 'bg-brand-dark text-onbrand cursor-not-allowed')
+                                           : service ? 'border border-brand-primary text-brand-primary hover:bg-brand-primary/10' : 'bg-surface-muted text-muted cursor-not-allowed'"
+                                  [disabled]="!service && !holder"
+                                  [style.height.rem]="seatRem"
+                                  [style.width.rem]="seatRem"
+                                  [attr.data-tooltip]="element.designator + (service ? ' · ' + (price(service) | bipMoney: service.total_currency) : '')"
+                                  class="bip-focusable shrink-0 rounded text-xs font-semibold"
+                                  type="button">
+                            {{ letter(element) }}
+                          </button>
+                        } @else if (isFixed(element)) {
+                          <span [style.height.rem]="seatRem" [style.width.rem]="seatRem" [title]="element.type === 'bassinet' ? t('element.bassinet') : ''"
+                                class="text-muted flex shrink-0 items-center justify-center text-[10px]">
+                            @if (element.type === 'bassinet') {
+                              <span aria-hidden="true" class="border-border-strong size-5 rounded-full border"></span>
+                              <span class="sr-only">{{ t('element.bassinet') }}</span>
+                            }
+                          </span>
+                        } @else {
+                          <span [style.height.rem]="seatRem"
+                                class="bg-surface-muted text-muted flex min-w-9 flex-1 items-center justify-center rounded px-1 text-[10px] font-semibold uppercase">
+                            {{ t('element.' + element.type) }}
+                          </span>
+                        }
+                      }
+                    </div>
+                  }
+                  <span class="text-muted w-5 shrink-0 text-xs">{{ rowNumber(row) }}</span>
+                  <span [class.bg-border-strong]="wing" class="h-9 w-1 shrink-0 rounded"></span>
+                </div>
+              }
+            </div>
+          }
+        </div>
+      } @else {
+        <p class="rounded-card bg-surface-muted p-4 text-sm">{{ t('unavailable-flight') }}</p>
+      }
+
+      <!-- Récapitulatif -->
+      @if (selection().length) {
+        <div class="rounded-card border-border-subtle border p-4">
+          <h3 class="font-semibold">{{ t('summary') }}</h3>
+          <ul class="mt-2 space-y-3 text-sm">
+            @for (segment of segments(); track segment.id) {
+              @for (choice of selection(); track choice.serviceId) {
+                @if (choice.segmentId === segment.id) {
+                  @let traveler = travelerOf(choice.passengerId);
+                  <li>
+                    <div class="flex items-center justify-between gap-4">
+                      <span>
+                        <span class="font-semibold">{{ segmentLabel(segment) }}</span>
+                        · {{ traveler?.name || t('traveler.' + (traveler?.type ?? 'adult'), {index: traveler?.index ?? 1}) }}
+                        · {{ t('seat', {designator: choice.designator}) }}
+                      </span>
+                      <span class="flex shrink-0 items-center gap-3">
+                        {{ +choice.amount ? (choice.amount | bipMoney: choice.currency) : t('free') }}
+                        <button (click)="clear(choice)" class="text-brand-primary text-xs font-semibold underline" type="button">{{ t('remove') }}</button>
+                      </span>
+                    </div>
+                    @if (choice.disclosures.length) {
+                      <ul class="text-muted mt-1 list-disc pl-5 text-xs">
+                        @for (disclosure of choice.disclosures; track disclosure) {
+                          <li lang="en">{{ disclosure }}</li>
+                        }
+                      </ul>
+                    }
+                  </li>
+                }
+              }
+            }
+          </ul>
+          @for (total of totals(); track total.currency) {
+            <p class="border-border-subtle mt-3 flex justify-between border-t pt-3 font-semibold">
+              <span>{{ t('total') }}</span>
+              <span>{{ total.amount | bipMoney: total.currency }}</span>
+            </p>
+          }
+          @if (selection().some(hasDisclosures)) {
+            <p class="text-muted mt-2 text-xs">{{ t('disclosures-note') }}</p>
+          }
+        </div>
+      }
+      <p class="text-muted text-xs">{{ t('optional') }}</p>
+    }
+  </section>
+</ng-container>

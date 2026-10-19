@@ -1,0 +1,65 @@
+<section *transloco="let t">
+  <h2 class="text-2xl font-bold">{{ t('flight.offer.steps.extras') }}</h2>
+  <div class="mt-5 grid grid-cols-1 gap-4 md:grid-cols-2">
+    @for (traveler of travelers(); track traveler.id) {
+      <article class="rounded-card border-border-subtle bg-surface-card border p-4">
+        <h3 class="flex items-center gap-3 font-bold">
+          <ng-icon name="heroUser" size="1.5rem"/>
+          {{ t('flight.offer.traveler.' + traveler.type, {index: traveler.index}) }}
+        </h3>
+        @if (traveler.name; as name) {
+          <p class="mt-1 font-semibold">{{ name }}</p>
+        }
+
+        <!-- Bagages payants, avant les bagages inclus -->
+        <p class="mt-4 text-sm font-semibold">{{ t('flight.offer.traveler.extra-bags.title') }}</p>
+        @for (group of traveler.extraBags; track group.segmentId) {
+          <div class="mt-2 text-xs">
+            <p class="text-muted font-semibold">{{ group.route }}</p>
+            @for (option of group.options; track option.service.id) {
+              @let service = option.service;
+              @let quantity = bagQuantity(service);
+              @let label = t('flight.offer.traveler.extra-bags.' + option.bagType);
+              <div class="mt-1 flex items-center gap-3">
+                <ng-icon [name]="option.bagType === 'carry_on' ? 'trolley' : 'suitcase'" class="shrink-0" size="1.5rem"/>
+                <div class="min-w-0 flex-1">
+                  <p>{{ label }}</p>
+                  <p class="text-muted">
+                    @if (option.weightKg; as kg) {
+                      {{ t('flight.offer.traveler.extra-bags.weight', {kg}) }} ·
+                    }
+                    {{ option.price | bipMoney: service.total_currency }}
+                  </p>
+                </div>
+                <div class="flex items-center gap-1">
+                  <button (click)="setBagQuantity(service, quantity - 1)" [disabled]="quantity === 0"
+                          class="bip-focusable rounded-button border-border-strong flex size-8 items-center justify-center border disabled:opacity-40" type="button">
+                    <span class="sr-only">{{ t('flight.offer.traveler.extra-bags.remove', {bag: label}) }}</span>
+                    <ng-icon aria-hidden="true" name="heroMinus"/>
+                  </button>
+                  <span aria-live="polite" class="w-6 text-center text-sm font-semibold">{{ quantity }}</span>
+                  <button (click)="setBagQuantity(service, quantity + 1)" [disabled]="quantity >= service.maximum_quantity"
+                          class="bip-focusable rounded-button border-border-strong flex size-8 items-center justify-center border disabled:opacity-40" type="button">
+                    <span class="sr-only">{{ t('flight.offer.traveler.extra-bags.add', {bag: label}) }}</span>
+                    <ng-icon aria-hidden="true" name="heroPlus"/>
+                  </button>
+                </div>
+              </div>
+            } @empty {
+              <p class="text-muted mt-1">{{ t('flight.offer.traveler.extra-bags.unavailable') }}</p>
+            }
+          </div>
+        }
+
+        @if (traveler.everyFlight.length) {
+          <p class="mt-4 text-sm font-semibold">{{ t('flight.offer.traveler.every-flight') }}</p>
+          <bip-included-bags [bags]="traveler.everyFlight"/>
+        }
+        @for (slice of traveler.perSlice; track slice.destination) {
+          <p class="mt-3 text-sm font-semibold">{{ t('search.offer-summary.flight-for', {city: slice.destination}) }}</p>
+          <bip-included-bags [bags]="slice.bags"/>
+        }
+      </article>
+    }
+  </div>
+</section>

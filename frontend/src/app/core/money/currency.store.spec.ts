@@ -15,10 +15,7 @@ function makeStore(response = of(RATES)) {
   TestBed.configureTestingModule({
     providers: [{ provide: HttpClient, useValue: { get: () => response } }, { provide: APP_CONFIG, useValue: { production: false, apiBaseUrl: '/api' } }],
   });
-  const store = TestBed.inject(CurrencyStore);
-  // `afterNextRender` ne s'exécute pas ici : on déclenche le chargement à la main.
-  (store as unknown as { loadRates(): void })['loadRates']();
-  return store;
+  return TestBed.inject(CurrencyStore);
 }
 
 describe('CurrencyStore', () => {

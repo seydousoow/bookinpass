@@ -1,0 +1,55 @@
+<ng-container *transloco="let t; prefix: 'search.offer-summary.cabin'">
+  <ul class="mt-3 space-y-3">
+    @for (line of lines(); track line.id) {
+      <li>
+        <p class="text-sm font-semibold">
+          {{ line.route }}
+          @if (line.cabin) {
+            · {{ line.cabin }}
+          }
+        </p>
+        @if (line.fareBasis) {
+          <p class="text-xs text-ink">{{ t('fare-basis', {code: line.fareBasis}) }}</p>
+        }
+
+        @if (line.amenities; as amenities) {
+          <ul class="mt-2 space-y-1.5 text-sm">
+            @if (amenities.seat; as seat) {
+              @let legroom = seat.legroom && seat.legroom !== 'n/a' ? seat.legroom : null;
+              @if (seat.type || legroom || line.pitchCm) {
+                <li class="flex gap-3">
+                  <ng-icon class="mt-0.5 shrink-0" name="heroArrowsPointingOut" size="1.25rem"/>
+                  <div>
+                    @if (seat.type) {
+                      <p>{{ t('seat.' + key(seat.type)) }}</p>
+                    }
+                    @if (legroom) {
+                      <p [class.text-ink]="seat.type" [class.text-xs]="seat.type">{{ t('legroom.' + legroom) }}</p>
+                    }
+                    @if (line.pitchCm) {
+                      <p [class.text-ink]="seat.type || legroom" [class.text-xs]="seat.type || legroom">{{ t('pitch', {inches: seat.pitch, cm: line.pitchCm}) }}</p>
+                    }
+                  </div>
+                </li>
+              }
+            }
+            @if (amenities.wifi; as wifi) {
+              <li [class.text-muted]="!wifi.available" class="flex gap-3">
+                <ng-icon class="mt-0.5 shrink-0" name="heroWifi" size="1.25rem"/>
+                <p>{{ t(wifi.available ? 'wifi.' + key(wifi.cost) : 'wifi.none') }}</p>
+              </li>
+            }
+            @if (amenities.power; as power) {
+              <li [class.text-muted]="!power.available" class="flex gap-3">
+                <ng-icon class="mt-0.5 shrink-0" name="heroBolt" size="1.25rem"/>
+                <p>{{ t(power.available ? 'power.yes' : 'power.no') }}</p>
+              </li>
+            }
+          </ul>
+        } @else {
+          <p class="mt-1 text-xs text-muted">{{ t('unknown') }}</p>
+        }
+      </li>
+    }
+  </ul>
+</ng-container>

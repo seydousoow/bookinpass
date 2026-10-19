@@ -90,7 +90,6 @@ export class LocationField implements FormValueControl<string | null> {
     effect(() => {
       const value = this.value();
       const selected = this.selected();
-      console.log(value, selected)
       if (value && (!selected || !Object.is(value, selected.code))) {
         const selection = this.findAirportSelection(value) ?? this.findCitySelection(value);
         this.selected.set(selection);

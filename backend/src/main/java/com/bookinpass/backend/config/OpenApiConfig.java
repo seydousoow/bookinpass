@@ -17,7 +17,9 @@ import java.util.List;
 public class OpenApiConfig {
 
     public static final String TAG_FLIGHTS = "Vols";
+    public static final String TAG_STAYS = "Hébergements";
     public static final String TAG_REFERENCE = "Référentiels";
+    public static final String TAG_PAYMENTS = "Paiements";
 
     @Bean
     OpenAPI bookInPassOpenApi() {
@@ -32,6 +34,8 @@ public class OpenApiConfig {
                         .license(new License().name("Propriétaire")))
                 .tags(List.of(
                         new Tag().name(TAG_FLIGHTS).description("Recherche et détail d'offres, relayés depuis Duffel"),
-                        new Tag().name(TAG_REFERENCE).description("Données de référence servies depuis PostgreSQL, en cache Redis")));
+                        new Tag().name(TAG_STAYS).description("Recherche, tarifs, devis et avis d'hébergement, relayés depuis Duffel Stays"),
+                        new Tag().name(TAG_REFERENCE).description("Données de référence servies depuis PostgreSQL, en cache Redis"),
+                        new Tag().name(TAG_PAYMENTS).description("Paiement Stripe Checkout au prix de vente, puis réservation ; les données de carte ne passent jamais par ce serveur")));
     }
 }

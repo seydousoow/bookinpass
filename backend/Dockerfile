@@ -55,7 +55,7 @@ COPY --from=jvm-build /workspace/target/extracted/application/ ./
 USER app
 EXPOSE 8080
 HEALTHCHECK --interval=10s --timeout=3s --start-period=20s --retries=5 \
-  CMD curl -fsS http://localhost:8080/actuator/health/readiness || exit 1
+  CMD curl -fsS http://localhost:8080/api/actuator/health/readiness || exit 1
 ENTRYPOINT ["java", "-XX:MaxRAMPercentage=75", "org.springframework.boot.loader.launch.JarLauncher"]
 
 # ---------------------------------------------------------------------------
@@ -70,5 +70,5 @@ COPY --from=native-build /workspace/target/backend /app/backend
 USER app
 EXPOSE 8080
 HEALTHCHECK --interval=10s --timeout=3s --start-period=10s --retries=5 \
-  CMD curl -fsS http://localhost:8080/actuator/health/readiness || exit 1
+  CMD curl -fsS http://localhost:8080/api/actuator/health/readiness || exit 1
 ENTRYPOINT ["/app/backend"]

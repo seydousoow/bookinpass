@@ -2,7 +2,6 @@
 
 import { booleanAttribute, Component, computed, ElementRef, HostListener, inject, input, output } from '@angular/core';
 import { Spinner } from '../spinner/spinner';
-import { translateSignal } from '@jsverse/transloco';
 
 export type ButtonVariant = 'primary' | 'secondary' | 'outline' | 'ghost' | 'accent' | 'success' | 'danger' | 'warning' | 'link';
 
@@ -46,7 +45,7 @@ const variants = {
   },
   template: `
     @if (loading()) {
-      <bip-spinner [label]="loadingLabel()" [size]="size() === 'sm' ? 'xs' : 'sm'" />
+      <bip-spinner [label]="loadingLabel()" [size]="size() === 'sm' ? 'xxs' : 'xs'" />
     }
     <ng-content />
   `,
@@ -57,7 +56,7 @@ export class Button {
   readonly loading = input(false, { transform: booleanAttribute });
   readonly disabled = input(false, { transform: booleanAttribute });
   readonly block = input(false, { transform: booleanAttribute });
-  readonly loadingLabel = input(translateSignal('common.loading')());
+  readonly loadingLabel = input('common.loading');
   readonly expanded = input(false, { transform: booleanAttribute });
   readonly type = input<'submit' | 'reset' | 'button'>('button');
   readonly clicked = output();

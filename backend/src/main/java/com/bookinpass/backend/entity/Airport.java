@@ -52,4 +52,9 @@ public class Airport {
     @JdbcTypeCode(SqlTypes.CHAR)
     @Column(name = "country_code", length = 2, nullable = false)
     private String countryCode;
+
+    /** Coordonnées (Duffel {@code /air/airports}) ; absentes pour quelques gares et aéroports fermés. */
+    private Double latitude;
+
+    private Double longitude;
 }

@@ -1,5 +1,6 @@
 package com.bookinpass.backend.config;
 
+import com.bookinpass.backend.dto.response.AirlineResponse;
 import com.bookinpass.backend.dto.response.AirportResponse;
 import com.bookinpass.backend.dto.response.ExchangeRatesResponse;
 import org.springframework.aot.hint.annotation.RegisterReflectionForBinding;
@@ -29,16 +30,25 @@ import java.util.regex.Pattern;
 @EnableCaching
 // Image native : Jackson dé/sérialise ces DTO dans Redis par réflexion. AOT ne déduit pas seul le type
 // élément de AirportResponse[] — sans ces indices, /api/airports échoue à l'écriture en cache.
-@RegisterReflectionForBinding({AirportResponse.class, ExchangeRatesResponse.class})
+@RegisterReflectionForBinding({AirportResponse.class, AirlineResponse.class, ExchangeRatesResponse.class})
 public class CacheConfig {
 
     public static final String FLIGHT_SEARCHES = "flight-searches";
-    public static final String FLIGHT_OFFERS = "flight-offers";
+    public static final String FLIGHT_UPSELLS = "flight-upsells";
+    public static final String FLIGHT_SEAT_MAPS = "flight-seat-maps";
+    public static final String STAY_SEARCHES = "stay-searches";
+    public static final String STAY_RATES = "stay-rates";
+    public static final String STAY_REVIEWS = "stay-reviews";
     public static final String AIRPORTS = "airports";
+    public static final String AIRLINES = "airlines";
     public static final String RATES = "rates";
+    /** Commande Duffel, clé {@code bip::flight::{orderId}}. */
+    public static final String FLIGHT_ORDERS = "flight";
 
     /**
-     * Premier {@code expires_at} du document : celui de l'offre elle-même pour {@code GET /air/offers/{id}}.
+     * Premier {@code expires_at} du document : celui de l'offre elle-même pour {@code GET /air/offers/{id}},
+     * celui de la première montée en gamme pour {@code upsell_offers}, celui du résultat ou d'un de ses tarifs
+     * (même échéance) pour {@code fetch_all_rates}.
      */
     private static final Pattern EXPIRES_AT = Pattern.compile("\"expires_at\"\\s*:\\s*\"([^\"]+)\"");
 
@@ -78,10 +88,18 @@ public class CacheConfig {
 
         return builder -> builder
                 .withCacheConfiguration(FLIGHT_SEARCHES, rawJson.entryTtl(ttl.flightSearchTtl()))
-                .withCacheConfiguration(FLIGHT_OFFERS, rawJson.entryTtl(untilOfferExpiry(ttl.flightOfferMaxTtl())))
+                .withCacheConfiguration(FLIGHT_UPSELLS, rawJson.entryTtl(untilOfferExpiry(ttl.flightOfferMaxTtl())))
+                .withCacheConfiguration(FLIGHT_SEAT_MAPS, rawJson.entryTtl(ttl.seatMapsTtl()))
+                .withCacheConfiguration(STAY_SEARCHES, rawJson.entryTtl(ttl.staySearchTtl()))
+                .withCacheConfiguration(STAY_RATES, rawJson.entryTtl(untilOfferExpiry(ttl.stayRatesMaxTtl())))
+                .withCacheConfiguration(STAY_REVIEWS, rawJson.entryTtl(ttl.stayReviewsTtl()))
                 .withCacheConfiguration(AIRPORTS, base
                         .serializeValuesWith(SerializationPair.fromSerializer(new JacksonJsonRedisSerializer<>(AirportResponse[].class)))
                         .entryTtl(ttl.airportsTtl()))
+                .withCacheConfiguration(AIRLINES, base
+                        .serializeValuesWith(SerializationPair.fromSerializer(new JacksonJsonRedisSerializer<>(AirlineResponse[].class)))
+                        .entryTtl(ttl.airlinesTtl()))
+                .withCacheConfiguration(FLIGHT_ORDERS, rawJson.computePrefixWith(name -> "bip::" + name + "::").entryTtl(ttl.flightOrderTtl()))
                 .withCacheConfiguration(RATES, base
                         .serializeValuesWith(SerializationPair.fromSerializer(new JacksonJsonRedisSerializer<>(ExchangeRatesResponse.class)))
                         .entryTtl(ttl.ratesTtl()));

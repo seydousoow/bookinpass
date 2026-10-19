@@ -1,0 +1,66 @@
+<ng-container *transloco="let t">
+  @if (open()) {
+    <bip-overlay (clicked)="close()" class="md:hidden"/>
+  }
+
+  <div [attr.aria-label]="isSheetActive() ? t('stay.filter.title') : null"
+       [attr.aria-modal]="isSheetActive() ? true : null"
+       [attr.role]="isSheetActive() ? 'dialog' : null"
+       [cdkTrapFocusAutoCapture]="isSheetActive()"
+       [cdkTrapFocus]="isSheetActive()"
+       [class.pointer-events-none]="isSheetHidden()"
+       [class.translate-y-full]="isSheetHidden()"
+       [inert]="isSheetHidden()"
+       class="bg-surface-card fixed inset-x-0 bottom-0 z-50 flex h-dvh w-full flex-col gap-4 overflow-y-auto p-6 transition-transform duration-300 ease-out
+              md:pointer-events-auto md:static md:z-auto md:h-auto md:translate-y-0 md:border-r md:border-r-zinc-100 md:p-3 md:transition-none">
+    <div class="flex items-center justify-between gap-2">
+      <p class="text-xl font-bold">{{ t('stay.filter.title') }}</p>
+      @if (filtering()) {
+        <button (click)="reset()" class="text-brand-primary bip-focusable ml-auto text-sm font-semibold underline" type="button">{{ t('stay.filter.reset') }}</button>
+      }
+      <bip-button (clicked)="close()" class="md:hidden" size="sm" variant="ghost">
+        <span class="sr-only">{{ t('stay.filter.close') }}</span>
+        <ng-icon name="heroXMarkSolid"/>
+      </bip-button>
+    </div>
+
+    <hr class="border-black/50">
+
+    @if (maxPrice() > 0) {
+      <fieldset class="border-b-muted grid gap-2 border-b pb-4">
+        <legend class="text-brand-dark mb-2 text-sm font-semibold">{{ t('stay.filter.budget') }}</legend>
+        <bip-slider (valueChange)="setBudget($event)" [currency]="currency()" [max]="maxPrice()" [min]="0" [step]="step()" [value]="budget()"/>
+      </fieldset>
+    }
+
+    <fieldset class="border-b-muted grid gap-1 border-b pb-4">
+      <legend class="text-brand-dark mb-2 text-sm font-semibold">{{ t('stay.filter.stars') }}</legend>
+      @for (star of stars; track star) {
+        <bip-checkbox (checkedChange)="toggleStar(star, $event)" [checked]="value().stars.includes(star)" [label]="t('stay.filter.star-count', {count: star})"/>
+      }
+    </fieldset>
+
+    <fieldset class="border-b-muted grid gap-1 border-b pb-4">
+      <legend class="text-brand-dark mb-2 text-sm font-semibold">{{ t('stay.filter.reviews') }}</legend>
+      @for (score of reviewThresholds; track score) {
+        <bip-checkbox (checkedChange)="setMinReview(score, $event)" [checked]="value().minReviewScore === score" [label]="t('stay.filter.review-min', {score})"/>
+      }
+    </fieldset>
+
+    @if (amenities().length) {
+      <fieldset class="grid gap-1">
+        <legend class="text-brand-dark mb-2 text-sm font-semibold">{{ t('stay.filter.amenities') }}</legend>
+        @for (amenity of amenities(); track amenity.type) {
+          <div class="flex flex-nowrap items-center justify-between gap-1">
+            <bip-checkbox (checkedChange)="toggleAmenity(amenity.type, $event)"
+                          [checked]="value().amenities.includes(amenity.type)"
+                          [label]="t('stay.amenities.' + amenity.type)"/>
+            <bip-badge size="sm">{{ amenity.count }}</bip-badge>
+          </div>
+        }
+      </fieldset>
+    }
+
+    <bip-button (clicked)="close()" class="mt-auto md:hidden" variant="primary">{{ t('stay.filter.show') }}</bip-button>
+  </div>
+</ng-container>

@@ -9,7 +9,7 @@ export type BadgeTone = 'neutral' | 'brand' | 'accent' | 'success' | 'warning' |
 })
 export class Badge {
   readonly tone = input<BadgeTone>('neutral');
-  readonly size = input<'sm' | 'md'>('md');
+  readonly size = input<'sm' | 'md' | 'lg'>('md');
 
   protected readonly hostClass = computed(() => {
     const tones = {
@@ -21,7 +21,7 @@ export class Badge {
       error: 'bg-state-error-soft text-state-error border-state-error/30',
       info: 'bg-state-info-soft text-state-info border-state-info/30',
     } as const;
-    const sizes = { sm: 'px-2 py-0.5 text-xs', md: 'px-2.5 py-1 text-xs' } as const;
+    const sizes = { sm: 'px-2 py-0.5 text-xs', md: 'px-2.5 py-1 text-xs', lg: 'px-3 py-1.5 text-sm font-semibold' } as const;
     return `inline-flex items-center gap-1 rounded-pill border font-semibold ${tones[this.tone()]} ${sizes[this.size()]}`;
   });
 }

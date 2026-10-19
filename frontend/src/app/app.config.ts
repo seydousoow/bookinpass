@@ -1,8 +1,7 @@
 import { ApplicationConfig, inject, provideBrowserGlobalErrorListeners } from '@angular/core';
 import { provideRouter, TitleStrategy, withComponentInputBinding, withInMemoryScrolling } from '@angular/router';
-import { provideClientHydration, withEventReplay } from '@angular/platform-browser';
 import { HttpClient, provideHttpClient } from '@angular/common/http';
-import { APP_CONFIG } from '@core/config/app-config.token';
+import { APP_CONFIG, runtimeConfig } from '@core/config/app-config.token';
 import { provideI18n } from '@core/i18n/i18n.config';
 import { environment } from '@env';
 import { routes } from './app.routes';
@@ -21,7 +20,6 @@ export const appConfig: ApplicationConfig = {
     // `withComponentInputBinding` : l'URL est la source de vérité de toute
     // recherche (plan §5.2), les composants la reçoivent en entrée.
     provideRouter(routes, withComponentInputBinding(), withInMemoryScrolling({ scrollPositionRestoration: 'enabled', anchorScrolling: 'enabled' })),
-    provideClientHydration(withEventReplay()),
 
     // FetchBackend est le backend par défaut depuis la v22 : `withFetch()` est
     // déprécié et n'a plus rien à ajouter.
@@ -31,7 +29,7 @@ export const appConfig: ApplicationConfig = {
     provideNgIconsConfig({ size: '1.2rem' }),
     provideNgIconLoader((name) => fetchIcon(name), withCaching()),
 
-    { provide: APP_CONFIG, useValue: environment },
+    { provide: APP_CONFIG, useValue: runtimeConfig(environment) },
     { provide: TitleStrategy, useClass: AppTitleStrategy },
   ],
 };
