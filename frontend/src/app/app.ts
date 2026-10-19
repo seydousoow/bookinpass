@@ -1,10 +1,11 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, inject, OnInit, signal } from '@angular/core';
 import { CurrencyStore } from '@core/money/currency.store';
 import { RouterOutlet } from '@angular/router';
 import { TranslocoService } from '@jsverse/transloco';
 import { Footer, FooterColumn, Header, NavEntry } from '@shared/ui';
 import { firstValueFrom } from 'rxjs';
 import { ICurrencyOption } from '@shared/models/money.model';
+import { injectSpeedInsights } from '@vercel/speed-insights';
 
 @Component({
   selector: 'bip-root',
@@ -27,7 +28,7 @@ import { ICurrencyOption } from '@shared/models/money.model';
     </div>
   `,
 })
-export class App {
+export class App implements OnInit {
   protected readonly navEntries: readonly NavEntry[] = [
     { labelKey: 'nav.home', route: '/', disabled: false },
     { labelKey: 'nav.flights', route: '/flight', disabled: false },
@@ -71,6 +72,10 @@ export class App {
 
   get _currencies(): readonly ICurrencyOption[] {
     return this.currencyStore.currencies();
+  }
+
+  ngOnInit() {
+    injectSpeedInsights();
   }
 
   protected async changeLanguage(lang: string): Promise<void> {
