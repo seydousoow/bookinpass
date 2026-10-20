@@ -1,6 +1,7 @@
 package com.bookinpass.backend.service;
 
 import com.bookinpass.backend.client.DuffelClient;
+import com.bookinpass.backend.dto.duffel.DuffelCustomerUser;
 import com.bookinpass.backend.dto.duffel.DuffelOrderUpdate;
 import com.bookinpass.backend.entity.User;
 import com.bookinpass.backend.exception.DuffelException;
@@ -42,11 +43,25 @@ class DuffelCustomerServiceTest {
         return new DuffelOrderUpdate(new DuffelOrderUpdate.Data(List.of(id)));
     }
 
+    private static DuffelCustomerUser details() {
+        return new DuffelCustomerUser(new DuffelCustomerUser.Data("aminata@example.com", "Aminata", "Sow", "+221771234567"));
+    }
+
     @Test
-    void knownCustomerIsReusedWithoutCallingDuffel() {
+    void knownCustomerIsUpdatedAndReused() {
         customers.attach(booker("icu_known"), "ord_1");
 
         verify(duffel, never()).createCustomerUser(any());
+        verify(duffel).updateCustomerUser("icu_known", details());
+        verify(duffel).updateOrder("ord_1", users("icu_known"));
+    }
+
+    @Test
+    void failedCustomerUpdateStillAttachesTheOrder() {
+        given(duffel.updateCustomerUser(anyString(), any())).willThrow(new DuffelException(HttpStatus.BAD_GATEWAY, "down"));
+
+        customers.attach(booker("icu_known"), "ord_1");
+
         verify(duffel).updateOrder("ord_1", users("icu_known"));
     }
 
@@ -55,6 +70,7 @@ class DuffelCustomerServiceTest {
         given(users.findFirstByEmailIgnoreCaseAndDuffelUserIdIsNotNull("aminata@example.com")).willReturn(Optional.of(booker("icu_mail")));
         customers.attach(booker(null), "ord_1");
         verify(recorder).linkDuffelUser(7, "icu_mail");
+        verify(duffel).updateCustomerUser("icu_mail", details());
         verify(duffel).updateOrder("ord_1", users("icu_mail"));
 
         given(users.findFirstByEmailIgnoreCaseAndDuffelUserIdIsNotNull(anyString())).willReturn(Optional.empty());
@@ -73,6 +89,7 @@ class DuffelCustomerServiceTest {
         customers.attach(booker(null), "ord_1");
 
         verify(recorder).linkDuffelUser(7, "icu_duffel");
+        verify(duffel).updateCustomerUser("icu_duffel", details());
         verify(duffel).updateOrder("ord_1", users("icu_duffel"));
     }
 

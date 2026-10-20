@@ -16,8 +16,9 @@ import java.util.Optional;
 
 /**
  * Client Duffel ({@code icu_…}) du titulaire de l'e-mail, rattaché à la commande pour la regrouper avec ses autres
- * réservations, chez Duffel comme chez nous. Duffel n'accepte qu'un client par e-mail : un client déjà connu pour
- * l'e-mail (chez nous ou chez Duffel) est réutilisé. Facultatif : un échec ici n'affecte pas la réservation.
+ * réservations, chez Duffel comme chez nous (utile au support). Duffel n'accepte qu'un client par e-mail : un client
+ * déjà connu pour l'e-mail (chez nous ou chez Duffel) est réutilisé, et mis à jour avec les coordonnées de la dernière
+ * réservation. Facultatif : un échec ici n'affecte pas la réservation.
  */
 @Slf4j
 @Service
@@ -33,6 +34,7 @@ public class DuffelCustomerService {
         try {
             String customerId = Optional.ofNullable(booker.getDuffelUserId())
                     .or(() -> users.findFirstByEmailIgnoreCaseAndDuffelUserIdIsNotNull(booker.getEmail()).map(User::getDuffelUserId))
+                    .map(known -> refresh(known, booker))
                     .orElseGet(() -> create(booker));
             if (!customerId.equals(booker.getDuffelUserId())) {
                 recorder.linkDuffelUser(booker.getId(), customerId);
@@ -45,8 +47,7 @@ public class DuffelCustomerService {
 
     private String create(User booker) {
         try {
-            return json.readTree(duffel.createCustomerUser(new DuffelCustomerUser(new DuffelCustomerUser.Data(
-                    booker.getEmail(), booker.getFirstName(), booker.getLastName(), booker.getPhoneNumber())))).path("data").path("id").asString();
+            return json.readTree(duffel.createCustomerUser(details(booker))).path("data").path("id").asString();
         } catch (DuffelException e) {
             if (!"emails_not_unique".equals(e.code())) {
                 throw e;
@@ -56,7 +57,22 @@ public class DuffelCustomerService {
             if (existing.isEmpty()) {
                 throw e;
             }
-            return existing;
+            return refresh(existing, booker);
         }
+    }
+
+    /** Client existant mis à jour (nom, téléphone) ; en cas d'échec, il est rattaché tel quel. */
+    private String refresh(String customerId, User booker) {
+        try {
+            duffel.updateCustomerUser(customerId, details(booker));
+        } catch (RuntimeException e) {
+            log.warn("Duffel customer user {} not updated: {}", customerId, e.getMessage());
+        }
+        return customerId;
+    }
+
+    private static DuffelCustomerUser details(User booker) {
+        return new DuffelCustomerUser(new DuffelCustomerUser.Data(booker.getEmail(), booker.getFirstName(), booker.getLastName(),
+                booker.getPhoneNumber()));
     }
 }

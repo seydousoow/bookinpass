@@ -224,6 +224,23 @@ public class FixtureDuffelClient implements DuffelClient {
     }
 
     @Override
+    public String updateCustomerUser(String customerUserId, DuffelCustomerUser user) {
+        for (Map.Entry<String, String> entry : customerUsers.entrySet()) {
+            ObjectNode existing = (ObjectNode) json.readTree(entry.getValue());
+            if (existing.path("id").asString().equals(customerUserId)) {
+                existing.put("email", user.data().email());
+                existing.put("given_name", user.data().givenName());
+                existing.put("family_name", user.data().familyName());
+                entry.setValue(json.writeValueAsString(existing));
+                ObjectNode response = json.createObjectNode();
+                response.set("data", existing);
+                return json.writeValueAsString(response);
+            }
+        }
+        throw new DuffelException(HttpStatus.NOT_FOUND, "Demo customer user not found", "invalid_request_error", "not_found", null, null);
+    }
+
+    @Override
     public String updateOrder(String orderId, DuffelOrderUpdate update) {
         for (Map.Entry<String, String> entry : orders.entrySet()) {
             ObjectNode order = (ObjectNode) json.readTree(entry.getValue());

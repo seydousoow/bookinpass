@@ -70,6 +70,9 @@ public interface DuffelClient {
     /** {@code GET /identity/customer/users?email=} — le client déjà créé pour cet e-mail, s'il existe. */
     String findCustomerUsers(String email);
 
+    /** {@code PUT /identity/customer/users/{id}} — remplace nom, prénom, e-mail et téléphone du client. */
+    String updateCustomerUser(String customerUserId, DuffelCustomerUser user);
+
     /** {@code PATCH /air/orders/{id}} — rattache des clients Duffel à une commande. */
     String updateOrder(String orderId, DuffelOrderUpdate update);
 

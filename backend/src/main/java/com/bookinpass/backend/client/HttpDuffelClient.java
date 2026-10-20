@@ -168,6 +168,19 @@ public class HttpDuffelClient implements DuffelClient {
     }
 
     @Override
+    public String updateCustomerUser(String customerUserId, DuffelCustomerUser user) {
+        return client.put()
+                .uri("/identity/customer/users/{id}", customerUserId)
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(user)
+                .retrieve()
+                .onStatus(HttpStatusCode::isError, (_, res) -> {
+                    throw errors.failure(res, "customer user update");
+                })
+                .body(String.class);
+    }
+
+    @Override
     public String getOrder(String orderId) {
         return client.get()
                 .uri("/air/orders/{id}", orderId)
