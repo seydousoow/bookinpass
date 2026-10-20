@@ -19,7 +19,7 @@ on:
         description: Cible du Dockerfile
         type: choice
         options: [ jvm, native ]
-        default: jvm
+        default: native
 
 permissions:
   contents: read
