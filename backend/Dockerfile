@@ -12,6 +12,8 @@
 # Dépendances Maven, communes aux deux cibles : la couche reste en cache tant que le pom ne change pas.
 # ---------------------------------------------------------------------------
 FROM ghcr.io/graalvm/native-image-community:25 AS deps
+# L'image déclare en_US.UTF-8 sans l'installer : mvnw afficherait « setlocale: cannot change locale » à chaque ligne.
+ENV LANG=C.UTF-8 LC_ALL=C.UTF-8
 WORKDIR /workspace
 COPY .mvn .mvn
 COPY mvnw pom.xml ./
