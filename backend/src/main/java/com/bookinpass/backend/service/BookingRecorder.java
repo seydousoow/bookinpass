@@ -51,23 +51,33 @@ public class BookingRecorder {
 
     /**
      * Autorisation obtenue : le paiement est enregistré (une seule fois). Session relue chez Stripe (PaymentIntent
-     * dépliée) ou reçue par webhook (PaymentIntent réduite à son identifiant).
+     * dépliée) ou reçue par webhook (PaymentIntent réduite à son identifiant). Les deux arrivent souvent ensemble :
+     * le verrou les fait passer l'un après l'autre, et le second complète la carte si le premier ne l'avait pas.
      */
     @Transactional
     public void recordAuthorisation(JsonNode session) {
         String sessionId = session.path("id").asString();
-        if (payments.findByCheckoutSessionId(sessionId).isPresent()) {
+        payments.lockCheckoutSession(sessionId);
+        JsonNode intent = session.path("payment_intent");
+        JsonNode method = intent.path("payment_method");
+        Optional<StripePayment> existing = payments.findByCheckoutSessionId(sessionId);
+        if (existing.isPresent()) {
+            if (existing.get().getCardLast4() == null && method.isObject()) {
+                describe(existing.get(), session, method);
+            }
             return;
         }
-        JsonNode intent = session.path("payment_intent");
         String intentId = intent.isString() ? intent.asString() : intent.path("id").asString();
-        JsonNode method = intent.path("payment_method");
         StripePayment payment = new StripePayment(sessionId, intentId, session.path("currency").asString("").toUpperCase(),
                 session.path("amount_total").asLong(), session.path("livemode").asBoolean(false), clock.instant());
-        payment.describe(text(method.path("type")), text(method.path("card").path("brand")), text(method.path("card").path("last4")),
-                text(session.path("customer_details").path("email")), text(session.path("customer_details").path("name")));
+        describe(payment, session, method);
         payments.save(payment);
         paymentEvents.save(new StripePaymentEvent(payment, "authorised", null, payment.getAmount(), null, payment.getAuthorisedAt()));
+    }
+
+    private static void describe(StripePayment payment, JsonNode session, JsonNode method) {
+        payment.describe(text(method.path("type")), text(method.path("card").path("brand")), text(method.path("card").path("last4")),
+                text(session.path("customer_details").path("email")), text(session.path("customer_details").path("name")));
     }
 
     /** Autorisation libérée (prix changé, commande refusée) : rien n'a été débité. */

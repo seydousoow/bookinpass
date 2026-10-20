@@ -169,6 +169,25 @@ class BookingJpaTest {
     }
 
     @Test
+    void authorisationFromWebhookThenBrowserIsStoredOnceWithTheCard() {
+        JsonMapper json = JsonMapper.builder().build();
+        // Webhook : PaymentIntent réduite à son identifiant, carte inconnue.
+        recorder.recordAuthorisation(json.readTree("""
+                {"id":"cs_7","amount_total":1000,"currency":"eur","payment_intent":"pi_7"}"""));
+        // Navigateur, juste après : session relue avec la PaymentIntent dépliée.
+        recorder.recordAuthorisation(json.readTree("""
+                {"id":"cs_7","amount_total":1000,"currency":"eur",
+                 "payment_intent":{"id":"pi_7","payment_method":{"type":"card","card":{"brand":"visa","last4":"4242"}}}}"""));
+        entityManager.flush();
+        entityManager.clear();
+
+        assertThat(jdbc.queryForObject("SELECT count(*) FROM stripe_payment WHERE checkout_session_id = 'cs_7'", Integer.class)).isEqualTo(1);
+        StripePayment payment = payments.findByCheckoutSessionId("cs_7").orElseThrow();
+        assertThat(payment.getPaymentIntentId()).isEqualTo("pi_7");
+        assertThat(payment.getCardLast4()).isEqualTo("4242");
+    }
+
+    @Test
     void webhooksMoveOrderAndPaymentThroughTheirStatuses() {
         JsonMapper json = JsonMapper.builder().build();
         Instant now = Instant.parse("2026-10-17T10:00:00Z");
