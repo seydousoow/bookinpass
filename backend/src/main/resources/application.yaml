@@ -21,6 +21,8 @@ spring:
       hibernate:
         jdbc:
           time_zone: UTC
+    show-sql: true
+
   data:
     redis:
       host: ${REDIS_HOST:localhost}
@@ -28,15 +30,19 @@ spring:
       # Redis ne sert que de cache : pas de dépôts Spring Data Redis (évite de réexaminer les dépôts JPA au démarrage).
       repositories:
         enabled: false
+
   cache:
     type: redis
+
   # Sujets des e-mails (i18n/mail_fr.properties, i18n/mail_en.properties).
   messages:
     basename: i18n/mail
     encoding: UTF-8
     fallback-to-system-locale: false
+
   flyway:
     locations: classpath:db/migration
+
   web:
     error:
       include-message: never
@@ -48,6 +54,7 @@ logging:
     com.bookinpass.backend.client.DuffelClient: ${DUFFEL_LOG_LEVEL:info}
     com.bookinpass.backend.client.StaysClient: ${STAYS_LOG_LEVEL:info}
     com.bookinpass.backend.client.ExpediaClient: ${EXPEDIA_LOG_LEVEL:info}
+    root: ${LOG_LEVEL:info}
 
 server:
   port: ${PORT:8080}

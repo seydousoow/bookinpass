@@ -4,6 +4,8 @@
 # Render ne fait que la tirer (pas de build Docker sur ses machines gratuites, trop petites pour GraalVM).
 # Toutes les variables sont gérées depuis le tableau de bord (sync: false : le Blueprint ne les écrase jamais) ;
 # seules la base et le cache sont reliés automatiquement. Valeurs conseillées en commentaire, au-dessus de chacune.
+# Attention : Render ne crée une variable sync: false qu'à la création du Blueprint. Une variable ajoutée ici
+# ensuite est ignorée : l'ajouter à la main (Environment → Add → « Add from .env »).
 
 services:
   - type: web
@@ -35,6 +37,24 @@ services:
       - key: REDIS_PORT
         fromService: { type: keyvalue, name: bookinpass-cache, property: port }
 
+      # Journaux : niveau général, puis appels sortants (debug = URL et statut, trace = en-têtes et corps).
+      # Valeur conseillée : info
+      - key: LOG_LEVEL
+        sync: false
+      # Valeur conseillée : info
+      - key: DUFFEL_LOG_LEVEL
+        sync: false
+      # Valeur conseillée : info
+      - key: STAYS_LOG_LEVEL
+        sync: false
+      # Valeur conseillée : info
+      - key: EXPEDIA_LOG_LEVEL
+        sync: false
+      # Swagger UI (/api/swagger-ui.html) et OpenAPI : false pour ne pas exposer la documentation de l'API.
+      # Valeur conseillée : false
+      - key: API_DOCS_ENABLED
+        sync: false
+
       # Site (Vercel) : retour Stripe, liens des e-mails, CORS (autres origines : CORS_ALLOWED_ORIGINS).
       - key: FRONTEND_URL
         sync: false
@@ -50,6 +70,13 @@ services:
         sync: false
       # Valeur conseillée : true
       - key: DUFFEL_STAYS_ENABLED
+        sync: false
+
+      - key: EXPEDIA_BASE_URL
+        sync: false
+      - key: EXPEDIA_API_KEY
+        sync: false
+      - key: EXPEDIA_SECRET
         sync: false
 
       - key: STRIPE_SECRET_KEY
