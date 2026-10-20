@@ -25,6 +25,9 @@ spring:
     redis:
       host: ${REDIS_HOST:localhost}
       port: ${REDIS_PORT:6379}
+      # Redis ne sert que de cache : pas de dépôts Spring Data Redis (évite de réexaminer les dépôts JPA au démarrage).
+      repositories:
+        enabled: false
   cache:
     type: redis
   # Sujets des e-mails (i18n/mail_fr.properties, i18n/mail_en.properties).
