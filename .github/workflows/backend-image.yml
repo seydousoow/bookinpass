@@ -31,7 +31,7 @@ concurrency:
 
 env:
   IMAGE: ghcr.io/${{ github.repository_owner }}/bookinpass-backend
-  TARGET: ${{ inputs.target || 'jvm' }}
+  TARGET: ${{ inputs.target || 'native' }}
 
 jobs:
   build:
