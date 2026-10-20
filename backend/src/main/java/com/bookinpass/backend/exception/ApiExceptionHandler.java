@@ -22,6 +22,7 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExcep
 import java.time.Duration;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 
 /**
@@ -107,7 +108,7 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
         }
         ResponseEntity.BodyBuilder response = ResponseEntity.status(status);
         if (status == HttpStatus.SERVICE_UNAVAILABLE) {
-            Duration wait = e.retryAfter() != null ? e.retryAfter() : Duration.ofSeconds(30);
+            Duration wait = Optional.ofNullable(e.retryAfter()).orElse(Duration.ofSeconds(30));
             response.header(HttpHeaders.RETRY_AFTER, String.valueOf(Math.max(1, wait.toSeconds())));
         }
         return response.body(problem);

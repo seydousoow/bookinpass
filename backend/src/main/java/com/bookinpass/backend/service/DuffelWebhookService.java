@@ -65,7 +65,7 @@ public class DuffelWebhookService {
             }
             // Annulée hors du site (compagnie, tableau de bord Duffel) : l'e-mail n'est pas encore parti.
             case "order_cancellation.confirmed" -> {
-                log.info("Duffel {} for {} (event {}, live={})", type, objectId, eventId, live);
+                log.info("Duffel {} for {} (event {}, live={}): cancelled outside the site", type, objectId, eventId, live);
                 if (recorded && !wasCancelled) {
                     orderId.ifPresent(id -> notifyCancelled(id, event.path("data").path("object")));
                 }
@@ -73,7 +73,7 @@ public class DuffelWebhookService {
             case "order.creation_failed", "air.payment.failed", "stays.booking_creation_failed" ->
                     log.warn("Duffel {} for {} (event {}, live={})", type, objectId, eventId, live);
             case "ping.triggered" -> log.info("Duffel webhook ping received (event {})", eventId);
-            default -> log.info("Duffel {} for {} (event {}, live={})", type, objectId, eventId, live);
+            default -> log.info("Duffel {} for {} (event {}, live={}): recorded, no follow-up", type, objectId, eventId, live);
         }
         return type;
     }
