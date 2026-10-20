@@ -9,7 +9,7 @@ import org.springframework.validation.annotation.Validated;
  *
  * @param sender adresse vérifiée dans SES (ou d'un domaine vérifié)
  * @param alias  nom affiché, ex. « Book In Pass »
- * @param region région du compte SES, ex. {@code eu-west-1}
+ * @param region région du compte SES, ex. {@code us-east-2}
  */
 @ConfigurationProperties(prefix = "aws.ses")
 @Validated

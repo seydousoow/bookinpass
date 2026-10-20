@@ -135,6 +135,6 @@ bookinpass:
 # chaîne AWS habituelle (AWS_ACCESS_KEY_ID / AWS_SECRET_ACCESS_KEY, profil, rôle IAM).
 aws:
   ses:
-    region: ${AWS_REGION:eu-west-1}
+    region: ${AWS_REGION:us-east-2}
     sender: ${AWS_SES_SENDER:reservations@bookinpass.com}
     alias: ${AWS_SES_ALIAS:Book In Pass}

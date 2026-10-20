@@ -74,7 +74,7 @@ services:
 
       # E-mails aux voyageurs par AWS SES. MAIL_ENABLED=false : rendus et journalisés, jamais envoyés.
       MAIL_ENABLED: ${MAIL_ENABLED:-false}
-      AWS_REGION: ${AWS_REGION:-eu-west-1}
+      AWS_REGION: ${AWS_REGION:-us-east-2}
       AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID:-}
       AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY:-}
       AWS_SES_SENDER: ${AWS_SES_SENDER:-reservations@bookinpass.com}
