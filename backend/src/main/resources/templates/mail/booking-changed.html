@@ -1,0 +1,11 @@
+<!DOCTYPE html>
+<!--/* Changement d'horaire ou de vol décidé par la compagnie. */-->
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout :: mail(~{::content})}">
+<body>
+<th:block th:fragment="content">
+    <tr><td style="padding-top:28px;" th:text="#{mail.hello(${name})}">Bonjour Amina,</td></tr>
+    <tr><td style="padding-top:12px;" th:text="#{mail.changed.intro}">Intro</td></tr>
+    <th:block th:replace="~{layout :: summary}"/>
+</th:block>
+</body>
+</html>

@@ -1,19 +1,24 @@
 package com.bookinpass.backend.mail.services;
 
-import com.bookinpass.backend.mail.config.FreemarkerConfig;
+import com.bookinpass.backend.mail.config.MailTemplateConfig;
 import com.bookinpass.backend.mail.properties.AwsSesProperties;
 import com.bookinpass.backend.mail.properties.MailProperties;
 import com.bookinpass.backend.mail.resources.BookingCancellationMailProperties;
 import com.bookinpass.backend.mail.resources.BookingChangeMailProperties;
 import com.bookinpass.backend.mail.resources.BookingConfirmationMailProperties;
 import com.bookinpass.backend.mail.resources.BookingMailProperties;
+import com.bookinpass.backend.mail.resources.FlightItinerary;
 import com.bookinpass.backend.mail.resources.MailLang;
 import org.junit.jupiter.api.Test;
 import org.springframework.context.support.ResourceBundleMessageSource;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.json.JsonMapper;
 
+import java.math.BigDecimal;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
+import java.util.Locale;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -26,9 +31,27 @@ import static org.mockito.Mockito.verify;
 class MailServiceTest {
 
     private static final JsonNode ORDER = JsonMapper.builder().build().readTree("""
-            {"booking_reference":"RZPNX8","passengers":[{"given_name":"Amina","family_name":"Sow"}],
-             "slices":[{"segments":[{"origin":{"iata_code":"DSS"},"destination":{"iata_code":"CDG"},
-               "departing_at":"2026-12-10T10:15:00","marketing_carrier":{"iata_code":"AF"},"marketing_carrier_flight_number":"718"}]}]}""");
+            {"booking_reference":"RZPNX8","total_currency":"EUR","base_amount":"509.00","tax_amount":"182.60",
+             "passengers":[{"id":"pas_1","type":"adult","given_name":"Amina","family_name":"Sow"}],
+             "conditions":{"change_before_departure":{"allowed":true,"penalty_amount":"40.00","penalty_currency":"EUR"},
+                           "refund_before_departure":{"allowed":false}},
+             "services":[{"type":"baggage","quantity":1,"segment_ids":["seg_2"],"passenger_ids":["pas_1"],"metadata":{"type":"checked"}}],
+             "slices":[{"duration":"PT15H40M",
+               "origin":{"iata_code":"DSS","city_name":"Dakar","iata_country_code":"SN"},
+               "destination":{"iata_code":"CDG","city_name":"Paris","iata_country_code":"FR"},
+               "segments":[
+                {"id":"seg_1","origin":{"iata_code":"DSS","name":"Aéroport Blaise Diagne","city_name":"Dakar","iata_country_code":"SN"},
+                 "destination":{"iata_code":"ALG","name":"Aéroport Houari Boumediene","city_name":"Alger","iata_country_code":"DZ"},
+                 "destination_terminal":"1","departing_at":"2026-09-02T01:05:00","arriving_at":"2026-09-02T06:25:00","duration":"PT4H20M",
+                 "marketing_carrier":{"name":"Air Algérie","iata_code":"AH"},"marketing_carrier_flight_number":"5011",
+                 "passengers":[{"passenger_id":"pas_1","cabin_class":"business","cabin_class_marketing_name":"Business",
+                   "baggages":[{"type":"checked","quantity":2},{"type":"carry_on","quantity":1}],"seat":{"designator":"2A"}}]},
+                {"id":"seg_2","origin":{"iata_code":"ALG","name":"Aéroport Houari Boumediene","city_name":"Alger","iata_country_code":"DZ"},
+                 "destination":{"iata_code":"CDG","name":"Aéroport Charles de Gaulle","city_name":"Paris","iata_country_code":"FR"},
+                 "origin_terminal":"1","destination_terminal":"2D","departing_at":"2026-09-02T23:15:00","arriving_at":"2026-09-03T02:45:00",
+                 "duration":"PT2H30M","marketing_carrier":{"name":"Air Algérie","iata_code":"AH"},"marketing_carrier_flight_number":"1214",
+                 "operating_carrier":{"name":"Tassili Airlines"},
+                 "passengers":[{"passenger_id":"pas_1","cabin_class":"business","baggages":[{"type":"checked","quantity":2}]}]}]}]}""");
 
     private final MailSenderService sender = mock(MailSenderService.class);
     private final MailVerifierService verifier = mock(MailVerifierService.class);
@@ -38,34 +61,66 @@ class MailServiceTest {
         messages.setBasename("i18n/mail");
         messages.setDefaultEncoding("UTF-8");
         messages.setFallbackToSystemLocale(false);
-        return new MailService(new FreemarkerConfig().freemarkerConfiguration(), sender, verifier,
+        return new MailService(MailTemplateConfig.engine(messages), sender, verifier,
                 new AwsSesProperties("reservations@bookinpass.com", "Book In Pass", "eu-west-1"),
                 new MailProperties(enabled, "http://localhost:4200/"), messages);
     }
 
     private static BookingConfirmationMailProperties confirmation(MailLang lang, String name) {
+        Locale locale = lang.toLocale();
         return BookingConfirmationMailProperties.builder()
                 .destination("amina@example.com").name(name).lang(lang)
-                .pnr("RZPNX8").segments(BookingMailProperties.segmentsOf(ORDER)).passengers(BookingMailProperties.passengersOf(ORDER))
-                .amount("260.42 EUR")
+                .pnr("RZPNX8").lastName(BookingMailProperties.lastNameOf(ORDER))
+                .segments(BookingMailProperties.segmentsOf(ORDER)).passengers(BookingMailProperties.passengersOf(ORDER))
+                .trips(FlightItinerary.trips(ORDER, locale)).travellers(FlightItinerary.travellers(ORDER))
+                .conditions(FlightItinerary.conditions(ORDER, locale))
+                .buyer(new FlightItinerary.Buyer(name, "+221771234567", "amina@example.com"))
+                .prices(new FlightItinerary.Prices(FlightItinerary.money(new BigDecimal("509.00"), "EUR", locale),
+                        FlightItinerary.money(new BigDecimal("182.60"), "EUR", locale), null,
+                        FlightItinerary.money(new BigDecimal("16.63"), "EUR", locale), FlightItinerary.money(new BigDecimal("708.23"), "EUR", locale)))
+                .amount("708.23 EUR")
                 .build();
     }
 
+    /** Aperçu dans un navigateur : {@code -Dmail.preview.dir=…} écrit les e-mails rendus. */
+    private static void preview(String file, MailService.Rendered mail) throws Exception {
+        String dir = System.getProperty("mail.preview.dir");
+        if (dir != null) {
+            Files.writeString(Path.of(dir, file), mail.body());
+        }
+    }
+
     @Test
-    void frenchConfirmationShowsTheTripAndEscapesValues() throws Exception {
+    void frenchConfirmationShowsTheWholeTripAndEscapesValues() throws Exception {
         MailService.Rendered mail = service(false).render(confirmation(MailLang.FR, "Amina <script>"));
+        preview("confirmation-fr.html", mail);
 
         assertThat(mail.subject()).isEqualTo("Votre réservation RZPNX8 est confirmée");
-        assertThat(mail.body()).contains("Bonjour", "RZPNX8", "DSS → CDG — 2026-12-10 10:15, AF 718", "Amina Sow", "260.42 EUR",
-                "http://localhost:4200/flight/manage", "Amina &lt;script&gt;").doesNotContain("<script>");
+        assertThat(mail.body()).contains("Bonne nouvelle", "RZPNX8", "Mercredi 2 septembre", "Dakar", "Sénégal", "Algérie",
+                        "Terminal 2D", "Air Algérie</strong> · <span>AH 5011</span>", "opéré par Tassili Airlines", "4h 20m", "Affaires",
+                        "Correspondance", "16h 50m", "jeu. 3 sept.", "Amina Sow", "Adulte", "DSS - ALG", "2 bagages en soute",
+                        "1 bagage en cabine", "Siège 2A", "3 bagages en soute", "Modification avant le départ", "40,00", "non autorisé",
+                        "+221771234567", "509,00", "182,60", "708,23", "Frais de service Book In Pass",
+                        "http://localhost:4200/flight/booking?n=RZPNX8&amp;l=Sow", "Amina &lt;script&gt;")
+                .doesNotContain("<script>");
     }
 
     @Test
     void englishBookingUsesTheEnglishTemplateAndSubject() throws Exception {
         MailService.Rendered mail = service(false).render(confirmation(MailLang.EN, "Amina"));
+        preview("confirmation-en.html", mail);
 
         assertThat(mail.subject()).isEqualTo("Your booking RZPNX8 is confirmed");
-        assertThat(mail.body()).contains("Hello Amina", "Amount paid", "Manage my booking");
+        assertThat(mail.body()).contains("Hello Amina", "Wednesday 2 September", "Senegal", "Business", "Layover", "2 checked bags",
+                "Change before departure", "€708.23", "Total price", "Manage my booking");
+    }
+
+    @Test
+    void confirmationWithoutDetailsStillShowsTheAmountPaid() throws Exception {
+        MailService.Rendered mail = service(false).render(BookingConfirmationMailProperties.builder()
+                .name("Amina").lang(MailLang.FR).pnr("RZPNX8").amount("260.42 EUR").build());
+
+        assertThat(mail.body()).contains("RZPNX8", "260.42 EUR").doesNotContain("Votre itinéraire", "Coordonnées de l'acheteur");
     }
 
     @Test

@@ -1,7 +1,6 @@
 package com.bookinpass.backend.mail.resources;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -25,9 +24,8 @@ import java.util.Set;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public abstract class BaseMailProperties {
 
-    private static final JsonMapper MAPPER = JsonMapper.builder()
-            .changeDefaultPropertyInclusion(s -> s.withValueInclusion(JsonInclude.Include.NON_NULL))
-            .build();
+    /** Valeurs nulles gardées : le gabarit lit {@code ${stop.country}} sans erreur de propriété absente. */
+    private static final JsonMapper MAPPER = JsonMapper.builder().build();
 
     private MailLang lang;
     /** Nom du destinataire (« Bonjour … »). */
@@ -48,7 +46,7 @@ public abstract class BaseMailProperties {
     @JsonIgnore
     public abstract MailType getMailType();
 
-    /** Variables du gabarit : tous les champs (classe fille comprise), sans les valeurs nulles. */
+    /** Variables du gabarit : tous les champs (classe fille comprise), en tables imbriquées. */
     @SuppressWarnings("unchecked")
     public Map<String, Object> toHashMap() {
         Map<String, Object> map = new HashMap<String, Object>(MAPPER.convertValue(this, Map.class));

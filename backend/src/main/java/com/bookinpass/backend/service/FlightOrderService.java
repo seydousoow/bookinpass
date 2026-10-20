@@ -158,16 +158,15 @@ public class FlightOrderService {
         capture(intentId, request.checkoutSessionId(), session.path("amount_total").asLong(), order);
         safely("confirmation mail of " + orderId, () -> {
             FlightOrderRequest.Passenger first = request.passengers().getFirst();
-            mailer.bookingConfirmed(request.email(), first.givenName() + " " + first.familyName(), order,
-                    paidAmount(session), request.lang());
+            mailer.bookingConfirmed(request.email(), first.givenName() + " " + first.familyName(), request.phoneNumber(), order, quote,
+                    paid(session), session.path("currency").asString("").toUpperCase(), request.lang());
         });
     }
 
-    /** « 260.42 EUR » : montant débité par Stripe, dans la devise de la session. */
-    private static String paidAmount(JsonNode session) {
+    /** Montant débité par Stripe (260.42), dans la devise de la session. */
+    private static BigDecimal paid(JsonNode session) {
         String currency = session.path("currency").asString("").toUpperCase();
-        return new BigDecimal(session.path("amount_total").asLong()).movePointLeft(FlightPricing.decimals(currency)).toPlainString()
-                + " " + currency;
+        return new BigDecimal(session.path("amount_total").asLong()).movePointLeft(FlightPricing.decimals(currency));
     }
 
     /** Écriture en base qui ne doit pas faire échouer une réservation déjà passée. */

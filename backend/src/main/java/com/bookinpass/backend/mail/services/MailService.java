@@ -4,23 +4,20 @@ import com.bookinpass.backend.mail.properties.AwsSesProperties;
 import com.bookinpass.backend.mail.properties.MailProperties;
 import com.bookinpass.backend.mail.resources.BaseMailProperties;
 import com.bookinpass.backend.mail.resources.MailLang;
-import freemarker.template.Configuration;
-import freemarker.template.TemplateException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.MessageSource;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+import org.thymeleaf.ITemplateEngine;
+import org.thymeleaf.context.Context;
 
-import java.io.IOException;
-import java.io.StringWriter;
-import java.nio.charset.StandardCharsets;
 import java.util.Locale;
 import java.util.Map;
 
 /**
- * Envoi d'un e-mail, quel qu'en soit le type : adresse vérifiée, gabarit FreeMarker de la langue rendu, sujet traduit
- * ({@code i18n/mail}), puis SES. Asynchrone : un e-mail ne retarde ni ne fait échouer une réservation ; toute erreur
+ * Envoi d'un e-mail, quel qu'en soit le type : adresse vérifiée, gabarit Thymeleaf rendu dans la langue de la
+ * réservation (libellés et sujet tirés de {@code i18n/mail}), puis SES. Asynchrone : un e-mail ne retarde ni ne fait échouer une réservation ; toute erreur
  * est journalisée.
  *
  * <p>E-mails désactivés ({@code MAIL_ENABLED=false}) : le gabarit est tout de même rendu (une erreur s'y voit en
@@ -31,7 +28,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class MailService {
 
-    private final Configuration freemarkerConfig;
+    private final ITemplateEngine mailTemplateEngine;
     private final MailSenderService mailSenderService;
     private final MailVerifierService mailVerifierService;
     private final AwsSesProperties awsSesProperties;
@@ -53,21 +50,17 @@ public class MailService {
     }
 
     /** Sujet et corps HTML, sans envoi (tests, aperçu). */
-    public <T extends BaseMailProperties> Rendered render(T properties) throws IOException, TemplateException {
+    public <T extends BaseMailProperties> Rendered render(T properties) {
         Locale locale = (properties.getLang() == null ? MailLang.FR : properties.getLang()).toLocale();
         properties.setSiteUrl(mailProperties.siteUrl());
         Map<String, Object> variables = properties.toHashMap();
         String subject = messages.getMessage("email.subject." + properties.getMailType().name().toLowerCase(Locale.ROOT),
                 new Object[]{variables.getOrDefault("pnr", "")}, locale);
         variables.put("subject", subject);
-        var template = freemarkerConfig.getTemplate(properties.getMailType().getTemplate(), locale, StandardCharsets.UTF_8.name());
-        try (var writer = new StringWriter()) {
-            template.process(variables, writer);
-            return new Rendered(subject, writer.toString());
-        }
+        return new Rendered(subject, mailTemplateEngine.process(properties.getMailType().getTemplate(), new Context(locale, variables)));
     }
 
-    private <T extends BaseMailProperties> void prepareAndSendMail(T properties) throws IOException, TemplateException {
+    private <T extends BaseMailProperties> void prepareAndSendMail(T properties) {
         Rendered mail = render(properties);
         String type = properties.getMailType().name();
         if (!mailProperties.enabled()) {

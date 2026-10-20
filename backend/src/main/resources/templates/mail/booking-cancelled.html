@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+<!--/* Annulation confirmée, avec le remboursement annoncé par la compagnie. */-->
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout :: mail(~{::content})}">
+<body>
+<th:block th:fragment="content">
+    <tr><td style="padding-top:28px;" th:text="#{mail.hello(${name})}">Bonjour Amina,</td></tr>
+    <tr><td style="padding-top:12px;" th:text="#{mail.cancelled.intro}">Intro</td></tr>
+    <tr><td style="padding-top:12px;"><strong th:text="#{mail.cancelled.refund}">Refund</strong> <span th:text="${refund}">200.00 EUR</span></td></tr>
+    <th:block th:replace="~{layout :: summary}"/>
+</th:block>
+</body>
+</html>

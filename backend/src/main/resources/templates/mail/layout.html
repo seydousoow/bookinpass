@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<!--/* Mise en page commune des e-mails : en-tête (logo), colonne de 600 px, pied de page. Chaque e-mail s'y insère par
+       th:replace="~{layout :: mail(~{::content})}" et fournit ses lignes de tableau (th:fragment="content").
+       Styles en ligne : les clients de messagerie ignorent souvent <style>. Couleurs : #5125d7 marque, #3f3f46 texte,
+       #71717a secondaire, #e4e4e7 bordures, #15803d confirmé, #eee9ff fond doux. */-->
+<html xmlns:th="http://www.thymeleaf.org" th:fragment="mail(content)" th:lang="${lang}">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <title th:text="'Book In Pass | ' + ${subject}">Book In Pass</title>
+</head>
+<body style="margin:0;padding:0;width:100%;background:#ffffff;font-family:Arial,Helvetica,sans-serif;color:#3f3f46;-webkit-text-size-adjust:100%;">
+<table role="presentation" width="100%" border="0" cellpadding="0" cellspacing="0" style="background:#ffffff;border-bottom:3px solid #5125d7;">
+    <tr>
+        <td align="center" style="padding:18px 16px;">
+            <table role="presentation" width="100%" border="0" cellpadding="0" cellspacing="0" style="max-width:600px;">
+                <tr>
+                    <td><a th:href="${baseUrl + '/'}" style="text-decoration:none;"><img th:src="${baseUrl + '/images/bip-white-logo.jpg'}" width="180" height="44"
+                        alt="Book In Pass" style="display:block;border:0;font-size:22px;font-weight:bold;color:#5125d7;"/></a></td>
+                </tr>
+            </table>
+        </td>
+    </tr>
+</table>
+<table role="presentation" width="100%" border="0" cellpadding="0" cellspacing="0">
+    <tr>
+        <td align="center" style="padding:0 16px;">
+            <table role="presentation" width="100%" border="0" cellpadding="0" cellspacing="0" style="max-width:600px;font-size:14px;line-height:20px;color:#3f3f46;">
+                <th:block th:replace="${content}"/>
+                <tr>
+                    <td style="padding:24px 0 8px;font-size:12px;line-height:17px;color:#71717a;" th:text="#{mail.automatic}">Automatic e-mail.</td>
+                </tr>
+                <tr>
+                    <td style="border-top:1px solid #e4e4e7;padding:16px 0 32px;font-size:12px;color:#71717a;">
+                        <strong style="color:#5125d7;">Book In Pass</strong> — <span th:text="#{mail.tagline}">Tagline</span>
+                    </td>
+                </tr>
+            </table>
+        </td>
+    </tr>
+</table>
+</body>
+</html>
+
+<!--/* Lien « Gérer ma réservation » : PNR et nom de famille dans l'adresse, la page s'ouvre directement. */-->
+<a th:fragment="manageButton" th:href="@{${baseUrl + '/flight/booking'}(n=${pnr},l=${lastName})}" th:text="#{mail.manage}"
+   style="display:inline-block;background:#5125d7;color:#ffffff;font-weight:bold;font-size:14px;text-decoration:none;padding:10px 20px;border-radius:999px;">Manage</a>
+
+<!--/* Récapitulatif court (modification, annulation) : PNR, vols, voyageurs, lien de gestion. */-->
+<th:block th:fragment="summary">
+    <tr><td style="padding-top:16px;font-weight:bold;" th:text="|#{mail.pnr} : ${pnr}|">PNR</td></tr>
+    <tr><td style="padding-top:16px;font-weight:bold;" th:text="#{mail.flights}">Flights</td></tr>
+    <tr><td>
+        <ul style="margin:0;padding-left:20px">
+            <li th:each="s : ${segments}" th:text="|${s.origin} → ${s.destination} — ${s.departure}${s.flight != null and s.flight != '' ? ', ' + s.flight : ''}|">DSS → CDG</li>
+            <li th:if="${#lists.isEmpty(segments)}">—</li>
+        </ul>
+    </td></tr>
+    <tr><td style="padding-top:16px;font-weight:bold;" th:text="#{mail.travellers}">Travellers</td></tr>
+    <tr><td>
+        <ul style="margin:0;padding-left:20px">
+            <li th:each="p : ${passengers}" th:text="${p}">Amina Sow</li>
+        </ul>
+    </td></tr>
+    <tr><td style="padding-top:24px;"><a th:replace="~{layout :: manageButton}"></a></td></tr>
+    <tr><td style="padding-top:8px;font-size:12px;color:#71717a;" th:text="#{mail.manage.hint}">Hint</td></tr>
+</th:block>

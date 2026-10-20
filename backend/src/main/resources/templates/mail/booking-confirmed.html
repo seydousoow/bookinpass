@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<!--/* Confirmation d'une réservation de vol. Ordre : confirmation et PNR, statut par trajet, mise en garde, itinéraire,
+       voyageurs et bagages, conditions, aide, acheteur, prix. Chaque bloc n'apparaît que si la donnée est connue.
+       Les trajets sont nommés Aller / Retour (deux au plus), sinon Vol 1, Vol 2… */-->
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout :: mail(~{::content})}">
+<body>
+<th:block th:fragment="content" th:with="tripCount=${trips == null ? 0 : #lists.size(trips)}">
+
+    <tr><td style="padding-top:28px;font-size:20px;font-weight:bold;">
+        <span th:text="#{mail.confirmed.goodNews}">Bonne nouvelle !</span>
+        <span style="color:#15803d;" th:text="|#{mail.confirmed.title} ✓|">Votre réservation est confirmée</span>
+    </td></tr>
+    <tr><td style="padding-top:16px;">
+        <table role="presentation" width="100%" border="0" cellpadding="0" cellspacing="0">
+            <tr>
+                <td style="font-size:13px;color:#71717a;"><span th:text="#{mail.pnr}">PNR</span><br/>
+                    <strong style="font-size:15px;color:#3f3f46;letter-spacing:1px;" th:text="${pnr}">RZPNX8</strong></td>
+                <td align="right"><a th:href="@{${baseUrl + '/flight/booking'}(n=${pnr},l=${lastName})}" th:text="#{mail.manage}"
+                                     style="color:#5125d7;font-weight:bold;text-decoration:underline;">Gérer ma réservation</a></td>
+            </tr>
+        </table>
+    </td></tr>
+    <tr><td style="padding-top:16px;" th:text="#{mail.confirmed.intro(${name})}">Bonjour Amina, …</td></tr>
+
+    <!--/* Statut : un trajet par ligne, avec la référence de la compagnie. */-->
+    <tr><td style="padding-top:20px;">
+        <table role="presentation" width="100%" border="0" cellpadding="0" cellspacing="0" style="border:1px solid #e4e4e7;border-radius:6px;">
+            <tr><td style="padding:18px;">
+                <table role="presentation" width="100%" border="0" cellpadding="0" cellspacing="0">
+                    <tr>
+                        <td style="font-size:17px;font-weight:bold;" th:text="#{mail.confirmed.status}">Réservation confirmée</td>
+                        <td align="right"><span style="background:#15803d;color:#ffffff;border-radius:999px;padding:4px 10px;font-size:11px;font-weight:bold;text-transform:uppercase;"
+                                                th:text="#{mail.confirmed.badge}">Confirmée</span></td>
+                    </tr>
+                    <tr th:each="trip : ${trips}">
+                        <td style="padding-top:12px;">
+                            <span style="font-size:11px;color:#71717a;text-transform:uppercase;" th:text="${trip.date}">Mardi 2 septembre</span><br/>
+                            <strong th:text="|✈ ${trip.from} - ${trip.to}|">✈ Dakar - Paris</strong>
+                        </td>
+                        <td align="right" valign="bottom" style="padding-top:12px;font-size:12px;color:#71717a;">
+                            <span th:text="#{mail.confirmed.airlineRef}">Réf.</span> <strong style="color:#3f3f46;" th:text="${pnr}">RZPNX8</strong>
+                        </td>
+                    </tr>
+                </table>
+            </td></tr>
+        </table>
+    </td></tr>
+
+    <tr><td style="padding-top:20px;">
+        <table role="presentation" width="100%" border="0" cellpadding="0" cellspacing="0" style="background:#eee9ff;border-radius:6px;">
+            <tr><td style="padding:12px 16px;font-size:12px;line-height:17px;color:#5125d7;" th:text="|ⓘ #{mail.confirmed.security}|">Sécurité</td></tr>
+        </table>
+    </td></tr>
+
+    <!--/* Itinéraire détaillé : un cadre par trajet, départ et arrivée de chaque vol, l'escale entre deux vols. */-->
+    <th:block th:if="${tripCount > 0}">
+        <tr><td style="padding-top:28px;font-size:19px;font-weight:bold;" th:text="#{mail.itinerary}">Votre itinéraire</td></tr>
+        <tr th:each="trip, ts : ${trips}"><td style="padding-top:20px;">
+            <table role="presentation" width="100%" border="0" cellpadding="0" cellspacing="0" style="border:1px solid #e4e4e7;border-radius:6px;">
+                <tr><td style="padding:18px;">
+                    <table role="presentation" width="100%" border="0" cellpadding="0" cellspacing="0">
+                        <tr><td colspan="2" style="font-size:11px;color:#71717a;text-transform:uppercase;" th:text="${trip.date}">Mardi 2 septembre</td></tr>
+                        <tr>
+                            <td style="font-size:18px;font-weight:bold;color:#5125d7;"
+                                th:text="|${tripCount == 2 and ts.index == 1 ? #messages.msg('mail.trip.return') : (tripCount <= 2 ? #messages.msg('mail.trip.outbound') : #messages.msg('mail.trip.flight', ts.count))} ✈|">Aller ✈</td>
+                            <td align="right" style="font-size:12px;color:#71717a;" th:if="${trip.duration != null}" th:text="|⏱ ${trip.duration}|">13h 40m</td>
+                        </tr>
+                    </table>
+                    <th:block th:each="leg : ${trip.legs}">
+                        <table role="presentation" width="100%" border="0" cellpadding="0" cellspacing="0" style="margin-top:6px;">
+                            <tr th:replace="~{booking-confirmed :: stop(${leg.departure})}"></tr>
+                            <tr>
+                                <td></td>
+                                <td style="padding:8px 0 0;">
+                                    <span style="font-size:13px;"><strong th:text="${leg.carrier}">Air Algérie</strong> · <span th:text="${leg.flight}">AH 5011</span></span><span
+                                        th:if="${leg.operatedBy != null}" style="font-size:12px;color:#71717a;" th:text="| — #{mail.operatedBy(${leg.operatedBy})}|"> — opéré par</span><br/>
+                                    <th:block th:if="${leg.duration != null}"><span th:replace="~{booking-confirmed :: pill(|⏱ ${leg.duration}|)}"></span></th:block>
+                                    <th:block th:if="${leg.cabin != null or leg.cabinName != null}"><span th:replace="~{booking-confirmed :: pill(${leg.cabin != null ? #messages.msgOrNull('mail.cabin.' + leg.cabin) ?: leg.cabinName : leg.cabinName})}"></span></th:block>
+                                </td>
+                            </tr>
+                            <tr th:replace="~{booking-confirmed :: stop(${leg.arrival})}"></tr>
+                        </table>
+                        <table th:if="${leg.layover != null}" role="presentation" width="100%" border="0" cellpadding="0" cellspacing="0"
+                               style="margin-top:12px;background:#eee9ff;border-radius:6px;">
+                            <tr><td style="padding:10px 14px;font-size:13px;">
+                                <strong style="color:#5125d7;" th:text="#{mail.connection}">Correspondance</strong><br/>
+                                <span style="font-size:12px;" th:text="#{mail.layover(${leg.layover})}">Durée de l'escale</span>
+                            </td></tr>
+                        </table>
+                    </th:block>
+                </td></tr>
+            </table>
+        </td></tr>
+    </th:block>
+
+    <!--/* Voyageurs : bagages (compris et achetés) et siège sur chaque vol. */-->
+    <th:block th:if="${travellers != null and !#lists.isEmpty(travellers)}">
+        <tr><td style="padding-top:28px;font-size:19px;font-weight:bold;" th:text="#{mail.passengers}">Vos voyageurs</td></tr>
+        <tr><td style="padding-top:20px;">
+            <table role="presentation" width="100%" border="0" cellpadding="0" cellspacing="0" style="border:1px solid #e4e4e7;border-radius:6px;">
+                <tr><td style="padding:18px;">
+                    <th:block th:each="traveller, ps : ${travellers}">
+                        <div th:if="${ps.index > 0}" style="border-top:1px solid #e4e4e7;margin:16px 0;"></div>
+                        <div style="font-size:11px;color:#71717a;text-transform:uppercase;" th:text="#{mail.passenger(${ps.count})}">Passager 1</div>
+                        <div style="font-size:17px;font-weight:bold;color:#5125d7;" th:text="${traveller.name}">Amina Sow</div>
+                        <div style="font-size:13px;margin-bottom:6px;" th:text="${#messages.msgOrNull('mail.type.' + traveller.type) ?: traveller.type}">Adulte</div>
+                        <th:block th:each="trip, ts : ${traveller.trips}">
+                            <div style="margin-top:10px;font-size:13px;">
+                                <strong th:text="${tripCount == 2 and ts.index == 1 ? #messages.msg('mail.trip.return') : (tripCount <= 2 ? #messages.msg('mail.trip.outbound') : #messages.msg('mail.trip.flight', ts.count))}">Aller</strong>
+                                <span style="color:#71717a;" th:text="#{mail.fromTo(${trip.from}, ${trip.to})}">De Dakar à Paris</span>
+                            </div>
+                            <div style="margin-top:4px;" th:each="leg : ${trip.legs}">
+                                <span th:replace="~{booking-confirmed :: pill(${'✈ ' + #strings.toUpperCase(#messages.msg('mail.flight')) + ' | ' + leg.route})}"></span>
+                                <th:block th:if="${leg.checked > 0}"><span th:replace="~{booking-confirmed :: pill(|🧳 ${#messages.msg(leg.checked > 1 ? 'mail.bags.checked.many' : 'mail.bags.checked.one', leg.checked)}|)}"></span></th:block>
+                                <th:block th:if="${leg.carryOn > 0}"><span th:replace="~{booking-confirmed :: pill(|👜 ${#messages.msg(leg.carryOn > 1 ? 'mail.bags.cabin.many' : 'mail.bags.cabin.one', leg.carryOn)}|)}"></span></th:block>
+                                <th:block th:if="${leg.checked == 0 and leg.carryOn == 0}"><span th:replace="~{booking-confirmed :: pill(#{mail.bags.none})}"></span></th:block>
+                                <th:block th:if="${leg.seat != null}"><span th:replace="~{booking-confirmed :: pill(|💺 ${#messages.msg('mail.seat', leg.seat)}|)}"></span></th:block>
+                            </div>
+                        </th:block>
+                    </th:block>
+                    <div style="margin-top:18px;font-size:13px;font-weight:bold;" th:text="#{mail.bags.policy}">Politique sur les bagages</div>
+                    <div style="margin-top:6px;font-size:12px;"><strong th:text="#{mail.bags.cabin}">Bagage en cabine</strong><br/>
+                        <span style="color:#71717a;" th:text="#{mail.bags.cabin.hint}">…</span></div>
+                    <div style="margin-top:6px;font-size:12px;"><strong th:text="#{mail.bags.checked}">Bagage en soute</strong><br/>
+                        <span style="color:#71717a;" th:text="#{mail.bags.checked.hint}">…</span></div>
+                    <div style="margin-top:12px;background:#fff7ed;border-radius:6px;padding:10px 14px;font-size:12px;color:#b45309;"
+                         th:text="|ⓘ #{mail.bags.warning}|">Bagages</div>
+                </td></tr>
+            </table>
+        </td></tr>
+    </th:block>
+
+    <!--/* Conditions du billet : modification et remboursement avant le départ. */-->
+    <th:block th:if="${conditions != null}">
+        <tr><td style="padding-top:28px;font-size:19px;font-weight:bold;" th:text="#{mail.moreInfo}">Informations supplémentaires</td></tr>
+        <tr><td style="padding-top:20px;">
+            <table role="presentation" width="100%" border="0" cellpadding="0" cellspacing="0" style="border:1px solid #e4e4e7;border-radius:6px;">
+                <tr><td style="padding:18px;">
+                    <div style="font-size:15px;font-weight:bold;margin-bottom:8px;" th:text="#{mail.conditions}">Conditions du billet</div>
+                    <div th:replace="~{booking-confirmed :: condition(#{mail.conditions.change}, ${conditions.change})}"></div>
+                    <div th:replace="~{booking-confirmed :: condition(#{mail.conditions.refund}, ${conditions.refund})}"></div>
+                    <div style="margin-top:10px;font-size:12px;color:#71717a;" th:text="#{mail.conditions.hint}">…</div>
+                </td></tr>
+            </table>
+        </td></tr>
+    </th:block>
+
+    <tr><td style="padding-top:20px;">
+        <table role="presentation" width="100%" border="0" cellpadding="0" cellspacing="0" style="background:#eee9ff;border-radius:6px;">
+            <tr><td style="padding:18px;">
+                <div style="font-size:15px;font-weight:bold;" th:text="#{mail.help}">Besoin d'aide ?</div>
+                <div style="margin:6px 0 14px;font-size:13px;" th:text="#{mail.help.hint}">…</div>
+                <a th:replace="~{layout :: manageButton}"></a>
+            </td></tr>
+        </table>
+    </td></tr>
+
+    <tr th:if="${buyer != null}"><td style="padding-top:20px;">
+        <table role="presentation" width="100%" border="0" cellpadding="0" cellspacing="0" style="border:1px solid #e4e4e7;border-radius:6px;">
+            <tr><td style="padding:18px;">
+                <div style="font-size:17px;font-weight:bold;padding-bottom:12px;border-bottom:1px solid #e4e4e7;" th:text="#{mail.buyer}">Coordonnées de l'acheteur</div>
+                <div style="margin-top:12px;font-size:13px;"><strong th:text="#{mail.buyer.name}">Nom</strong><br/><span th:text="${buyer.name}">Amina Sow</span></div>
+                <div th:if="${buyer.phone != null}" style="margin-top:8px;font-size:13px;"><strong th:text="#{mail.buyer.phone}">Téléphone</strong><br/><span th:text="${buyer.phone}">+221…</span></div>
+                <div style="margin-top:8px;font-size:13px;"><strong th:text="#{mail.buyer.email}">E-mail</strong><br/><span th:text="${buyer.email}">amina@example.com</span></div>
+            </td></tr>
+        </table>
+    </td></tr>
+
+    <tr><td style="padding-top:20px;">
+        <table role="presentation" width="100%" border="0" cellpadding="0" cellspacing="0" style="border:1px solid #e4e4e7;border-radius:6px;">
+            <tr><td style="padding:18px;">
+                <div style="font-size:17px;font-weight:bold;padding-bottom:12px;border-bottom:1px solid #e4e4e7;" th:text="#{mail.prices}">Récapitulatif des prix</div>
+                <table role="presentation" width="100%" border="0" cellpadding="0" cellspacing="0" style="margin-top:8px;font-size:13px;">
+                    <th:block th:if="${prices != null and prices.fare != null}">
+                        <tr><td style="padding:5px 0;" th:text="#{mail.prices.fare}">Tarif de base</td><td align="right" th:text="${prices.fare}">509,00 €</td></tr>
+                        <tr th:if="${prices.taxes != null}"><td style="padding:5px 0;" th:text="#{mail.prices.taxes}">Taxes</td><td align="right" th:text="${prices.taxes}">182,60 €</td></tr>
+                        <tr th:if="${prices.services != null}"><td style="padding:5px 0;" th:text="#{mail.prices.services}">Services</td><td align="right" th:text="${prices.services}">0,00 €</td></tr>
+                        <tr th:if="${prices.fees != null}"><td style="padding:5px 0;" th:text="#{mail.prices.fees}">Frais</td><td align="right" th:text="${prices.fees}">16,63 €</td></tr>
+                    </th:block>
+                    <tr>
+                        <td style="padding:14px 0 0;font-weight:bold;" th:text="#{mail.prices.total}">Prix total</td>
+                        <td align="right" style="padding:14px 0 0;font-weight:bold;" th:text="${prices != null ? prices.total : amount}">708,23 €</td>
+                    </tr>
+                </table>
+            </td></tr>
+        </table>
+    </td></tr>
+</th:block>
+
+<!--/* Fragments locaux. */-->
+<tr th:fragment="stop(s)">
+    <td width="64" valign="top" style="padding:10px 0 0;font-weight:bold;font-size:14px;white-space:nowrap;"><span th:text="${s.time}">01:05</span><th:block th:if="${s.date != null}"><br/><span
+            style="font-weight:normal;font-size:11px;color:#71717a;" th:text="${s.date}">jeu. 3 sept.</span></th:block></td>
+    <td valign="top" style="padding:10px 0 0;">
+        <strong th:text="${s.city ?: s.code}">Dakar</strong><span th:if="${s.country != null}" th:text="| (${s.country})|"> (Sénégal)</span><br/>
+        <span style="font-size:12px;color:#71717a;"><strong th:text="${s.code}">DSS</strong><span th:if="${s.airport != null}" th:text="| · ${s.airport}|"> · Aéroport</span><span
+                th:if="${s.terminal != null}" th:text="|, #{mail.terminal(${s.terminal})}|">, Terminal 1</span></span>
+    </td>
+</tr>
+<div th:fragment="condition(label, c)" style="margin-top:4px;font-size:13px;">
+    <strong th:text="|${label} :|">Modification :</strong>
+    <span th:if="${c == null or c.allowed == null}" th:text="#{mail.conditions.unknown}">non précisé</span>
+    <span th:if="${c != null and c.allowed == true}" style="color:#15803d;"
+          th:text="${c.penalty != null ? #messages.msg('mail.conditions.allowedFee', c.penalty) : #messages.msg('mail.conditions.allowedFree')}">possible</span>
+    <span th:if="${c != null and c.allowed == false}" style="color:#b91c1c;" th:text="#{mail.conditions.notAllowed}">non autorisé</span>
+</div>
+<span th:fragment="pill(label)" th:text="${label}"
+      style="display:inline-block;border:1px solid #e4e4e7;border-radius:999px;padding:3px 10px;margin:3px 4px 3px 0;font-size:12px;color:#3f3f46;white-space:nowrap;">pill</span>
+</body>
+</html>

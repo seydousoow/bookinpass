@@ -18,6 +18,8 @@ import java.util.List;
 public abstract class BookingMailProperties extends BaseMailProperties {
 
     private String pnr;
+    /** Nom de famille du premier voyageur : avec le PNR, ouvre « Gérer ma réservation » ({@code ?n=…&l=…}). */
+    private String lastName;
     private List<Segment> segments;
     private List<String> passengers;
 
@@ -41,6 +43,10 @@ public abstract class BookingMailProperties extends BaseMailProperties {
             }
         }
         return segments;
+    }
+
+    public static String lastNameOf(JsonNode order) {
+        return order.path("passengers").path(0).path("family_name").asString("");
     }
 
     /** « Prénom Nom » de chaque voyageur de la commande. */
