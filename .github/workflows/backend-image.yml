@@ -1,5 +1,9 @@
-# Image native de l'API (GraalVM) construite ici — le build demande ~8 Go de RAM, hors de portée des builders
-# gratuits de Render — puis publiée sur GHCR et déployée sur Render (hook de déploiement).
+# Image de l'API construite ici, publiée sur GHCR, puis déployée sur Render (hook de déploiement) : Render ne fait
+# que tirer l'image. Deux cibles du Dockerfile :
+#   jvm    (défaut) build en ~3 min ; démarrage plus lent et plus gourmand en mémoire.
+#   native GraalVM, build en ~15 min (~8 Go de RAM, hors de portée des builders gratuits de Render) ; démarre en
+#          moins d'une seconde avec ~215 Mo.
+# Lancement manuel (Actions → backend-image → Run workflow) pour choisir la cible ; un push sur main prend `jvm`.
 #
 # Secret du dépôt : RENDER_DEPLOY_HOOK_URL (Render → service → Settings → Deploy Hook). Sans lui, l'image est
 # publiée et Render la reprend à son prochain déploiement manuel.
@@ -10,6 +14,12 @@ on:
     branches: [ main ]
     paths: [ 'backend/**', '.github/workflows/backend-image.yml' ]
   workflow_dispatch:
+    inputs:
+      target:
+        description: Cible du Dockerfile
+        type: choice
+        options: [ jvm, native ]
+        default: jvm
 
 permissions:
   contents: read
@@ -21,6 +31,7 @@ concurrency:
 
 env:
   IMAGE: ghcr.io/${{ github.repository_owner }}/bookinpass-backend
+  TARGET: ${{ inputs.target || 'jvm' }}
 
 jobs:
   build:
@@ -37,20 +48,20 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      # Cible native, linux/amd64 (machines Render). -Ob : build plus court ; -march=compatibility : binaire qui
-      # tourne sur tout processeur x86-64 (la valeur par défaut, x86-64-v3, exige AVX2 et planterait au démarrage sans).
+      # linux/amd64 (machines Render). Pour la cible native : -Ob (build plus court) et -march=compatibility (binaire
+      # qui tourne sur tout processeur x86-64 ; x86-64-v3 par défaut exige AVX2). Sans effet sur la cible jvm.
       - uses: docker/build-push-action@v6
         with:
           context: backend
-          target: native
+          target: ${{ env.TARGET }}
           platforms: linux/amd64
           build-args: NATIVE_IMAGE_OPTIONS=-J-Xmx12g -Ob -march=compatibility
           push: true
           tags: |
             ${{ env.IMAGE }}:latest
-            ${{ env.IMAGE }}:${{ github.sha }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+            ${{ env.IMAGE }}:${{ env.TARGET }}-${{ github.sha }}
+          cache-from: type=gha,scope=${{ env.TARGET }}
+          cache-to: type=gha,mode=max,scope=${{ env.TARGET }}
 
       - name: Déploiement Render
         env:

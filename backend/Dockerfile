@@ -60,7 +60,9 @@ EXPOSE 8080
 
 HEALTHCHECK --interval=10s --timeout=3s --start-period=20s --retries=5 \
   CMD curl -fsS http://localhost:8080/api/actuator/health/readiness || exit 1
-ENTRYPOINT ["java", "-XX:MaxRAMPercentage=75", "org.springframework.boot.loader.launch.JarLauncher"]
+# Options JVM remplaçables par l'hébergeur (ex. profil petite mémoire sur Render, voir render.yaml).
+ENV JAVA_TOOL_OPTIONS="-XX:MaxRAMPercentage=75"
+ENTRYPOINT ["java", "org.springframework.boot.loader.launch.JarLauncher"]
 
 # ---------------------------------------------------------------------------
 # Image native (cible par défaut, donc en dernier) : un binaire, ni JVM ni Maven. glibc requise (Debian slim).
