@@ -54,6 +54,13 @@ public class User {
     @Column(name = "duffel_user_id")
     private String duffelUserId;
 
+    /**
+     * Langue par défaut ({@code fr}, {@code en}) : celle du site à la création. Une réservation suivante ne la change
+     * pas ; le voyageur la modifiera depuis son espace.
+     */
+    @Column(nullable = false, length = 2)
+    private String lang = "fr";
+
     @Column(name = "match_key", nullable = false, unique = true)
     private String matchKey;
 
@@ -66,6 +73,11 @@ public class User {
     private Instant updatedAt;
 
     public User(String firstName, String lastName, LocalDate birthDate, String gender, String email, String phoneNumber) {
+        this(firstName, lastName, birthDate, gender, email, phoneNumber, "fr");
+    }
+
+    public User(String firstName, String lastName, LocalDate birthDate, String gender, String email, String phoneNumber, String lang) {
+        this.lang = lang;
         this.firstName = firstName;
         this.lastName = lastName;
         this.birthDate = birthDate;

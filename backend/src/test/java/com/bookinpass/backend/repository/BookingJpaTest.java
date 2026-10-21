@@ -16,6 +16,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
+import com.bookinpass.backend.config.web.RequestLang;
 import com.bookinpass.backend.dto.request.FlightOrderRequest;
 import com.bookinpass.backend.dto.request.PriceOfferRequest.IntendedService;
 import com.bookinpass.backend.service.BookingRecorder;
@@ -146,14 +147,24 @@ class BookingJpaTest {
 
         recorder.recordAuthorisation(session);
         recorder.recordAuthorisation(session);
-        User booker = recorder.recordOrder(duffelOrder, request, quote);
-        recorder.recordOrder(duffelOrder, request, quote);
+        // Site en anglais : la nouvelle voyageuse le prend comme langue par défaut, la voyageuse connue garde la sienne.
+        RequestLang.set("en");
+        User booker;
+        try {
+            booker = recorder.recordOrder(duffelOrder, request, quote);
+            recorder.recordOrder(duffelOrder, request, quote);
+        } finally {
+            RequestLang.clear();
+        }
         recorder.recordCapture("cs_9", 21769);
         entityManager.flush();
         entityManager.clear();
 
         assertThat(booker.getFirstName()).isEqualTo("Aminata");
         assertThat(users.count()).isEqualTo(2);
+        assertThat(users.findById(booker.getId()).orElseThrow().getLang()).isEqualTo("fr");
+        assertThat(jdbc.queryForObject("SELECT lang FROM users WHERE first_name = 'Lou'", String.class)).isEqualTo("en");
+        assertThat(jdbc.queryForObject("SELECT lang FROM flight_order WHERE duffel_order_id = 'ord_9'", String.class)).isEqualTo("en");
         assertThat(users.findById(booker.getId()).orElseThrow().getPhoneNumber()).isEqualTo("+221771234567");
         FlightOrder order = orders.findByDuffelOrderId("ord_9").orElseThrow();
         assertThat(order.getBookingReference()).isEqualTo("ABC123");

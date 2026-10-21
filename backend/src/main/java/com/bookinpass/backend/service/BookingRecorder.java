@@ -1,5 +1,6 @@
 package com.bookinpass.backend.service;
 
+import com.bookinpass.backend.config.web.RequestLang;
 import com.bookinpass.backend.dto.request.FlightOrderRequest;
 import com.bookinpass.backend.entity.FlightOrder;
 import com.bookinpass.backend.entity.FlightOrderEvent;
@@ -275,7 +276,7 @@ public class BookingRecorder {
                     return user;
                 })
                 .orElseGet(() -> users.save(new User(passenger.givenName(), passenger.familyName(), passenger.bornOn(), passenger.gender(),
-                        request.email(), request.phoneNumber())));
+                        request.email(), request.phoneNumber(), RequestLang.current())));
     }
 
     private FlightOrder newOrder(JsonNode duffelOrder, FlightOrderRequest request, FlightQuote quote) {
@@ -283,7 +284,7 @@ public class BookingRecorder {
         FlightOrder order = new FlightOrder(duffelOrder.path("id").asString(), request.offerId(), text(duffelOrder.path("booking_reference")),
                 quote.currency(), quote.duffelTotal(), quote.sellingTotal(), pricing(quote), duffelOrder.path("live_mode").asBoolean(false),
                 bookedAt, lastTravelDate(quote.offer().path("slices")));
-        order.useLang(request.lang());
+        order.useLang(RequestLang.current());
         return order;
     }
 

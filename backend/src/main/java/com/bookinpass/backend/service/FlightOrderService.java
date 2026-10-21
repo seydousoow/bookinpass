@@ -4,6 +4,7 @@ import com.bookinpass.backend.client.DuffelClient;
 import com.bookinpass.backend.client.StripeClient;
 import com.bookinpass.backend.dto.duffel.DuffelOrderRequest;
 import com.bookinpass.backend.dto.duffel.DuffelPriceRequest;
+import com.bookinpass.backend.config.web.RequestLang;
 import com.bookinpass.backend.dto.request.FlightOrderRequest;
 import com.bookinpass.backend.dto.request.PriceOfferRequest.IntendedService;
 import com.bookinpass.backend.dto.response.FlightOrderResponse;
@@ -159,7 +160,7 @@ public class FlightOrderService {
         safely("confirmation mail of " + orderId, () -> {
             FlightOrderRequest.Passenger first = request.passengers().getFirst();
             mailer.bookingConfirmed(request.email(), first.givenName() + " " + first.familyName(), request.phoneNumber(), order, quote,
-                    paid(session), session.path("currency").asString("").toUpperCase(), request.lang());
+                    paid(session), session.path("currency").asString("").toUpperCase(), RequestLang.current());
         });
     }
 
