@@ -14,7 +14,8 @@
         <table role="presentation" width="100%" border="0" cellpadding="0" cellspacing="0">
             <tr>
                 <td style="font-size:13px;color:#71717a;"><span th:text="#{mail.pnr}">PNR</span><br/>
-                    <strong style="font-size:15px;color:#3f3f46;letter-spacing:1px;" th:text="${pnr}">RZPNX8</strong></td>
+                    <strong style="font-size:15px;color:#3f3f46;letter-spacing:1px;" th:text="${pnr}">RZPNX8</strong>
+                    <th:block th:if="${bookedOn != null}"><br/><span th:text="#{mail.confirmed.bookedOn(${bookedOn})}">Réservée le 21 octobre 2026</span></th:block></td>
                 <td align="right"><a th:href="@{${baseUrl + '/flight/booking'}(n=${pnr},l=${lastName})}" th:text="#{mail.manage}"
                                      style="color:#5125d7;font-weight:bold;text-decoration:underline;">Gérer ma réservation</a></td>
             </tr>
@@ -103,7 +104,10 @@
                         <div th:if="${ps.index > 0}" style="border-top:1px solid #e4e4e7;margin:16px 0;"></div>
                         <div style="font-size:11px;color:#71717a;text-transform:uppercase;" th:text="#{mail.passenger(${ps.count})}">Passager 1</div>
                         <div style="font-size:17px;font-weight:bold;color:#5125d7;" th:text="${traveller.name}">Amina Sow</div>
-                        <div style="font-size:13px;margin-bottom:6px;" th:text="${#messages.msgOrNull('mail.type.' + traveller.type) ?: traveller.type}">Adulte</div>
+                        <div style="font-size:13px;" th:text="${#messages.msgOrNull('mail.type.' + traveller.type) ?: traveller.type}">Adulte</div>
+                        <div th:if="${traveller.ticket != null}" style="font-size:13px;"><span style="color:#71717a;" th:text="#{mail.ticket}">Billet électronique</span>
+                            <strong th:text="${traveller.ticket}">057-1234567890</strong></div>
+                        <div style="margin-bottom:6px;"></div>
                         <th:block th:each="trip, ts : ${traveller.trips}">
                             <div style="margin-top:10px;font-size:13px;">
                                 <strong th:text="${tripCount == 2 and ts.index == 1 ? #messages.msg('mail.trip.return') : (tripCount <= 2 ? #messages.msg('mail.trip.outbound') : #messages.msg('mail.trip.flight', ts.count))}">Aller</strong>

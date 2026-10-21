@@ -31,7 +31,8 @@ import static org.mockito.Mockito.verify;
 class MailServiceTest {
 
     private static final JsonNode ORDER = JsonMapper.builder().build().readTree("""
-            {"booking_reference":"RZPNX8","total_currency":"EUR","base_amount":"509.00","tax_amount":"182.60",
+            {"booking_reference":"RZPNX8","created_at":"2026-08-19T07:35:02.780868Z","total_currency":"EUR",
+             "documents":[{"type":"electronic_ticket","unique_identifier":"124-2345678901","passenger_ids":["pas_1"]}],"base_amount":"509.00","tax_amount":"182.60",
              "passengers":[{"id":"pas_1","type":"adult","given_name":"Amina","family_name":"Sow"}],
              "conditions":{"change_before_departure":{"allowed":true,"penalty_amount":"40.00","penalty_currency":"EUR"},
                            "refund_before_departure":{"allowed":false}},
@@ -70,7 +71,7 @@ class MailServiceTest {
         Locale locale = lang.toLocale();
         return BookingConfirmationMailProperties.builder()
                 .destination("amina@example.com").name(name).lang(lang)
-                .pnr("RZPNX8").lastName(BookingMailProperties.lastNameOf(ORDER))
+                .pnr("RZPNX8").lastName(BookingMailProperties.lastNameOf(ORDER)).bookedOn(FlightItinerary.bookedOn(ORDER, locale))
                 .segments(BookingMailProperties.segmentsOf(ORDER)).passengers(BookingMailProperties.passengersOf(ORDER))
                 .trips(FlightItinerary.trips(ORDER, locale)).travellers(FlightItinerary.travellers(ORDER))
                 .conditions(FlightItinerary.conditions(ORDER, locale))
@@ -96,7 +97,8 @@ class MailServiceTest {
         preview("confirmation-fr.html", mail);
 
         assertThat(mail.subject()).isEqualTo("Votre réservation RZPNX8 est confirmée");
-        assertThat(mail.body()).contains("Bonne nouvelle", "RZPNX8", "Mercredi 2 septembre", "Dakar", "Sénégal", "Algérie",
+        assertThat(mail.body()).contains("Bonne nouvelle", "RZPNX8", "Réservée le 19 août 2026", "Billet électronique", "124-2345678901",
+                        "Mercredi 2 septembre", "Dakar", "Sénégal", "Algérie",
                         "Terminal 2D", "Air Algérie</strong> · <span>AH 5011</span>", "opéré par Tassili Airlines", "4h 20m", "Affaires",
                         "Correspondance", "16h 50m", "jeu. 3 sept.", "Amina Sow", "Adulte", "DSS - ALG", "2 bagages en soute",
                         "1 bagage en cabine", "Siège 2A", "3 bagages en soute", "Modification avant le départ", "40,00", "non autorisé",
@@ -111,7 +113,7 @@ class MailServiceTest {
         preview("confirmation-en.html", mail);
 
         assertThat(mail.subject()).isEqualTo("Your booking RZPNX8 is confirmed");
-        assertThat(mail.body()).contains("Hello Amina", "Wednesday 2 September", "Senegal", "Business", "Layover", "2 checked bags",
+        assertThat(mail.body()).contains("Hello Amina", "Booked on 19 August 2026", "E-ticket:", "Wednesday 2 September", "Senegal", "Business", "Layover", "2 checked bags",
                 "Change before departure", "€708.23", "Total price", "Manage my booking");
     }
 

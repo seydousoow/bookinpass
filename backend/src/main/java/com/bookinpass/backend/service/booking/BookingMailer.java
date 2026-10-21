@@ -52,7 +52,7 @@ public class BookingMailer {
         Locale locale = lang.toLocale();
         return BookingConfirmationMailProperties.builder()
                 .destination(to).name(travellerName).lang(lang)
-                .pnr(pnr(order)).lastName(BookingMailProperties.lastNameOf(order))
+                .pnr(pnr(order)).lastName(BookingMailProperties.lastNameOf(order)).bookedOn(FlightItinerary.bookedOn(order, locale))
                 .segments(BookingMailProperties.segmentsOf(order)).passengers(BookingMailProperties.passengersOf(order))
                 .trips(FlightItinerary.trips(order, locale)).travellers(FlightItinerary.travellers(order))
                 .conditions(FlightItinerary.conditions(order, locale));

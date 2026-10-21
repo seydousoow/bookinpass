@@ -5,6 +5,8 @@ import tools.jackson.databind.JsonNode;
 import java.math.BigDecimal;
 import java.text.NumberFormat;
 import java.time.Duration;
+import java.time.Instant;
+import java.time.ZoneId;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
@@ -20,6 +22,8 @@ import java.util.Locale;
  * les donne.
  */
 public final class FlightItinerary {
+
+    private static final ZoneId DAKAR = ZoneId.of("Africa/Dakar");
 
     private FlightItinerary() {
     }
@@ -40,8 +44,11 @@ public final class FlightItinerary {
     public record Stop(String time, String date, String city, String country, String code, String airport, String terminal) {
     }
 
-    /** {@code type} : {@code adult}, {@code child}, {@code infant_without_seat} (traduit par le gabarit). */
-    public record Traveller(String name, String type, List<TravellerTrip> trips) {
+    /**
+     * {@code type} : {@code adult}, {@code child}, {@code infant_without_seat} (traduit par le gabarit) ; {@code ticket} :
+     * numéro du billet électronique, absent tant que la compagnie ne l'a pas émis.
+     */
+    public record Traveller(String name, String type, String ticket, List<TravellerTrip> trips) {
     }
 
     public record TravellerTrip(String from, String to, List<LegExtras> legs) {
@@ -148,9 +155,20 @@ public final class FlightItinerary {
                 trips.add(new TravellerTrip(city(slice.path("origin")), city(slice.path("destination")), legs));
             }
             travellers.add(new Traveller((passenger.path("given_name").asString("") + " " + passenger.path("family_name").asString("")).trim(),
-                    passenger.path("type").asString("adult"), trips));
+                    passenger.path("type").asString("adult"), ticket(order, passengerId), trips));
         }
         return travellers;
+    }
+
+    /** Date de la réservation (« 21 octobre 2026 »), à l'heure de Dakar ; {@code null} si Duffel ne la donne pas. */
+    public static String bookedOn(JsonNode order, Locale locale) {
+        String createdAt = order.path("created_at").asString("");
+        try {
+            return createdAt.isEmpty() ? null
+                    : Instant.parse(createdAt).atZone(DAKAR).format(DateTimeFormatter.ofPattern("d MMMM yyyy", locale));
+        } catch (DateTimeParseException e) {
+            return null;
+        }
     }
 
     /** Modification et remboursement avant le départ ; {@code null} si Duffel ne donne aucune condition. */
@@ -230,6 +248,15 @@ public final class FlightItinerary {
         } catch (DateTimeParseException e) {
             return null;
         }
+    }
+
+    private static String ticket(JsonNode order, String passengerId) {
+        for (JsonNode document : order.path("documents")) {
+            if ("electronic_ticket".equals(document.path("type").asString()) && contains(document.path("passenger_ids"), passengerId)) {
+                return text(document.path("unique_identifier"));
+            }
+        }
+        return null;
     }
 
     private static boolean contains(JsonNode ids, String id) {
