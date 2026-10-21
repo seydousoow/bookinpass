@@ -28,7 +28,7 @@ public class WebhookController {
     private final DuffelWebhookService duffel;
 
     /**
-     * URL à déclarer chez Duffel : {@code https://bip.dicortex.com/api/webhooks/duffel}. Corps lu en octets : la
+     * URL à déclarer chez Duffel : {@code https://bip-back.dicortex.com/api/webhooks/duffel}. Corps lu en octets : la
      * signature porte sur le corps exact envoyé par Duffel.
      */
     @PostMapping(path = "/duffel", consumes = MediaType.APPLICATION_JSON_VALUE)

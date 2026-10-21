@@ -73,7 +73,7 @@ Clés : `STRIPE_SECRET_KEY`, `STRIPE_PUBLISHABLE_KEY` ; vides = 503 `payments-un
 retour après un moyen à redirection. Webhook signé : `POST /payments/webhooks/stripe` (`STRIPE_WEBHOOK_SECRET`,
 en-tête `Stripe-Signature` vérifié). Reste à faire : voir [STRIPE_INTEGRATION_TODO.md](../STRIPE_INTEGRATION_TODO.md).
 
-**Webhooks Duffel.** `POST /webhooks/duffel` (déclaré chez Duffel : `https://bip.dicortex.com/api/webhooks/duffel`) reçoit les événements Duffel (commandes, changements de vol décidés
+**Webhooks Duffel.** `POST /webhooks/duffel` (déclaré chez Duffel : `https://bip-back.dicortex.com/api/webhooks/duffel`) reçoit les événements Duffel (commandes, changements de vol décidés
 par la compagnie, paiements, `ping.triggered`), vérifie `X-Duffel-Signature` avec `DUFFEL_WEBHOOK_SECRET` et répond
 `{"success": true}`. Ils mettent à jour la commande enregistrée (`flight_order` : changée, annulation en cours, annulée, remboursement dans `flight_order_event`) et sont journalisés (changement de vol en WARN : le voyageur devra être prévenu).
 Un seul webhook par mode (test / production), en HTTPS, jamais `localhost` (en développement : tunnel ngrok).
