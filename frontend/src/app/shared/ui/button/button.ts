@@ -9,7 +9,7 @@ export type ButtonSize = 'sm' | 'md' | 'lg';
 
 const sizes = {
   sm: 'min-h-8 rounded-button px-3 py-1.5 text-xs',
-  md: 'min-h-10 rounded-button px-4 py-2 text-sm',
+  md: 'min-h-11 rounded-button px-4 py-2 text-sm',
   lg: 'min-h-12 rounded-button px-6 py-3 text-base',
 } as const;
 
@@ -41,7 +41,9 @@ const variants = {
     '[attr.tabindex]': '!isButton && nonInteractive() ? -1 : 0',
     '[attr.aria-expanded]': 'expanded()',
     '[attr.type]': 'type()',
-    'attr.role': 'button'
+    // `<button>` : désactivé nativement (aucun clic ne part, même vers les écouteurs de la page) ; `<a>` : annoncé.
+    '[attr.disabled]': 'isButton && nonInteractive() ? "" : null',
+    '[attr.aria-disabled]': '!isButton && nonInteractive() ? "true" : null',
   },
   template: `
     @if (loading()) {
@@ -93,8 +95,9 @@ export class Button {
   @HostListener('click', ['$event'])
   protected onClick(event: MouseEvent): void {
     if (this.nonInteractive()) {
+      // `<a bipButton>` n'a pas de `disabled` : le clic est arrêté ici, y compris pour les autres écouteurs de l'élément.
       event.preventDefault();
-      event.stopPropagation();
+      event.stopImmediatePropagation();
       return;
     }
 

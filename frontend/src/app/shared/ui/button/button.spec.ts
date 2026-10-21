@@ -1,6 +1,7 @@
 import { Component, signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
+import { TranslocoTestingModule } from '@jsverse/transloco';
 import { Button } from './button';
 
 /**
@@ -27,7 +28,10 @@ describe('Button', () => {
   let element: HTMLButtonElement;
 
   beforeEach(async () => {
-    await TestBed.configureTestingModule({ imports: [Host] }).compileComponents();
+    // Le spinner du chargement traduit son libellé.
+    await TestBed.configureTestingModule({
+      imports: [Host, TranslocoTestingModule.forRoot({ langs: { fr: {} }, translocoConfig: { availableLangs: ['fr'], defaultLang: 'fr' } })],
+    }).compileComponents();
     fixture = TestBed.createComponent(Host);
     host = fixture.componentInstance;
     element = fixture.debugElement.query(By.css('button')).nativeElement;

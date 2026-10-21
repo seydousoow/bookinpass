@@ -1,4 +1,6 @@
+import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
+import { TranslocoService } from '@jsverse/transloco';
 import { APP_CONFIG } from '@core/config/app-config.token';
 import { HttpClient } from '@angular/common/http';
 import { of, throwError } from 'rxjs';
@@ -13,7 +15,12 @@ const RATES: IExchangeRates = {
 
 function makeStore(response = of(RATES)) {
   TestBed.configureTestingModule({
-    providers: [{ provide: HttpClient, useValue: { get: () => response } }, { provide: APP_CONFIG, useValue: { production: false, apiBaseUrl: '/api' } }],
+    providers: [
+      { provide: HttpClient, useValue: { get: () => response } },
+      { provide: APP_CONFIG, useValue: { production: false, apiBaseUrl: '/api' } },
+      // Seule la langue active sert (libellés des devises).
+      { provide: TranslocoService, useValue: { activeLang: signal('fr') } },
+    ],
   });
   return TestBed.inject(CurrencyStore);
 }
@@ -50,7 +57,11 @@ describe('CurrencyStore', () => {
   });
 
   it('expose les devises servies par le backend', () => {
-    expect(makeStore().currencies().map((c) => c.code)).toEqual(['XOF', 'EUR', 'USD']);
+    expect(
+      makeStore()
+        .currencies()
+        .map((c) => c.code),
+    ).toEqual(['XOF', 'EUR', 'USD']);
   });
 
   it('mémorise le choix de l’utilisateur', () => {
@@ -61,10 +72,7 @@ describe('CurrencyStore', () => {
   });
 
   it('oublie une devise que le backend ne sert plus', () => {
-    TestBed.configureTestingModule({
-      providers: [{ provide: HttpClient, useValue: { get: () => of(RATES) } }, { provide: APP_CONFIG, useValue: { production: false, apiBaseUrl: '/api' } }],
-    });
-    const store = TestBed.inject(CurrencyStore);
+    const store = makeStore();
     store.selected.set('GBP');
     (store as unknown as { loadRates(): void })['loadRates']();
     expect(store.selected()).toBe('XOF');
