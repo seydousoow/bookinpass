@@ -1,4 +1,4 @@
-import { IStayRate, IStayResult, IStayRoom } from '@shared/models';
+import { IStayRate, IStayResult, IStayRoom } from '@shared/models/stay.model';
 import { cancellationPolicy, findRate, roomsByPrice } from './rate.util';
 
 const rate = (id: string, total: string, timeline: { before: string; refund_amount: string }[] = []): IStayRate =>

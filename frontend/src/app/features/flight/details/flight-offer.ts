@@ -9,19 +9,15 @@ import { APP_CONFIG } from '@core/config/app-config.token';
 import { TranslocoLocaleService } from '@jsverse/transloco-locale';
 import { NgIcon, provideIcons } from '@ng-icons/core';
 import { heroCheck, heroChevronDown, heroInformationCircle, heroUser } from '@ng-icons/heroicons/outline';
-import { Button, Modal, Spinner, TextInput } from '@shared/ui';
+import { Button } from '@shared/ui/button/button';
+import { TextInput } from '@shared/ui/input/input';
+import { Modal } from '@shared/ui/modal/modal';
+import { Spinner } from '@shared/ui/spinner/spinner';
 import { isValidPhone, PhoneInput } from '@shared/ui/phone-input/phone-input';
-import {
-  IFlightOfferDetails,
-  IFlightOfferResponse,
-  IIntendedService,
-  IOfferSlice,
-  IPassengerUpdate,
-  ISeatChoice,
-  IUpsellOffersResponse,
-  TBaggageType,
-  TPassengerType,
-} from '@shared/models';
+import { IFlightOfferDetails, IFlightOfferResponse, IPassengerUpdate, IUpsellOffersResponse } from '@shared/models/flight-offer.model';
+import { IIntendedService, IOfferSlice } from '@shared/models/flight.model';
+import { TBaggageType, TPassengerType } from '@shared/models/search.model';
+import { ISeatChoice } from '@shared/models/seat-map.model';
 import { ITravelerInfo, TravelerForm } from './traveler-form/traveler-form';
 import { Router } from '@angular/router';
 import { BipOfferPriceDetails } from '@features/flight/details/price-details/offer-price-details';
@@ -59,7 +55,6 @@ interface ITravelerCard {
 }
 
 const BAGGAGE_TYPES: readonly TBaggageType[] = ['checked', 'carry_on'];
-
 
 /** Offre retirée ou expirée chez Duffel ; une coupure réseau, elle, ne prouve rien. */
 const isGone = (error: unknown): boolean =>
@@ -218,7 +213,9 @@ export class FlightOffer {
       email(path.email, { message: 'flight.offer.contact.email-invalid' });
       // Duffel l'exige pour chaque voyageur, au format international.
       required(path.phone, { message: 'common.required-field' });
-      validate(path.phone, ({ value }) => (!value() || isValidPhone(value()) ? null : { kind: 'phone', message: 'flight.offer.contact.phone-invalid' }));
+      validate(path.phone, ({ value }) =>
+        !value() || isValidPhone(value()) ? null : { kind: 'phone', message: 'flight.offer.contact.phone-invalid' },
+      );
     },
     { name: 'contact' },
   );

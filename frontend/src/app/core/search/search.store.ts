@@ -1,5 +1,5 @@
 import { Service, signal } from '@angular/core';
-import { IPersistedFlightSearch } from '@shared/models';
+import { IPersistedFlightSearch } from '@shared/models/search.model';
 
 const STORAGE_KEY = 'bip.search';
 

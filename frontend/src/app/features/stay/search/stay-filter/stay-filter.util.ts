@@ -1,4 +1,4 @@
-import { IStayResult, TStayAmenity } from '@shared/models';
+import { IStayResult, TStayAmenity } from '@shared/models/stay.model';
 import { staySellingTotal } from '@core/money/pricing';
 
 export type TStaySort = 'price' | 'rating' | 'reviews';

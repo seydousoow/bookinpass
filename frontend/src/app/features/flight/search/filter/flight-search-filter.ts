@@ -1,7 +1,14 @@
 import { Component, computed, effect, inject, input, model, signal, untracked } from '@angular/core';
-import { IAirlineFilter, ISelectOption } from '@shared/models';
+import { IAirlineFilter } from '@shared/models/search.model';
+import { ISelectOption } from '@shared/models/select.model';
 import { CdkTrapFocus } from '@angular/cdk/a11y';
-import { Badge, Button, Checkbox, lockScrollWhile, Overlay, RadioGroup, Viewport } from '@shared/ui';
+import { Badge } from '@shared/ui/badge/badge';
+import { Button } from '@shared/ui/button/button';
+import { Checkbox } from '@shared/ui/checkbox/checkbox';
+import { Overlay } from '@shared/ui/overlay/overlay';
+import { RadioGroup } from '@shared/ui/radio-group/radio-group';
+import { lockScrollWhile } from '@shared/ui/scroll-lock/scroll-lock';
+import { Viewport } from '@shared/ui/viewport/viewport';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { IFlightOffer } from '@shared/models/flight.model';
 import { CurrencyStore } from '@core/money/currency.store';
@@ -31,7 +38,10 @@ export class FlightSearchFilter {
   /** Feuille plein écran ouverte — sans effet au-delà du point de rupture mobile (`md:`). */
   protected readonly open = signal(false);
   protected readonly filtering = computed(() => isFlightFiltering(this.value()));
-  protected readonly stopOptions: readonly ISelectOption<number>[] = STOP_OPTIONS.map((value) => ({ label: `search.filter.stops.max.${value}`, value }));
+  protected readonly stopOptions: readonly ISelectOption<number>[] = STOP_OPTIONS.map((value) => ({
+    label: `search.filter.stops.max.${value}`,
+    value,
+  }));
   protected readonly bagOptions = [
     { key: 'cabinBag', label: 'search.filter.bags.cabin' },
     { key: 'holdBag', label: 'search.filter.bags.hold' },
@@ -77,7 +87,6 @@ export class FlightSearchFilter {
   });
   /** Sans plafond choisi, le curseur couvre toute la fourchette des offres. */
   protected readonly budget = computed((): PriceRange => this.value().price ?? { min: 0, max: this.maxPrice() });
-
 
   constructor() {
     effect(() => {

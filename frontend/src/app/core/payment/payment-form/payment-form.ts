@@ -9,7 +9,7 @@ import {
   StripeCheckoutFormLoadActionsSuccess,
   StripeCheckoutSession,
 } from '@stripe/stripe-js';
-import { Spinner } from '@shared/ui';
+import { Spinner } from '@shared/ui/spinner/spinner';
 import { formatMoney } from '@core/money/money';
 import { ICheckoutSession } from '../payment.service';
 

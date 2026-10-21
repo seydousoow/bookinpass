@@ -1,6 +1,8 @@
 import { Component, computed, input, signal } from '@angular/core';
 import { NgIcon } from '@ng-icons/core';
-import { IFlightOfferDetails, ISeatChoice, TPassengerType } from '@shared/models';
+import { IFlightOfferDetails } from '@shared/models/flight-offer.model';
+import { TPassengerType } from '@shared/models/search.model';
+import { ISeatChoice } from '@shared/models/seat-map.model';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { MoneyPipe } from '@core/money/money.pipe';
 import { extraBagsAmount, IExtraBagLine } from '../extra-bags/extra-bags.util';
@@ -42,7 +44,10 @@ export class BipOfferPriceDetails {
   private readonly seatPrices = computed(() => {
     const currency = this.offer().total_currency;
     return new Map(
-      this.seats().map((s) => [s.serviceId, s.duffelAmount ? Number(s.duffelAmount) : roundMoney(Number(s.amount) / (1 + ANCILLARY_MARKUP), currency)]),
+      this.seats().map((s) => [
+        s.serviceId,
+        s.duffelAmount ? Number(s.duffelAmount) : roundMoney(Number(s.amount) / (1 + ANCILLARY_MARKUP), currency),
+      ]),
     );
   });
   /** Tarif de base du billet seul : Duffel y ajoute les services prévus, affichés (majorés) sur leurs propres lignes. */

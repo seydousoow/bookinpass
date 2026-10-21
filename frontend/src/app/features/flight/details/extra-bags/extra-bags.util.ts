@@ -1,4 +1,6 @@
-import { IBaggageServiceMetadata, IFlightOfferDetails, IService, TBaggageType } from '@shared/models';
+import { IFlightOfferDetails } from '@shared/models/flight-offer.model';
+import { IBaggageServiceMetadata, IService } from '@shared/models/flight.model';
+import { TBaggageType } from '@shared/models/search.model';
 import { ancillaryPrice } from '@core/money/pricing';
 
 /** Bagages supplémentaires retenus : identifiant du service Duffel → quantité. */
@@ -48,7 +50,12 @@ export function extraBagGroups(offer: IFlightOfferDetails, passengerId: string):
     const lastSegment = anchored[0]?.segment_ids.at(-1) ?? segment.id;
     const options = anchored.map((service) => {
       const metadata = service.metadata as IBaggageServiceMetadata;
-      return { service, bagType: metadata.type, weightKg: metadata.maximum_weight_kg, price: ancillaryPrice(service.total_amount, service.total_currency) };
+      return {
+        service,
+        bagType: metadata.type,
+        weightKg: metadata.maximum_weight_kg,
+        price: ancillaryPrice(service.total_amount, service.total_currency),
+      };
     });
     groups.push({ segmentId: segment.id, route: `${segment.origin.iata_code} → ${airport(lastSegment, 'destination')}`, options });
   }

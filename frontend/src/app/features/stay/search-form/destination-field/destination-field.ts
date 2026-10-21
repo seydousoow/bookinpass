@@ -7,8 +7,8 @@ import { NgIcon, provideIcons } from '@ng-icons/core';
 import { heroMapPinSolid, heroXMarkSolid } from '@ng-icons/heroicons/solid';
 import { TranslocoDirective, TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { catchError, debounceTime, distinctUntilChanged, EMPTY, filter, finalize, map, of, switchMap } from 'rxjs';
-import { IStayDestination } from '@shared/models';
-import { Spinner } from '@shared/ui';
+import { IStayDestination } from '@shared/models/stay.model';
+import { Spinner } from '@shared/ui/spinner/spinner';
 import { isDestinationId, StayDestinationService } from './stay-destination.service';
 
 const SEARCH_MIN_LENGTH = 2;

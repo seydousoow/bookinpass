@@ -1,23 +1,17 @@
+import { AirportStore } from '@core/reference/airport.store';
 import { Component, computed, effect, inject, input, signal, untracked } from '@angular/core';
 import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
 import { ISelectOption } from '@shared/models/select.model';
 import { CABIN_CLASSES, IFlightSearch, TCabinClass, TTripType } from '@shared/models/search.model';
 import { SearchStore } from '@core/search/search.store';
-import {
-  Button,
-  DatePicker,
-  DatePickerMode,
-  fromIso,
-  isAfterDay,
-  isBeforeDay,
-  isValidPassengerCount,
-  LocationField,
-  PassengerSelector,
-  RadioGroup,
-  Select,
-  todayIso,
-  toIso,
-} from '@shared/ui';
+import { Button } from '@shared/ui/button/button';
+import { DatePicker, DatePickerMode } from '@shared/ui/date-picker/date-picker';
+import { fromIso, isAfterDay, isBeforeDay, todayIso, toIso } from '@shared/ui/date-picker/date-utils';
+import { LocationField } from '@shared/ui/location-field/location-field';
+import { PassengerSelector } from '@shared/ui/people-selector/passenger-selector';
+import { isValidPassengerCount } from '@shared/ui/people-selector/passenger.helper';
+import { RadioGroup } from '@shared/ui/radio-group/radio-group';
+import { Select } from '@shared/ui/select/select';
 import { form, FormField, FormRoot, required, validate } from '@angular/forms/signals';
 import { Router } from '@angular/router';
 
@@ -121,6 +115,7 @@ export class FlightSearchForm {
   });
   private readonly router = inject(Router);
   private readonly searchStore = inject(SearchStore);
+  protected readonly airports = inject(AirportStore);
   private readonly restoredFromStorage = signal(false);
 
   constructor() {

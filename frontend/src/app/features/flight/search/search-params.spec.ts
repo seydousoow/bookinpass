@@ -1,4 +1,4 @@
-import { toIso } from '@shared/ui';
+import { toIso } from '@shared/ui/date-picker/date-utils';
 import { parseSearchParams } from './search-params';
 
 const inDays = (days: number): string => {

@@ -2,7 +2,7 @@ import { inject, Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { APP_CONFIG } from '@core/config/app-config.token';
-import { IStayDestination } from '@shared/models';
+import { IStayDestination } from '@shared/models/stay.model';
 
 /** Destinations d'hébergement : villes GeoNames servies par le backend. */
 @Injectable({ providedIn: 'root' })

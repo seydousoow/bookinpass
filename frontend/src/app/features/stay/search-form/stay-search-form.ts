@@ -2,8 +2,10 @@ import { Component, computed, effect, inject, input, signal, untracked } from '@
 import { form, FormField, FormRoot, required, validate } from '@angular/forms/signals';
 import { Router } from '@angular/router';
 import { TranslocoDirective } from '@jsverse/transloco';
-import { Button, DatePicker, fromIso, isAfterDay, isBeforeDay, todayIso, toIso } from '@shared/ui';
-import { IStaySearch } from '@shared/models';
+import { Button } from '@shared/ui/button/button';
+import { DatePicker } from '@shared/ui/date-picker/date-picker';
+import { fromIso, isAfterDay, isBeforeDay, todayIso, toIso } from '@shared/ui/date-picker/date-utils';
+import { IStaySearch } from '@shared/models/stay.model';
 import { StaySearchStore } from '@core/search/stay-search.store';
 import { isValidStayGuests, maxCheckIn, nightsBetween, STAY_LIMITS, toStayQueryParams } from '../search/stay-search-params';
 import { GuestSelector } from './guest-selector/guest-selector';

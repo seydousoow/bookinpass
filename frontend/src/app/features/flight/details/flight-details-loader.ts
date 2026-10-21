@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { Spinner } from '@shared/ui';
+import { Spinner } from '@shared/ui/spinner/spinner';
 
 @Component({
   selector: 'bip-flight-details-loader',

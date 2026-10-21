@@ -3,8 +3,8 @@ import { NgTemplateOutlet } from '@angular/common';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { NgIcon, provideIcons } from '@ng-icons/core';
 import { heroCheckCircle, heroQuestionMarkCircle, heroXCircle } from '@ng-icons/heroicons/outline';
-import { Modal } from '@shared/ui';
-import { IFlightOfferDetails } from '@shared/models';
+import { Modal } from '@shared/ui/modal/modal';
+import { IFlightOfferDetails } from '@shared/models/flight-offer.model';
 import { conditionFlag, conditionLabel, offerChangeLabel } from './conditions.util';
 import { MoneyPipe } from '@core/money/money.pipe';
 
@@ -39,5 +39,4 @@ export class OfferConditions {
       ],
     })),
   );
-
 }

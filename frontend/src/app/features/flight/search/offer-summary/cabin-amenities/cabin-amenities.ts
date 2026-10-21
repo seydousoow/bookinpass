@@ -2,7 +2,7 @@ import { Component, computed, input } from '@angular/core';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { NgIcon, provideIcons } from '@ng-icons/core';
 import { heroArrowsPointingOut, heroBolt, heroWifi } from '@ng-icons/heroicons/outline';
-import { ICabinAmenities, IFlightSegment } from '@shared/models';
+import { ICabinAmenities, IFlightSegment } from '@shared/models/flight.model';
 
 interface ICabinLine {
   readonly id: string;

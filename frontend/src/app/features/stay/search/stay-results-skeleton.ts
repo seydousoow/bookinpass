@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { Spinner } from '@shared/ui';
+import { Spinner } from '@shared/ui/spinner/spinner';
 
 /** Attente des résultats : trois cartes fantômes et l'annonce du chargement. */
 @Component({
@@ -7,7 +7,7 @@ import { Spinner } from '@shared/ui';
   imports: [Spinner],
   template: `
     <div class="flex flex-col gap-3 py-4">
-      <bip-spinner class="self-center" label="stay.search.loading" showLabel size="md"/>
+      <bip-spinner class="self-center" label="stay.search.loading" showLabel size="md" />
       @for (card of cards; track card) {
         <div aria-hidden="true" class="rounded-card border-border-subtle flex animate-pulse overflow-hidden border max-sm:flex-col">
           <div class="bg-surface-muted h-40 sm:w-56"></div>

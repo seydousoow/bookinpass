@@ -5,8 +5,10 @@ import { TranslocoDirective } from '@jsverse/transloco';
 import { TranslocoLocaleService } from '@jsverse/transloco-locale';
 import { NgIcon, provideIcons } from '@ng-icons/core';
 import { heroDocumentText } from '@ng-icons/heroicons/outline';
-import { Button, formatDuration } from '@shared/ui';
-import { IFlightOfferDetails, IFlightSegment } from '@shared/models';
+import { Button } from '@shared/ui/button/button';
+import { formatDuration } from '@shared/ui/utils';
+import { IFlightOfferDetails } from '@shared/models/flight-offer.model';
+import { IFlightSegment } from '@shared/models/flight.model';
 import { OfferConditions } from '../offer-conditions/offer-conditions';
 
 /** Résumé du vol : compagnie vendeuse, chaque segment avec son appareil, et accès aux conditions du billet. */

@@ -2,7 +2,10 @@ import { Component, inject, OnInit, signal } from '@angular/core';
 import { CurrencyStore } from '@core/money/currency.store';
 import { RouterOutlet } from '@angular/router';
 import { TranslocoService } from '@jsverse/transloco';
-import { Footer, FooterColumn, Header, NavEntry } from '@shared/ui';
+// Par leur chemin, pas par le barrel `@shared/ui` : il entraînerait tout le kit (date-picker, recherche d'aéroports,
+// CDK…) dans le chargement initial au lieu des pages qui s'en servent.
+import { Footer, FooterColumn } from '@shared/ui/footer/footer';
+import { Header, NavEntry } from '@shared/ui/header/header';
 import { firstValueFrom } from 'rxjs';
 import { ICurrencyOption } from '@shared/models/money.model';
 import { injectSpeedInsights } from '@vercel/speed-insights';

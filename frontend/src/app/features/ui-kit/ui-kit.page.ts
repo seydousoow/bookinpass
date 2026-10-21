@@ -1,15 +1,17 @@
 import { Component, inject, signal } from '@angular/core';
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { AirportStore } from '@shared/ui/location-field/airport.store';
+import { AirportStore } from '@core/reference/airport.store';
 import { appError } from '@shared/models/app-error';
 import { CurrencyStore } from '@core/money/currency.store';
 import { formatXof } from '@core/money/money';
 import { SystemStatus } from '@shared/models/system-state';
 import { ISelectOption } from '@shared/models/select.model';
 import { IPlaceSelection } from '@shared/models/place.model';
-import { BadgeTone, ButtonSize, ButtonVariant, IPassengerCount } from '@shared/ui';
+import { BadgeTone } from '@shared/ui/badge/badge';
+import { ButtonSize, ButtonVariant } from '@shared/ui/button/button';
+import { IPassengerCount } from '@shared/ui/people-selector/passenger.helper';
 import { disabled, form, minLength, required } from '@angular/forms/signals';
-import { IDateRangeValue } from '@shared/models';
+import { IDateRangeValue } from '@shared/models/search.model';
 
 interface formModel {
   cabin: string[];

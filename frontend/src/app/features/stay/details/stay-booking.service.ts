@@ -2,7 +2,7 @@ import { inject, Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { map, Observable } from 'rxjs';
 import { APP_CONFIG } from '@core/config/app-config.token';
-import { IStayQuote, IStayQuoteResponse, IStayResult, IStayResultResponse, IStayReviewsResponse } from '@shared/models';
+import { IStayQuote, IStayQuoteResponse, IStayResult, IStayResultResponse, IStayReviewsResponse } from '@shared/models/stay.model';
 
 /** Appels de la réservation d'hébergement hors chargement initial (qui passe par `httpResource`). */
 @Injectable({ providedIn: 'root' })

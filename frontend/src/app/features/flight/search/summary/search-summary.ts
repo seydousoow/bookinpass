@@ -3,9 +3,11 @@ import { TranslocoDirective } from '@jsverse/transloco';
 import { NgIcon, provideIcons } from '@ng-icons/core';
 import { heroArrowRight, heroArrowsRightLeft } from '@ng-icons/heroicons/outline';
 import { DatePipe } from '@core/i18n/date.pipe';
-import { IFlightSearch } from '@shared/models';
-import { Button, Modal, Viewport } from '@shared/ui';
-import { AirportStore } from '@shared/ui/location-field/airport.store';
+import { IFlightSearch } from '@shared/models/search.model';
+import { Button } from '@shared/ui/button/button';
+import { Modal } from '@shared/ui/modal/modal';
+import { Viewport } from '@shared/ui/viewport/viewport';
+import { AirportStore } from '@core/reference/airport.store';
 import { FlightSearchForm } from '@features/flight/search-form/flight-search-form';
 
 /**

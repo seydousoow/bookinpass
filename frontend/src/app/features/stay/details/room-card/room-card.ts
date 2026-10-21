@@ -1,6 +1,6 @@
 import { Component, computed, input, output } from '@angular/core';
 import { TranslocoDirective } from '@jsverse/transloco';
-import { IStayRate, IStayRoom } from '@shared/models';
+import { IStayRate, IStayRoom } from '@shared/models/stay.model';
 import { StayPhoto } from '../../ui/stay-photo';
 import { RateOption } from '../rate-option/rate-option';
 
@@ -11,7 +11,7 @@ import { RateOption } from '../rate-option/rate-option';
   template: `
     <article
       *transloco="let t; prefix: 'stay.room'"
-      class="rounded-card border-border-subtle bg-surface-muted grid gap-3 border p-3 md:grid-cols-[12rem_1fr] shadow-md">
+      class="rounded-card border-border-subtle bg-surface-muted grid gap-3 border p-3 shadow-md md:grid-cols-[12rem_1fr]">
       <div class="space-y-2">
         <bip-stay-photo
           [alt]="room().name"

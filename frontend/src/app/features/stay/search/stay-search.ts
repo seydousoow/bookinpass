@@ -9,8 +9,12 @@ import { heroAdjustmentsHorizontal, heroMagnifyingGlass } from '@ng-icons/heroic
 import { APP_CONFIG } from '@core/config/app-config.token';
 import { CurrencyStore } from '@core/money/currency.store';
 import { StaySearchStore } from '@core/search/stay-search.store';
-import { ISelectOption, IStayDestination, IStayResult, IStaySearchResponse } from '@shared/models';
-import { Button, Modal, Select, Viewport } from '@shared/ui';
+import { ISelectOption } from '@shared/models/select.model';
+import { IStayDestination, IStayResult, IStaySearchResponse } from '@shared/models/stay.model';
+import { Button } from '@shared/ui/button/button';
+import { Modal } from '@shared/ui/modal/modal';
+import { Select } from '@shared/ui/select/select';
+import { Viewport } from '@shared/ui/viewport/viewport';
 import { StaySearchForm } from '../search-form/stay-search-form';
 import { StayCard } from './stay-card/stay-card';
 import { StayFilter } from './stay-filter/stay-filter';
@@ -72,7 +76,7 @@ export class StaySearch {
     if (!search) {
       return undefined;
     }
-    return {url: `${this.apiBaseUrl}/stays/search`, params: toStayQueryParams(search)};
+    return { url: `${this.apiBaseUrl}/stays/search`, params: toStayQueryParams(search) };
   });
   protected readonly loading = this.resource.isLoading;
   /** Panne côté API (hors critères refusés, qui renvoient à l'accueil des hébergements) : on propose de relancer. */

@@ -3,8 +3,9 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { finalize } from 'rxjs';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { DatePipe } from '@core/i18n/date.pipe';
-import { IStayReview } from '@shared/models';
-import { Button, Spinner } from '@shared/ui';
+import { IStayReview } from '@shared/models/stay.model';
+import { Button } from '@shared/ui/button/button';
+import { Spinner } from '@shared/ui/spinner/spinner';
 import { ReviewScore } from '../../ui/review-score';
 import { StayBookingService } from '../stay-booking.service';
 

@@ -7,7 +7,8 @@ import {
   heroQuestionMarkCircleSolid,
   heroShoppingBagSolid,
 } from '@ng-icons/heroicons/solid';
-import { Button, Viewport } from '@shared/ui';
+import { Button } from '@shared/ui/button/button';
+import { Viewport } from '@shared/ui/viewport/viewport';
 import { IFlightOffer, IFlightSegment, IOfferSlice } from '@shared/models/flight.model';
 import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
 import { MoneyPipe } from '@core/money/money.pipe';

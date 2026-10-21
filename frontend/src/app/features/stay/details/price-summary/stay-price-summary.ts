@@ -1,7 +1,7 @@
 import { Component, computed, input } from '@angular/core';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { DatePipe } from '@core/i18n/date.pipe';
-import { IStayQuote, IStayResult } from '@shared/models';
+import { IStayQuote, IStayResult } from '@shared/models/stay.model';
 import { nightsBetween } from '../../search/stay-search-params';
 import { IRateChoice } from '../rate.util';
 import { MoneyPipe } from '@core/money/money.pipe';

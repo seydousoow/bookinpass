@@ -3,8 +3,8 @@ import { NgTemplateOutlet } from '@angular/common';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { NgIcon, provideIcons } from '@ng-icons/core';
 import { heroCheck, heroMinus } from '@ng-icons/heroicons/outline';
-import { Button } from '@shared/ui';
-import { IFlightOfferDetails } from '@shared/models';
+import { Button } from '@shared/ui/button/button';
+import { IFlightOfferDetails } from '@shared/models/flight-offer.model';
 import { conditionFlag, conditionLabel, offerChangeLabel } from '../offer-conditions/conditions.util';
 import { MoneyPipe } from '@core/money/money.pipe';
 import { sellingTotal } from '@core/money/pricing';
@@ -40,11 +40,13 @@ export class FareOptions {
         checked: count('checked'),
         carryOn: count('carry_on'),
         refund: conditionLabel('refund', offer.conditions?.refund_before_departure),
-        change: offerChangeLabel(offer.conditions?.change_before_departure, offer.slices.map((s) => s.conditions?.change_before_departure)),
+        change: offerChangeLabel(
+          offer.conditions?.change_before_departure,
+          offer.slices.map((s) => s.conditions?.change_before_departure),
+        ),
         seat: conditionFlag(slice?.conditions?.advance_seat_selection),
         boarding: conditionFlag(slice?.conditions?.priority_boarding),
       };
     });
   });
-
 }

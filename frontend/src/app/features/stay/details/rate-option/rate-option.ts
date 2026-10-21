@@ -3,7 +3,7 @@ import { TranslocoDirective } from '@jsverse/transloco';
 import { DatePipe } from '@core/i18n/date.pipe';
 import { NgIcon, provideIcons } from '@ng-icons/core';
 import { heroCheck, heroChevronDown } from '@ng-icons/heroicons/outline';
-import { IStayRate } from '@shared/models';
+import { IStayRate } from '@shared/models/stay.model';
 import { cancellationPolicy } from '../rate.util';
 import { MoneyPipe } from '@core/money/money.pipe';
 import { staySellingTotal } from '@core/money/pricing';

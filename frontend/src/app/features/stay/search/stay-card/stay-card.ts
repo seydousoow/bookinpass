@@ -2,8 +2,8 @@ import { ChangeDetectionStrategy, Component, computed, input, output } from '@an
 import { TranslocoDirective } from '@jsverse/transloco';
 import { NgIcon, provideIcons } from '@ng-icons/core';
 import { heroMapPin } from '@ng-icons/heroicons/outline';
-import { IStayResult } from '@shared/models';
-import { Button } from '@shared/ui';
+import { IStayResult } from '@shared/models/stay.model';
+import { Button } from '@shared/ui/button/button';
 import { nightsBetween } from '../stay-search-params';
 import { StarRating } from '../../ui/star-rating';
 import { ReviewScore } from '../../ui/review-score';

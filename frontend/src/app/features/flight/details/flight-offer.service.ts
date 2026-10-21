@@ -2,7 +2,8 @@ import { inject, Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { map, Observable } from 'rxjs';
 import { APP_CONFIG } from '@core/config/app-config.token';
-import { IFlightOfferDetails, IFlightOfferResponse, IIntendedService, IPassengerUpdate } from '@shared/models';
+import { IFlightOfferDetails, IFlightOfferResponse, IPassengerUpdate } from '@shared/models/flight-offer.model';
+import { IIntendedService } from '@shared/models/flight.model';
 import { IIdentityDocument } from './traveler-form/traveler-form';
 
 /** Voyageur tel que Duffel le réserve (`POST /flights/orders`). */

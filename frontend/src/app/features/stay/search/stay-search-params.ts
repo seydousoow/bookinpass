@@ -1,7 +1,8 @@
 import { inject } from '@angular/core';
 import { CanActivateFn, Router } from '@angular/router';
-import { IStayGuests, IStaySearch } from '@shared/models';
-import { fromIso, IsoDate, todayIso, toIso } from '@shared/ui';
+import { IStayGuests, IStaySearch } from '@shared/models/stay.model';
+// Par leur chemin : chargé au démarrage (routes), le barrel `@shared/ui` y ajouterait tout le kit.
+import { fromIso, IsoDate, todayIso, toIso } from '@shared/ui/date-picker/date-utils';
 
 /** Paramètres de l'URL de recherche d'hébergement, tels que le routeur les donne. */
 export interface IStaySearchParams {

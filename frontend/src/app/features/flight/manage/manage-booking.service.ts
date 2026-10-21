@@ -2,7 +2,7 @@ import { inject, Injectable, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, tap } from 'rxjs';
 import { APP_CONFIG } from '@core/config/app-config.token';
-import { IFlightSegment, IOfferSlice } from '@shared/models';
+import { IFlightSegment, IOfferSlice } from '@shared/models/flight.model';
 
 /** Accès à une réservation : PNR + nom de famille d'un voyageur (vérifiés par le serveur à chaque appel). */
 export interface IBookingAccess {

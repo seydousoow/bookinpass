@@ -5,7 +5,10 @@ import { heroCheckCircle, heroHeart, heroPencilSquare, heroShare, heroXMark } fr
 
 import { TranslocoDirective } from '@jsverse/transloco';
 
-import { Button, formatDuration, lockScrollWhile, Overlay } from '@shared/ui';
+import { Button } from '@shared/ui/button/button';
+import { Overlay } from '@shared/ui/overlay/overlay';
+import { lockScrollWhile } from '@shared/ui/scroll-lock/scroll-lock';
+import { formatDuration } from '@shared/ui/utils';
 import { IFlightOffer, IOfferSlice } from '@shared/models/flight.model';
 import { FlightSegmentComponent } from '@features/flight/search/offer-summary/flight-segment';
 import { CabinAmenities } from '@features/flight/search/offer-summary/cabin-amenities/cabin-amenities';

@@ -4,10 +4,12 @@ import { ViewportScroller } from '@angular/common';
 import { HttpErrorResponse, HttpStatusCode, httpResource } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { TranslocoDirective } from '@jsverse/transloco';
-import { Button, Pagination, Spinner } from '@shared/ui';
+import { Button } from '@shared/ui/button/button';
+import { Pagination } from '@shared/ui/pagination/pagination';
+import { Spinner } from '@shared/ui/spinner/spinner';
 import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
 import { debounceTime, EMPTY, map, switchMap, timer } from 'rxjs';
-import { IFlightSearchResult, TTripType } from '@shared/models';
+import { IFlightSearchResult, TTripType } from '@shared/models/search.model';
 import { SearchSkeleton } from '@features/flight/search/skeleton/search-skeleton';
 import { SearchSummary } from '@features/flight/search/summary/search-summary';
 import { FlightSearchFilter } from '@features/flight/search/filter/flight-search-filter';
@@ -82,7 +84,7 @@ export class FlightSearch {
     return { url: `${this.apiBaseUrl}/flights/search`, params };
   });
   readonly loading = this.searchResource.isLoading;
-  readonly offers = computed(() => this.searchResource.hasValue() ? this.searchResource.value().data.offers : undefined);
+  readonly offers = computed(() => (this.searchResource.hasValue() ? this.searchResource.value().data.offers : undefined));
   readonly hasOffers = computed(() => (this.offers()?.length ?? 0) > 0);
   /** Critères du panneau de filtres ; remis à zéro à chaque nouvelle recherche. */
   protected readonly filter = signal<IFlightFilter>(NO_FLIGHT_FILTER);

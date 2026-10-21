@@ -3,8 +3,15 @@ import { form, FormField, FormRoot, maxLength, metadata, pattern, REQUIRED, requ
 import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
 import { NgIcon, provideIcons } from '@ng-icons/core';
 import { heroXMark } from '@ng-icons/heroicons/outline';
-import { Button, Modal, Select, TextInput, todayIso } from '@shared/ui';
-import { COUNTRY_CODES, ILoyaltyProgrammeAccount, ISelectOption, TPassengerType } from '@shared/models';
+import { Button } from '@shared/ui/button/button';
+import { todayIso } from '@shared/ui/date-picker/date-utils';
+import { TextInput } from '@shared/ui/input/input';
+import { Modal } from '@shared/ui/modal/modal';
+import { Select } from '@shared/ui/select/select';
+import { COUNTRY_CODES } from '@shared/models/country.model';
+import { ILoyaltyProgrammeAccount } from '@shared/models/flight.model';
+import { TPassengerType } from '@shared/models/search.model';
+import { ISelectOption } from '@shared/models/select.model';
 import { AirlineStore } from '@core/reference/airline.store';
 
 export type TPassengerTitle = 'mr' | 'ms' | 'miss';

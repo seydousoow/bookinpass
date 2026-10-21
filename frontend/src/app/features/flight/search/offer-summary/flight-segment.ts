@@ -1,10 +1,10 @@
 import { Component, inject, input } from '@angular/core';
-import { IFlightSegment } from '@shared/models';
+import { IFlightSegment } from '@shared/models/flight.model';
 import { NgOptimizedImage, TitleCasePipe } from '@angular/common';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { NgIcon, provideIcons } from '@ng-icons/core';
 import { TranslocoLocaleService } from '@jsverse/transloco-locale';
-import { formatDuration } from '@shared/ui';
+import { formatDuration } from '@shared/ui/utils';
 import { heroClock } from '@ng-icons/heroicons/outline';
 
 @Component({

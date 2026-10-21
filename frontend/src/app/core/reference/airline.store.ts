@@ -1,6 +1,6 @@
 import { computed, inject, Injectable } from '@angular/core';
 import { httpResource } from '@angular/common/http';
-import { IAirlineReference } from '@shared/models';
+import { IAirlineReference } from '@shared/models/airline.model';
 import { APP_CONFIG } from '@core/config/app-config.token';
 
 /**

@@ -1,15 +1,13 @@
-// noinspection ES6PreferShortImport
-
 import { inject, Injectable, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { IAirport } from '../../models/place.model';
-import { APP_CONFIG } from '../../../core/config/app-config.token';
+import { IAirport } from '@shared/models/place.model';
+import { APP_CONFIG } from '@core/config/app-config.token';
 
 /**
  * Référentiel des points de départ / d'arrivée.
  *
  * Le jeu de données vient du backend (`GET /api/airports`, mis en cache côté
- * serveur). Le composant appelant n'en sait rien : seule cette classe connaît l'URL.
+ * serveur). Seule cette classe connaît l'URL ; le champ de lieu (`bip-location-field`) reçoit la liste en entrée.
  */
 @Injectable({ providedIn: 'root' })
 export class AirportStore {

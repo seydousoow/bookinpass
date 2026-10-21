@@ -1,7 +1,9 @@
 import { inject } from '@angular/core';
 import { CanActivateFn, Router } from '@angular/router';
-import { CABIN_CLASSES, IFlightSearch, TCabinClass } from '@shared/models';
-import { fromIso, IsoDate, isValidPassengerCount, todayIso, toIso } from '@shared/ui';
+import { CABIN_CLASSES, IFlightSearch, TCabinClass } from '@shared/models/search.model';
+// Par leur chemin : ce garde est chargé au démarrage (routes), le barrel `@shared/ui` y ajouterait tout le kit.
+import { fromIso, IsoDate, todayIso, toIso } from '@shared/ui/date-picker/date-utils';
+import { isValidPassengerCount } from '@shared/ui/people-selector/passenger.helper';
 
 /** Paramètres de l'URL de recherche, tels que le routeur les donne (chaînes, ou absents). */
 export interface ISearchParams {

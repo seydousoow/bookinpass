@@ -1,6 +1,6 @@
 // noinspection ES6PreferShortImport
 
-import { booleanAttribute, Component, computed, effect, inject, input, model, output, signal } from '@angular/core';
+import { booleanAttribute, Component, computed, effect, input, model, output, signal } from '@angular/core';
 import { FormValueControl, ValidationError, WithOptionalFieldTree } from '@angular/forms/signals';
 import { Combobox, ComboboxPopup, ComboboxWidget } from '@angular/aria/combobox';
 import { Listbox, Option } from '@angular/aria/listbox';
@@ -11,7 +11,6 @@ import { TranslocoDirective, TranslocoPipe } from '@jsverse/transloco';
 import { Spinner } from '../spinner/spinner';
 import { IAirport, ICityGroup, IPlaceSelection } from '../../models/place.model';
 import { createAirportIndex, searchAirports } from './airport-search';
-import { AirportStore } from './airport.store';
 
 const SEARCH_MIN_LENGTH = 2;
 const MAX_RESULTS = 180;
@@ -53,9 +52,9 @@ export class LocationField implements FormValueControl<string | null> {
     const selection = this.selected();
     return selection ? [`${selection.kind}:${selection.code}`] : [];
   });
-  private readonly airportStore = inject(AirportStore);
-  protected readonly loading = this.airportStore.loading;
-  protected readonly airports = this.airportStore.airports;
+  /** Points de départ / d'arrivée proposés, fournis par la page (`AirportStore`) : le composant ne fait aucun appel. */
+  readonly airports = input<readonly IAirport[]>([]);
+  readonly loading = input(false);
   /**
    * Fuse index is rebuilt only when the airport dataset changes.
    */

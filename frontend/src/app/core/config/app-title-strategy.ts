@@ -1,7 +1,7 @@
 import { inject, Service } from '@angular/core';
 import { ActivatedRouteSnapshot, RouterStateSnapshot, TitleStrategy } from '@angular/router';
 import { Title } from '@angular/platform-browser';
-import { fromIso, IsoDate } from '@shared/ui';
+import { fromIso, IsoDate } from '@shared/ui/date-picker/date-utils';
 
 @Service()
 export class AppTitleStrategy extends TitleStrategy {

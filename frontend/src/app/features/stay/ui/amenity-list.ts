@@ -1,6 +1,6 @@
 import { Component, computed, input } from '@angular/core';
 import { TranslocoDirective } from '@jsverse/transloco';
-import { IAccommodation } from '@shared/models';
+import { IAccommodation } from '@shared/models/stay.model';
 
 /** Équipements de l'établissement, en pastilles. `limit` : les premiers seulement, avec « +n ». */
 @Component({

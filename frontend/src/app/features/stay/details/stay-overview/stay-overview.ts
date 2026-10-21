@@ -2,7 +2,7 @@ import { Component, input } from '@angular/core';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { NgIcon, provideIcons } from '@ng-icons/core';
 import { heroClock } from '@ng-icons/heroicons/outline';
-import { IAccommodation } from '@shared/models';
+import { IAccommodation } from '@shared/models/stay.model';
 import { AmenityList } from '../../ui/amenity-list';
 
 /** Présentation, horaires d'arrivée et de départ, remise des clés et équipements. */

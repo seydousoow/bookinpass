@@ -2,7 +2,8 @@ import { Component, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { form, FormField, FormRoot, maxLength, pattern, required } from '@angular/forms/signals';
 import { TranslocoDirective } from '@jsverse/transloco';
-import { Button, TextInput } from '@shared/ui';
+import { Button } from '@shared/ui/button/button';
+import { TextInput } from '@shared/ui/input/input';
 import { errorCode, ManageBookingService } from './manage-booking.service';
 
 /** Onglet « Gérer mon vol » de l'accueil : PNR + nom de famille, puis la page de la réservation. */

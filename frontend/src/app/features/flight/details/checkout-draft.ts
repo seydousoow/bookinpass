@@ -1,4 +1,4 @@
-import { ISeatChoice } from '@shared/models';
+import { ISeatChoice } from '@shared/models/seat-map.model';
 import { ITravelerInfo } from './traveler-form/traveler-form';
 import { TBagSelection } from './extra-bags/extra-bags.util';
 import { IContact } from '@core/session/contact';

@@ -1,4 +1,4 @@
-import { IStayResult } from '@shared/models';
+import { IStayResult } from '@shared/models/stay.model';
 import { applyStayFilter, NO_STAY_FILTER, sortStays } from './stay-filter.util';
 
 const result = (id: string, price: string, rating: number | null, score: number | null, amenities: string[] = []): IStayResult =>

@@ -1,7 +1,7 @@
 import { Component, inject } from '@angular/core';
 import { isActive, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { TranslocoDirective } from '@jsverse/transloco';
-import { Card } from '@shared/ui';
+import { Card } from '@shared/ui/card/card';
 
 interface IHomeTab {
   readonly key: 'flights' | 'stays' | 'manage';

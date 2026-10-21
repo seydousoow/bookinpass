@@ -1,4 +1,4 @@
-import { IFlightOfferDetails } from '@shared/models';
+import { IFlightOfferDetails } from '@shared/models/flight-offer.model';
 import { extraBagGroups, extraBagLines, extraBagsAmount, toOrderServices } from './extra-bags.util';
 
 const segment = (id: string, from: string, to: string) => ({ id, origin: { iata_code: from }, destination: { iata_code: to } });

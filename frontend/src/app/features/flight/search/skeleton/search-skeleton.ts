@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { Spinner } from '@shared/ui';
+import { Spinner } from '@shared/ui/spinner/spinner';
 
 /**
  * Attente des offres : même gabarit que la page de résultats (filtres à gauche sur grand écran, cartes d'offre),
@@ -10,7 +10,7 @@ import { Spinner } from '@shared/ui';
   imports: [Spinner],
   host: { class: 'block w-full flex-1 min-h-0 overflow-hidden' },
   template: `
-    <div class="absolute z-90 flex justify-center items-center h-screen w-screen overflow-hidden bg-white/5 top-0 left-0">
+    <div class="absolute top-0 left-0 z-90 flex h-screen w-screen items-center justify-center overflow-hidden bg-white/5">
       <bip-spinner label="search.loading" showLabel size="md" />
     </div>
     <div class="mx-auto flex max-w-6xl gap-2 py-2 md:flex-row">

@@ -1,4 +1,4 @@
-import { IStayRate, IStayResult, IStayRoom } from '@shared/models';
+import { IStayRate, IStayResult, IStayRoom } from '@shared/models/stay.model';
 
 /** Ce qu'une annulation rembourse aujourd'hui, d'après la frise Duffel. */
 export type TCancellation =
@@ -21,7 +21,10 @@ export function cancellationPolicy(rate: IStayRate, now = new Date()): TCancella
 }
 
 export function cheapestRate(room: IStayRoom): IStayRate | undefined {
-  return room.rates.reduce<IStayRate | undefined>((best, rate) => (!best || Number(rate.total_amount) < Number(best.total_amount) ? rate : best), undefined);
+  return room.rates.reduce<IStayRate | undefined>(
+    (best, rate) => (!best || Number(rate.total_amount) < Number(best.total_amount) ? rate : best),
+    undefined,
+  );
 }
 
 /** Chambres triées par leur tarif le moins cher. */

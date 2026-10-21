@@ -3,7 +3,8 @@ import { applyEach, email, form, FormField, maxLength, pattern, required, valida
 import { TranslocoDirective } from '@jsverse/transloco';
 import { NgIcon, provideIcons } from '@ng-icons/core';
 import { heroUser } from '@ng-icons/heroicons/outline';
-import { Textarea, TextInput } from '@shared/ui';
+import { TextInput } from '@shared/ui/input/input';
+import { Textarea } from '@shared/ui/textarea/textarea';
 import { isValidPhone, PhoneInput } from '@shared/ui/phone-input/phone-input';
 import { IGuestName, IStayGuestDetails } from '../stay-draft';
 

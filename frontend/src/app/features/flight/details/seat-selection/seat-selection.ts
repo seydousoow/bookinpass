@@ -1,20 +1,13 @@
 import { Component, computed, effect, inject, input, linkedSignal, model, untracked } from '@angular/core';
 import { httpResource } from '@angular/common/http';
 import { TranslocoDirective } from '@jsverse/transloco';
-import {
-  IFlightOfferDetails,
-  IFlightSegment,
-  ISeatChoice,
-  ISeatElement,
-  ISeatMap,
-  ISeatMapCabin,
-  ISeatMapsResponse,
-  ISeatService,
-  TPassengerType,
-  TSeatMapElement,
-} from '@shared/models';
+import { IFlightOfferDetails } from '@shared/models/flight-offer.model';
+import { IFlightSegment } from '@shared/models/flight.model';
+import { TPassengerType } from '@shared/models/search.model';
+import { ISeatChoice, ISeatElement, ISeatMap, ISeatMapCabin, ISeatMapsResponse, ISeatService, TSeatMapElement } from '@shared/models/seat-map.model';
 import { APP_CONFIG } from '@core/config/app-config.token';
-import { Button, Spinner } from '@shared/ui';
+import { Button } from '@shared/ui/button/button';
+import { Spinner } from '@shared/ui/spinner/spinner';
 import { MoneyPipe } from '@core/money/money.pipe';
 import { ancillaryPrice } from '@core/money/pricing';
 

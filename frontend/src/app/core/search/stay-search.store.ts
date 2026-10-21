@@ -1,5 +1,5 @@
 import { Service, signal } from '@angular/core';
-import { IStaySearch } from '@shared/models';
+import { IStaySearch } from '@shared/models/stay.model';
 
 const STORAGE_KEY = 'bip.stay-search';
 

@@ -1,8 +1,9 @@
 import { Component, computed, inject, input, model, output, signal } from '@angular/core';
 import { FormValueControl, ValidationError } from '@angular/forms/signals';
 import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
-import { Button, Dropdown } from '@shared/ui';
-import { IStayGuests } from '@shared/models';
+import { Button } from '@shared/ui/button/button';
+import { Dropdown } from '@shared/ui/dropdown/dropdown';
+import { IStayGuests } from '@shared/models/stay.model';
 import { isValidStayGuests, STAY_LIMITS } from '../../search/stay-search-params';
 
 type TCounter = 'rooms' | 'adults' | 'children';

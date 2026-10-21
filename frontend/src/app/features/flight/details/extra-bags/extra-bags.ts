@@ -3,7 +3,8 @@ import { TranslocoDirective } from '@jsverse/transloco';
 import { NgIcon, provideIcons } from '@ng-icons/core';
 import { heroMinus, heroPlus, heroUser } from '@ng-icons/heroicons/outline';
 import { MoneyPipe } from '@core/money/money.pipe';
-import { IService, TPassengerType } from '@shared/models';
+import { IService } from '@shared/models/flight.model';
+import { TPassengerType } from '@shared/models/search.model';
 import { IBagLine, IncludedBags } from '../included-bags/included-bags';
 import { IExtraBagGroup, TBagSelection } from './extra-bags.util';
 
@@ -26,12 +27,7 @@ export interface IExtrasTraveler {
 @Component({
   selector: 'bip-extra-bags',
   templateUrl: './extra-bags.html',
-  imports: [
-    TranslocoDirective,
-    NgIcon,
-    MoneyPipe,
-    IncludedBags
-  ],
+  imports: [TranslocoDirective, NgIcon, MoneyPipe, IncludedBags],
   providers: [provideIcons({ heroUser, heroPlus, heroMinus })],
 })
 export class ExtraBags {

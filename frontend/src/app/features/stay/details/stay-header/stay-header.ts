@@ -1,7 +1,7 @@
 import { Component, input } from '@angular/core';
 import { NgIcon, provideIcons } from '@ng-icons/core';
 import { heroMapPin } from '@ng-icons/heroicons/outline';
-import { IAccommodation } from '@shared/models';
+import { IAccommodation } from '@shared/models/stay.model';
 import { StarRating } from '../../ui/star-rating';
 import { ReviewScore } from '../../ui/review-score';
 

@@ -1,4 +1,4 @@
-import { ICondition } from '@shared/models';
+import { ICondition } from '@shared/models/flight.model';
 
 export type TConditionFlag = 'included' | 'not-included' | 'unknown';
 

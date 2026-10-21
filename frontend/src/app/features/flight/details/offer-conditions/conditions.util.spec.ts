@@ -1,4 +1,4 @@
-import { ICondition } from '@shared/models';
+import { ICondition } from '@shared/models/flight.model';
 import { conditionLabel, offerChangeLabel } from './conditions.util';
 
 const condition = (allowed: boolean, penalty_amount: string | null = null, penalty_currency: string | null = null) =>

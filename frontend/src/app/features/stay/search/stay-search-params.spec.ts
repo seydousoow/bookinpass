@@ -1,4 +1,4 @@
-import { toIso } from '@shared/ui';
+import { toIso } from '@shared/ui/date-picker/date-utils';
 import { isValidStayGuests, nightsBetween, parseStaySearchParams, toStayQueryParams } from './stay-search-params';
 
 const inDays = (days: number): string => {
