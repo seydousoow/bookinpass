@@ -40,6 +40,7 @@
           "options": {
             "browser": "src/main.ts",
             "tsConfig": "tsconfig.app.json",
+            "allowedCommonJsDependencies": ["@messageformat/core"],
             "assets": [
               {
                 "glob": "**/*",
@@ -58,7 +59,7 @@
               "budgets": [
                 {
                   "type": "initial",
-                  "maximumWarning": "600kB",
+                  "maximumWarning": "650kB",
                   "maximumError": "900kB"
                 },
                 {
