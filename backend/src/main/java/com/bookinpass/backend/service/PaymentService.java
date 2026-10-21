@@ -14,8 +14,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import tools.jackson.databind.JsonNode;
-import tools.jackson.databind.node.ObjectNode;
 import tools.jackson.databind.json.JsonMapper;
+import tools.jackson.databind.node.ObjectNode;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -47,6 +47,51 @@ public class PaymentService {
     private final JsonMapper json;
     private final Clock clock;
     private final BookingRecorder recorder;
+
+    /**
+     * {@code ase_1x2,ase_2x1} : services de la session, gardés dans ses métadonnées.
+     */
+    static String summary(List<IntendedService> services) {
+        return services.stream().map(s -> s.id() + "x" + s.quantity()).sorted().collect(Collectors.joining(","));
+    }
+
+    /**
+     * Inverse de {@link #summary} ; vide pour une session sans service.
+     */
+    static List<IntendedService> parseSummary(String summary) {
+        if (summary == null || summary.isBlank()) {
+            return List.of();
+        }
+        return Arrays.stream(summary.split(","))
+                .map(part -> {
+                    int x = part.lastIndexOf('x');
+                    return new IntendedService(part.substring(0, x), Integer.parseInt(part.substring(x + 1)));
+                })
+                .toList();
+    }
+
+    /**
+     * Trajet en codes IATA, lisible quelle que soit la langue : « DSS → CDG », « DSS → CDG → DSS ».
+     */
+    private static String label(JsonNode offer) {
+        StringBuilder route = new StringBuilder();
+        for (JsonNode slice : offer.path("slices")) {
+            if (route.isEmpty()) {
+                route.append(slice.path("origin").path("iata_code").asString(""));
+            }
+            route.append(" → ").append(slice.path("destination").path("iata_code").asString(""));
+        }
+        return route.isEmpty() ? "Book In Pass" : route.toString();
+    }
+
+    private static String idempotencyKey(String... parts) {
+        try {
+            byte[] hash = MessageDigest.getInstance("SHA-256").digest(String.join("|", parts).getBytes(StandardCharsets.UTF_8));
+            return "bip-flight-checkout-" + HexFormat.of().formatHex(hash, 0, 16);
+        } catch (NoSuchAlgorithmException e) {
+            throw new IllegalStateException(e);
+        }
+    }
 
     /**
      * @param returnPath page du site où revenir après un moyen à redirection (déjà validée : un chemin, pas d'origine)
@@ -90,25 +135,6 @@ public class PaymentService {
                 stripeProperties.publishableKey(), total.toPlainString(), currency);
     }
 
-    /**
-     * Prix d'une offre et de ses services, relus chez Duffel : ce que Duffel facture (payé sur notre solde), ce que
-     * le client paie (frais BIP et marges compris), et le détail ligne par ligne.
-     *
-     * @param ticket   billet au prix Duffel ; {@code serviceFee} : nos frais BIP dessus, au taux {@code feeRate}
-     * @param services une ligne par service choisi
-     */
-    public record FlightQuote(JsonNode offer, String currency, BigDecimal duffelTotal, BigDecimal sellingTotal, long sellingMinorUnits,
-                              BigDecimal ticket, BigDecimal serviceFee, BigDecimal feeRate, List<ServiceLine> services) {
-    }
-
-    /**
-     * @param type     {@code baggage} ou {@code seat}
-     * @param price    prix Duffel de la ligne (unitaire × quantité)
-     * @param markup   notre marge sur la ligne
-     */
-    public record ServiceLine(String id, String type, int quantity, BigDecimal price, BigDecimal markup) {
-    }
-
     FlightQuote quote(String offerId, List<IntendedService> services) {
         JsonNode offer = json.readTree(flights.offer(offerId)).path("data");
         Map<String, ServicePrice> prices = servicePrices(offerId, offer, services);
@@ -140,32 +166,10 @@ public class PaymentService {
                 FlightPricing.serviceFee(ticketOffer), FlightPricing.serviceFeeRate(ticketOffer), List.copyOf(lines));
     }
 
-    /** Prix Duffel unitaire d'un service, son type et la quantité maximale autorisée. */
-    private record ServicePrice(BigDecimal price, String type, int maximum) {
-    }
-
     void requireEnabled() {
         if (!stripeProperties.enabled()) {
             throw new PaymentException(HttpStatus.SERVICE_UNAVAILABLE, "payments-unavailable", "Payments are not configured.");
         }
-    }
-
-    /** {@code ase_1x2,ase_2x1} : services de la session, gardés dans ses métadonnées. */
-    static String summary(List<IntendedService> services) {
-        return services.stream().map(s -> s.id() + "x" + s.quantity()).sorted().collect(Collectors.joining(","));
-    }
-
-    /** Inverse de {@link #summary} ; vide pour une session sans service. */
-    static List<IntendedService> parseSummary(String summary) {
-        if (summary == null || summary.isBlank()) {
-            return List.of();
-        }
-        return Arrays.stream(summary.split(","))
-                .map(part -> {
-                    int x = part.lastIndexOf('x');
-                    return new IntendedService(part.substring(0, x), Integer.parseInt(part.substring(x + 1)));
-                })
-                .toList();
     }
 
     /**
@@ -192,24 +196,11 @@ public class PaymentService {
                     log.info("Stripe {} for offer {}: session {}, payment_intent {}, payment_status {}", type,
                             session.path("metadata").path("offer_id").asString(""), session.path("id").asString(""),
                             session.path("payment_intent").asString(""), session.path("payment_status").asString(""));
-            case "checkout.session.async_payment_failed", "checkout.session.expired" ->
-                    log.info("Stripe {} for offer {}: session {}", type,
-                            session.path("metadata").path("offer_id").asString(""), session.path("id").asString(""));
+            case "checkout.session.async_payment_failed", "checkout.session.expired" -> log.info("Stripe {} for offer {}: session {}", type,
+                    session.path("metadata").path("offer_id").asString(""), session.path("id").asString(""));
             default -> log.debug("Stripe event {} ignored", type);
         }
         return type;
-    }
-
-    /** Trajet en codes IATA, lisible quelle que soit la langue : « DSS → CDG », « DSS → CDG → DSS ». */
-    private static String label(JsonNode offer) {
-        StringBuilder route = new StringBuilder();
-        for (JsonNode slice : offer.path("slices")) {
-            if (route.isEmpty()) {
-                route.append(slice.path("origin").path("iata_code").asString(""));
-            }
-            route.append(" → ").append(slice.path("destination").path("iata_code").asString(""));
-        }
-        return route.isEmpty() ? "Book In Pass" : route.toString();
     }
 
     /**
@@ -246,12 +237,28 @@ public class PaymentService {
         return prices;
     }
 
-    private static String idempotencyKey(String... parts) {
-        try {
-            byte[] hash = MessageDigest.getInstance("SHA-256").digest(String.join("|", parts).getBytes(StandardCharsets.UTF_8));
-            return "bip-flight-checkout-" + HexFormat.of().formatHex(hash, 0, 16);
-        } catch (NoSuchAlgorithmException e) {
-            throw new IllegalStateException(e);
-        }
+    /**
+     * Prix d'une offre et de ses services, relus chez Duffel : ce que Duffel facture (payé sur notre solde), ce que
+     * le client paie (frais BIP et marges compris), et le détail ligne par ligne.
+     *
+     * @param ticket   billet au prix Duffel ; {@code serviceFee} : nos frais BIP dessus, au taux {@code feeRate}
+     * @param services une ligne par service choisi
+     */
+    public record FlightQuote(JsonNode offer, String currency, BigDecimal duffelTotal, BigDecimal sellingTotal, long sellingMinorUnits,
+                              BigDecimal ticket, BigDecimal serviceFee, BigDecimal feeRate, List<ServiceLine> services) {
+    }
+
+    /**
+     * @param type   {@code baggage} ou {@code seat}
+     * @param price  prix Duffel de la ligne (unitaire × quantité)
+     * @param markup notre marge sur la ligne
+     */
+    public record ServiceLine(String id, String type, int quantity, BigDecimal price, BigDecimal markup) {
+    }
+
+    /**
+     * Prix Duffel unitaire d'un service, son type et la quantité maximale autorisée.
+     */
+    private record ServicePrice(BigDecimal price, String type, int maximum) {
     }
 }

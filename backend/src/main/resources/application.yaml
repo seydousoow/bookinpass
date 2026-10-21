@@ -146,5 +146,5 @@ bookinpass:
 aws:
   ses:
     region: ${AWS_REGION:us-east-2}
-    sender: ${AWS_SES_SENDER:reservations@bookinpass.com}
+    sender: ${AWS_SES_SENDER:no-reply@bip.dicortex.com}
     alias: ${AWS_SES_ALIAS:Book In Pass}

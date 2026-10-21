@@ -2,9 +2,9 @@ package com.bookinpass.backend.service;
 
 import com.bookinpass.backend.client.DuffelClient;
 import com.bookinpass.backend.client.StripeClient;
+import com.bookinpass.backend.config.web.RequestLang;
 import com.bookinpass.backend.dto.duffel.DuffelOrderRequest;
 import com.bookinpass.backend.dto.duffel.DuffelPriceRequest;
-import com.bookinpass.backend.config.web.RequestLang;
 import com.bookinpass.backend.dto.request.FlightOrderRequest;
 import com.bookinpass.backend.dto.request.PriceOfferRequest.IntendedService;
 import com.bookinpass.backend.dto.response.FlightOrderResponse;
@@ -54,9 +54,10 @@ import java.util.concurrent.ConcurrentHashMap;
 @RequiredArgsConstructor
 public class FlightOrderService {
 
-    /** Statuts Stripe d'une autorisation : à capturer, ou déjà capturée (requête rejouée). */
+    /**
+     * Statuts Stripe d'une autorisation : à capturer, ou déjà capturée (requête rejouée).
+     */
     private static final String CAPTURABLE = "requires_capture";
-    private static final String CAPTURED = "succeeded";
 
     private final PaymentService payments;
     private final StripeClient stripe;
@@ -66,8 +67,46 @@ public class FlightOrderService {
     private final DuffelCustomerService customers;
     private final FlightOrderCache orderCache;
     private final BookingMailer mailer;
-    /** Une réservation à la fois par session (double clic, onglet dupliqué) ; une seule instance aujourd'hui. */
+    /**
+     * Une réservation à la fois par session (double clic, onglet dupliqué) ; une seule instance aujourd'hui.
+     */
     private final Set<String> inProgress = ConcurrentHashMap.newKeySet();
+
+    /**
+     * Montant débité par Stripe (260.42), dans la devise de la session.
+     */
+    private static BigDecimal paid(JsonNode session) {
+        String currency = session.path("currency").asString("").toUpperCase();
+        return new BigDecimal(session.path("amount_total").asLong()).movePointLeft(FlightPricing.decimals(currency));
+    }
+
+    /**
+     * Écriture en base qui ne doit pas faire échouer une réservation déjà passée.
+     */
+    private static void safely(String what, Runnable write) {
+        try {
+            write.run();
+        } catch (RuntimeException e) {
+            log.error("Booking record failed for {}: the booking itself is unaffected", what, e);
+        }
+    }
+
+    /**
+     * Cause lisible d'un échec, pour le journal et l'historique du paiement.
+     */
+    private static String reason(RuntimeException e) {
+        if (e instanceof DuffelException d && d.code() != null) {
+            return d.code();
+        }
+        if (e instanceof PaymentException p) {
+            return p.code();
+        }
+        return e.getClass().getSimpleName();
+    }
+
+    private static boolean isUncertain(RuntimeException e) {
+        return e instanceof ResourceAccessException || e instanceof DuffelException d && d.status().is5xxServerError();
+    }
 
     public FlightOrderResponse book(FlightOrderRequest request) {
         payments.requireEnabled();
@@ -164,21 +203,6 @@ public class FlightOrderService {
         });
     }
 
-    /** Montant débité par Stripe (260.42), dans la devise de la session. */
-    private static BigDecimal paid(JsonNode session) {
-        String currency = session.path("currency").asString("").toUpperCase();
-        return new BigDecimal(session.path("amount_total").asLong()).movePointLeft(FlightPricing.decimals(currency));
-    }
-
-    /** Écriture en base qui ne doit pas faire échouer une réservation déjà passée. */
-    private static void safely(String what, Runnable write) {
-        try {
-            write.run();
-        } catch (RuntimeException e) {
-            log.error("Booking record failed for {}: the booking itself is unaffected", what, e);
-        }
-    }
-
     private DuffelOrderRequest orderRequest(FlightOrderRequest request, FlightQuote quote, List<IntendedService> services, String intentId) {
         Map<String, String> types = new HashMap<>();
         for (JsonNode passenger : quote.offer().path("passengers")) {
@@ -208,7 +232,9 @@ public class FlightOrderService {
                 Map.of("checkout_session_id", request.checkoutSessionId(), "payment_intent_id", intentId)));
     }
 
-    /** Commande déjà passée sur l'offre avec cette session de paiement (métadonnées posées à la création). */
+    /**
+     * Commande déjà passée sur l'offre avec cette session de paiement (métadonnées posées à la création).
+     */
     private Optional<JsonNode> findOrder(String offerId, String sessionId) {
         for (JsonNode order : json.readTree(duffel.findOrders(offerId)).path("data")) {
             if (sessionId.equals(order.path("metadata").path("checkout_session_id").asString())) {
@@ -216,21 +242,6 @@ public class FlightOrderService {
             }
         }
         return Optional.empty();
-    }
-
-    /** Cause lisible d'un échec, pour le journal et l'historique du paiement. */
-    private static String reason(RuntimeException e) {
-        if (e instanceof DuffelException d && d.code() != null) {
-            return d.code();
-        }
-        if (e instanceof PaymentException p) {
-            return p.code();
-        }
-        return e.getClass().getSimpleName();
-    }
-
-    private static boolean isUncertain(RuntimeException e) {
-        return e instanceof ResourceAccessException || e instanceof DuffelException d && d.status().is5xxServerError();
     }
 
     /**
