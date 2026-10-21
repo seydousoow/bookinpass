@@ -1,7 +1,6 @@
 import { inject, Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { map, Observable } from 'rxjs';
-import { TranslocoService } from '@jsverse/transloco';
 import { APP_CONFIG } from '@core/config/app-config.token';
 import { IFlightOfferDetails, IFlightOfferResponse, IIntendedService, IPassengerUpdate } from '@shared/models';
 import { IIdentityDocument } from './traveler-form/traveler-form';
@@ -45,7 +44,6 @@ export class FlightOfferService {
   private readonly http = inject(HttpClient);
   private readonly offersUrl = `${inject(APP_CONFIG).apiBaseUrl}/flights/offers`;
   private readonly ordersUrl = `${inject(APP_CONFIG).apiBaseUrl}/flights/orders`;
-  private readonly transloco = inject(TranslocoService);
 
   /** Offre complète, avec ses services disponibles. */
   getOffer(offerId: string): Observable<IFlightOfferDetails> {
@@ -68,9 +66,11 @@ export class FlightOfferService {
     return this.http.patch<IFlightOfferResponse>(url, update).pipe(map((r) => r.data));
   }
 
-  /** Réserve l'offre payée ; rejouable sans risque (le serveur rend la réservation déjà faite). */
-  /** La langue active accompagne la commande : les e-mails de la réservation (SES) sont envoyés dans cette langue. */
+  /**
+   * Réserve l'offre payée ; rejouable sans risque (le serveur rend la réservation déjà faite). Les e-mails partent
+   * dans la langue du site, transmise par `langInterceptor`.
+   */
   createOrder(request: IFlightOrderRequest): Observable<IFlightOrder> {
-    return this.http.post<IFlightOrder>(this.ordersUrl, { ...request, lang: this.transloco.getActiveLang() });
+    return this.http.post<IFlightOrder>(this.ordersUrl, request);
   }
 }
