@@ -49,4 +49,11 @@ public class TransportDeparture {
 
     @Column(nullable = false)
     private short held;
+
+    /** Départ effectif, puis arrivée, saisis par le chef de gare. */
+    @Column(name = "departed_at")
+    private Instant departedAt;
+
+    @Column(name = "arrived_at")
+    private Instant arrivedAt;
 }

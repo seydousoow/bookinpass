@@ -6,6 +6,8 @@ import jakarta.persistence.Convert;
 import jakarta.persistence.Converter;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
@@ -13,7 +15,6 @@ import jakarta.persistence.Table;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.hibernate.annotations.Immutable;
 import org.hibernate.annotations.JdbcType;
 import org.hibernate.type.descriptor.jdbc.LocalTimeJdbcType;
 
@@ -26,12 +27,12 @@ import java.time.LocalTime;
  */
 @Entity
 @Table(name = "transport_schedule")
-@Immutable
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class TransportSchedule {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
@@ -53,6 +54,13 @@ public class TransportSchedule {
     @JdbcType(LocalTimeJdbcType.class)
     @Column(name = "last_departure")
     private LocalTime lastDeparture;
+
+    public TransportSchedule(TransportRoute route, DayOfWeek dayOfWeek, LocalTime departsAt, LocalTime lastDeparture) {
+        this.route = route;
+        this.dayOfWeek = dayOfWeek;
+        this.departsAt = departsAt;
+        this.lastDeparture = lastDeparture;
+    }
 
     /** Jour ISO en base : 1 = lundi … 7 = dimanche, comme {@link DayOfWeek#getValue()}. */
     @Converter

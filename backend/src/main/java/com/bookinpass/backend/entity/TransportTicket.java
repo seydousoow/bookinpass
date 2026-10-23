@@ -40,8 +40,13 @@ public class TransportTicket {
     @Column(name = "family_name", nullable = false)
     private String familyName;
 
-    @Column(name = "scanned_at")
+    /** Contrôle : une seule fois, par requête atomique ({@code TransportTicketRepository#scan}). */
+    @Column(name = "scanned_at", insertable = false, updatable = false)
     private Instant scannedAt;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "scanned_by", insertable = false, updatable = false)
+    private StaffUser scannedBy;
 
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)

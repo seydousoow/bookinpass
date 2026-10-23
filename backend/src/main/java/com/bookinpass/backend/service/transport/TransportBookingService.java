@@ -33,7 +33,6 @@ import org.springframework.transaction.support.TransactionTemplate;
 import tools.jackson.databind.JsonNode;
 
 import java.math.BigDecimal;
-import java.security.SecureRandom;
 import java.text.Normalizer;
 import java.time.Clock;
 import java.time.Duration;
@@ -68,9 +67,6 @@ public class TransportBookingService {
     /** Métadonnée {@code kind} des sessions de car : le webhook ne traite qu'elles. */
     static final String KIND = "bus";
     private static final String CAPTURABLE = "requires_capture";
-    /** Sans 0/O ni 1/I : codes lus à voix haute ou recopiés à la main. */
-    private static final String ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-    private static final SecureRandom RANDOM = new SecureRandom();
     private static final DateTimeFormatter LABEL_DATE = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm").withZone(TransportSearchService.ZONE);
 
     private final TransportSearchService search;
@@ -331,7 +327,7 @@ public class TransportBookingService {
     private String newReference() {
         String reference;
         do {
-            reference = random(6);
+            reference = TransportCodes.random(6);
         } while (bookings.existsByReference(reference));
         return reference;
     }
@@ -339,17 +335,9 @@ public class TransportBookingService {
     private String newTicketCode() {
         String code;
         do {
-            code = random(10);
+            code = TransportCodes.random(10);
         } while (tickets.existsByCode(code));
         return code;
-    }
-
-    private static String random(int length) {
-        StringBuilder code = new StringBuilder(length);
-        for (int i = 0; i < length; i++) {
-            code.append(ALPHABET.charAt(RANDOM.nextInt(ALPHABET.length())));
-        }
-        return code.toString();
     }
 
     /** Sans accents, espaces ni casse : « Sène » et « SENE » désignent le même nom. */

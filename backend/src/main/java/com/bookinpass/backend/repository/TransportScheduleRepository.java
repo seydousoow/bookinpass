@@ -12,4 +12,6 @@ public interface TransportScheduleRepository extends JpaRepository<TransportSche
 
     /** Horaires d'une ligne pour un jour de la semaine, dans l'ordre de départ. */
     List<TransportSchedule> findByRouteIdAndDayOfWeekOrderByDepartsAt(Integer routeId, DayOfWeek dayOfWeek);
+
+    List<TransportSchedule> findByRouteIdOrderByDayOfWeekAscDepartsAtAsc(Integer routeId);
 }

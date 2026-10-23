@@ -10,6 +10,8 @@ import java.util.List;
 @Repository
 public interface TransportStationRepository extends JpaRepository<TransportStation, Integer> {
 
+    boolean existsByCode(String code);
+
     @Query("select s from TransportStation s left join fetch s.city order by s.name")
     List<TransportStation> findAllWithCity();
 }
