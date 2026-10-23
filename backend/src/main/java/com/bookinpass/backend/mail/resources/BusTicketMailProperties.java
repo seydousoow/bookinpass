@@ -35,14 +35,17 @@ public final class BusTicketMailProperties extends BaseMailProperties {
     private String operator;
     private String operatorPhone;
     private List<Ticket> tickets;
-    /** Montant payé (« 8 000 XOF »). */
+    /** Montant payé (« 8 240 F CFA »), frais compris. */
     private String amount;
+    /** Frais de service Book In Pass compris dans le montant ; nul s'il n'y en a pas. */
+    private String fees;
 
     @Override
     public MailType getMailType() {
         return MailType.BUS_TICKET;
     }
 
-    public record Ticket(String passenger, String code) {
+    /** @param qr identifiant de l'image du QR code dans l'e-mail ({@code cid:…}) */
+    public record Ticket(String passenger, String code, String qr) {
     }
 }

@@ -45,6 +45,11 @@ public class TransportStation {
     @Column(name = "airport_iata", length = 3)
     private String airportIata;
 
+    /** Aéroport de la gare (même colonne, en lecture) : son pays pour les frais de service. */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "airport_iata", insertable = false, updatable = false)
+    private Airport airport;
+
     private String address;
 
     /** Téléphone de la gare, E.164 ; à défaut, celui de l'exploitant. */
@@ -53,6 +58,11 @@ public class TransportStation {
     /** Lieu de recherche : identifiant GeoNames de la ville, ou code IATA de l'aéroport. */
     public String placeId() {
         return city != null ? city.getId().toString() : airportIata;
+    }
+
+    /** Pays de la gare (ISO 3166-1), celui de sa ville ou de son aéroport. */
+    public String countryCode() {
+        return city != null ? city.getCountryCode() : airport != null ? airport.getCountryCode() : null;
     }
 
     /** Nom du lieu : la ville, ou la gare elle-même pour un aéroport. */

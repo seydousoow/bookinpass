@@ -67,7 +67,7 @@
               <div class="flex items-center justify-between gap-4 sm:flex-col sm:items-end">
                 <div class="sm:text-right">
                   <p class="text-lg font-bold">{{ departure.total | bipMoney: departure.currency }}</p>
-                  <p class="text-muted text-xs">{{ t('search.per-passenger', {price: (departure.price | bipMoney: departure.currency)}) }}</p>
+                  <p class="text-muted text-xs">{{ t('search.per-passenger', {price: (unitPrice(departure) | bipMoney: departure.currency)}) }}</p>
                   @if (!departure.available) {
                     <p class="text-state-error text-xs font-semibold">{{ t(departure.seats_left === 0 || (departure.seats_left !== null && departure.seats_left < criteria.passengers) ? 'search.sold-out' : 'search.closed') }}</p>
                   } @else if (departure.seats_left !== null && departure.seats_left <= 10) {

@@ -11,6 +11,7 @@ import com.bookinpass.backend.exception.TransportException;
 import com.bookinpass.backend.repository.TransportDepartureRepository;
 import com.bookinpass.backend.repository.TransportRouteRepository;
 import com.bookinpass.backend.repository.TransportScheduleRepository;
+import com.bookinpass.backend.service.pricing.TransportPricing;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -133,6 +134,12 @@ public class TransportSearchService {
         return departure;
     }
 
+    /** Frais de service Book In Pass par passager sur une ligne : 3 % dans un même pays, 5 % sinon. */
+    public static BigDecimal serviceFee(TransportRoute route) {
+        return TransportPricing.serviceFee(route.getPrice(), route.getCurrency(),
+                TransportPricing.serviceFeeRate(route.getOrigin().countryCode(), route.getDestination().countryCode()));
+    }
+
     /** Gare telle que l'affichent la recherche et la réservation ; téléphone de l'exploitant à défaut du sien. */
     static TransportStationResponse station(TransportStation station) {
         String phone = station.getPhone() != null ? station.getPhone() : station.getOperator().getPhone();
@@ -163,10 +170,16 @@ public class TransportSearchService {
     private static TransportDepartureResponse response(ScheduledDeparture departure, int passengers, Integer seatsLeft, boolean available) {
         TransportRoute route = departure.route();
         BigDecimal price = route.getPrice();
+        BigDecimal fee = serviceFee(route);
         return new TransportDepartureResponse(route.getCode(), route.getNetwork().dbValue(), route.getOperator().getName(),
                 station(route.getOrigin()), station(route.getDestination()), departure.departsAt().toString(),
                 departure.continuous() ? departure.lastDepartureAt().toString() : null,
-                price.stripTrailingZeros().toPlainString(), price.multiply(BigDecimal.valueOf(passengers)).stripTrailingZeros().toPlainString(),
+                plain(price), plain(fee), plain(price.add(fee).multiply(BigDecimal.valueOf(passengers))),
                 route.getCurrency(), seatsLeft, available);
+    }
+
+    /** Montant sans zéros de remplissage ni notation scientifique : « 4120 ». */
+    static String plain(BigDecimal amount) {
+        return amount.stripTrailingZeros().toPlainString();
     }
 }

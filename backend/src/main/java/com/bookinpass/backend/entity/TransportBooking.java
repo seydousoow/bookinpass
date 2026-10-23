@@ -58,9 +58,15 @@ public class TransportBooking {
     @Column(nullable = false)
     private short passengers;
 
+    /** Prix de l'exploitant par passager. */
     @Column(name = "unit_price", nullable = false, precision = 12, scale = 2)
     private BigDecimal unitPrice;
 
+    /** Frais de service Book In Pass par passager. */
+    @Column(name = "unit_fee", nullable = false, precision = 12, scale = 2)
+    private BigDecimal unitFee;
+
+    /** Débité : (prix + frais) × passagers. */
     @Column(nullable = false, precision = 12, scale = 2)
     private BigDecimal total;
 
@@ -103,14 +109,15 @@ public class TransportBooking {
     private Instant updatedAt;
 
     public TransportBooking(String reference, UUID requestId, TransportDeparture departure, int passengers, BigDecimal unitPrice,
-                            String currency, String email, String phone, String lang, Instant holdExpiresAt) {
+                            BigDecimal unitFee, String currency, String email, String phone, String lang, Instant holdExpiresAt) {
         this.reference = reference;
         this.requestId = requestId;
         this.departure = departure;
         this.status = TransportBookingStatus.HELD;
         this.passengers = (short) passengers;
         this.unitPrice = unitPrice;
-        this.total = unitPrice.multiply(BigDecimal.valueOf(passengers));
+        this.unitFee = unitFee;
+        this.total = unitPrice.add(unitFee).multiply(BigDecimal.valueOf(passengers));
         this.currency = currency;
         this.email = email;
         this.phone = phone;

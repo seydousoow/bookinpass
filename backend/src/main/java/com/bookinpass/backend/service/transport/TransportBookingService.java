@@ -158,7 +158,7 @@ public class TransportBookingService {
             throw new TransportException(HttpStatus.CONFLICT, "sold-out", "Not enough seats left on this departure.");
         }
         TransportBooking booking = new TransportBooking(newReference(), request.requestId(), dated, seats, route.getPrice(),
-                route.getCurrency(), request.email(), request.phone(), RequestLang.current(), clock.instant().plus(HOLD));
+                TransportSearchService.serviceFee(route), route.getCurrency(), request.email(), request.phone(), RequestLang.current(), clock.instant().plus(HOLD));
         for (TransportBookingRequest.Passenger passenger : request.passengers()) {
             booking.addTicket(newTicketCode(), passenger.givenName().trim(), passenger.familyName().trim());
         }
@@ -301,9 +301,11 @@ public class TransportBookingService {
                 route.getOperator().getPhone(), TransportSearchService.station(route.getOrigin()), TransportSearchService.station(route.getDestination()),
                 departure.getDepartsAt().toString(), departure.getLastDepartureAt() == null ? null : departure.getLastDepartureAt().toString(),
                 booking.getTickets().stream()
-                        .map(t -> new TransportBookingResponse.Ticket(t.getGivenName(), t.getFamilyName(), valid ? t.getCode() : null))
+                        .map(t -> new TransportBookingResponse.Ticket(t.getGivenName(), t.getFamilyName(), valid ? t.getCode() : null,
+                                valid ? TicketQr.svg(t.getCode()) : null))
                         .toList(),
-                booking.getTotal().stripTrailingZeros().toPlainString(), booking.getCurrency());
+                TransportSearchService.plain(booking.getUnitFee().multiply(BigDecimal.valueOf(booking.getPassengers()))),
+                TransportSearchService.plain(booking.getTotal()), booking.getCurrency());
     }
 
     private void capture(String intentId, String sessionId, long amount, String reference) {

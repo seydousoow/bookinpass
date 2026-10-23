@@ -72,6 +72,11 @@ export class BusSearch {
     });
   }
 
+  /** Prix par passager, frais de service compris. */
+  protected unitPrice(departure: IBusDeparture): number {
+    return Number(departure.price) + Number(departure.fee);
+  }
+
   protected retry(): void {
     this.results.reload();
   }

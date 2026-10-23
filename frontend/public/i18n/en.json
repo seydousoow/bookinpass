@@ -918,7 +918,7 @@
       "time-note": "Dakar time (GMT).",
       "continuous": "continuous departures until {until}",
       "boarding": "Boarding: {address}",
-      "per-passenger": "{price} per passenger",
+      "per-passenger": "{price} per passenger, service fees included",
       "sold-out": "Sold out",
       "closed": "Sales closed",
       "seats-left": "{count, plural, one {Only # seat left} other {Only # seats left}}",
@@ -937,7 +937,8 @@
       "back-to-results": "Back to departures",
       "total": "{count, plural, one {Total for # passenger: {total}} other {Total for # passengers: {total}}}",
       "to-payment": "Continue to payment",
-      "back-to-travellers": "Edit passengers"
+      "back-to-travellers": "Edit passengers",
+      "fees": "including {fees} Book In Pass service fees"
     },
     "travellers": {
       "title": "Passengers",
@@ -990,7 +991,9 @@
       "operator": "Operator",
       "total": "Total paid",
       "code": "Ticket code {code}",
-      "present": "Show each passenger's code to the inspector. Be at the station 30 minutes before departure."
+      "present": "Show each passenger's QR code or code to the inspector. Be at the station 30 minutes before departure.",
+      "fees": "including {fees} service fees",
+      "qr": "QR code for ticket {code}"
     },
     "lookup": {
       "title": "My bus tickets",

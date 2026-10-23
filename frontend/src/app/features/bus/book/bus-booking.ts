@@ -239,6 +239,11 @@ export class BusBooking {
     this.lookup.reload();
   }
 
+  /** Frais de service Book In Pass de tous les passagers. */
+  protected feesOf(departure: IBusDeparture): number {
+    return Number(departure.fee) * (this.choice()?.passengers ?? 1);
+  }
+
   private goTo(step: TBusStep): void {
     this.step.set(step);
     this.scroller.scrollToPosition([0, 0]);

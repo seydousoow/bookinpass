@@ -153,7 +153,10 @@ class TransportSaleTest {
         List<TransportDepartureResponse> monday = search.departures(DAKAR, TOUBA, LocalDate.of(2026, 10, 26), 2);
 
         assertThat(monday).extracting(TransportDepartureResponse::departsAt).containsExactly("2026-10-26T07:00:00Z", "2026-10-26T15:00:00Z");
-        assertThat(monday.getFirst().total()).isEqualTo("8000");
+        // 4 000 F + 3 % de frais BIP (Sénégal → Sénégal) = 4 120 F par passager.
+        assertThat(monday.getFirst().price()).isEqualTo("4000");
+        assertThat(monday.getFirst().fee()).isEqualTo("120");
+        assertThat(monday.getFirst().total()).isEqualTo("8240");
         assertThat(monday.getFirst().seatsLeft()).isEqualTo(50);
         assertThat(monday.getFirst().origin().name()).isEqualTo("Terminus Liberté 5");
         assertThat(search.departures(DAKAR, TOUBA, LocalDate.of(2026, 10, 28), 1)).isEmpty();
@@ -166,18 +169,23 @@ class TransportSaleTest {
     void paidHoldBecomesConfirmedTickets() {
         TransportHoldResponse hold = sale.hold(request(UUID.randomUUID(), "Sène", "Diop"));
 
-        assertThat(hold.checkout().amount()).isEqualTo("8000");
+        assertThat(hold.checkout().amount()).isEqualTo("8240");
         assertThat(hold.checkout().currency()).isEqualTo("XOF");
         assertThat(mondayAt7().seatsLeft()).isEqualTo(48);
         // Session : 31 minutes ; places bloquées 36.
-        verify(stripe).createCheckoutSession(eq(8000L), eq("XOF"), eq("Dakar → Touba · 26/10/2026 07:00"), anyString(), eq("fr"), anyMap(),
+        verify(stripe).createCheckoutSession(eq(8240L), eq("XOF"), eq("Dakar → Touba · 26/10/2026 07:00"), anyString(), eq("fr"), anyMap(),
                 eq("bip-bus-" + hold.reference() + "-fr"), eq(NOW.plus(Duration.ofMinutes(31))));
 
-        paid(hold.reference(), 8000);
+        paid(hold.reference(), 8240);
         TransportBookingResponse confirmed = sale.confirm(hold.reference(), "cs_" + hold.reference());
 
         assertThat(confirmed.status()).isEqualTo("confirmed");
-        assertThat(confirmed.tickets()).hasSize(2).allSatisfy(t -> assertThat(t.code()).matches("[A-HJ-NP-Z2-9]{10}"));
+        assertThat(confirmed.tickets()).hasSize(2).allSatisfy(t -> {
+            assertThat(t.code()).matches("[A-HJ-NP-Z2-9]{10}");
+            assertThat(t.qr().path()).startsWith("M");
+        });
+        assertThat(confirmed.fees()).isEqualTo("240");
+        assertThat(confirmed.total()).isEqualTo("8240");
         verify(stripe).capturePaymentIntent("pi_" + hold.reference(), "bip-capture-pi_" + hold.reference());
         verify(mailer).send(hold.reference());
         assertThat(jdbc.queryForMap("SELECT sold, held FROM transport_departure")).containsEntry("sold", 2).containsEntry("held", 0);
@@ -236,7 +244,7 @@ class TransportSaleTest {
         assertThat(jdbc.queryForObject("SELECT status FROM transport_booking", String.class)).isEqualTo("released");
         assertThat(mondayAt7().seatsLeft()).isEqualTo(50);
 
-        paid(hold.reference(), 4000);
+        paid(hold.reference(), 4120);
         assertThat(sale.confirm(hold.reference(), "cs_" + hold.reference()).status()).isEqualTo("confirmed");
         assertThat(jdbc.queryForMap("SELECT sold, held FROM transport_departure")).containsEntry("sold", 1).containsEntry("held", 0);
     }
@@ -251,7 +259,7 @@ class TransportSaleTest {
         clock.set(NOW);
         sale.hold(request(UUID.randomUUID(), "Gaye"));
 
-        paid(late.reference(), 4000);
+        paid(late.reference(), 4120);
         assertThatThrownBy(() -> sale.confirm(late.reference(), "cs_" + late.reference()))
                 .isInstanceOfSatisfying(TransportException.class, e -> assertThat(e.code()).isEqualTo("sold-out"));
         verify(stripe).cancelPaymentIntent("pi_" + late.reference(), "abandoned", "bip-cancel-pi_" + late.reference());
@@ -277,11 +285,14 @@ class TransportSaleTest {
         TransportHoldResponse hold = sale.hold(request(UUID.randomUUID(), "Sène"));
 
         assertThat(sale.find(hold.reference().toLowerCase(), "SENE").tickets()).singleElement()
-                .satisfies(t -> assertThat(t.code()).isNull());
+                .satisfies(t -> {
+                    assertThat(t.code()).isNull();
+                    assertThat(t.qr()).isNull();
+                });
         assertThatThrownBy(() -> sale.find(hold.reference(), "Diop"))
                 .isInstanceOfSatisfying(TransportException.class, e -> assertThat(e.code()).isEqualTo("booking-not-found"));
 
-        paid(hold.reference(), 4000);
+        paid(hold.reference(), 4120);
         sale.confirm(hold.reference(), "cs_" + hold.reference());
         assertThat(sale.find(hold.reference(), "sène").tickets().getFirst().code()).isNotNull();
     }

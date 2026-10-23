@@ -918,7 +918,7 @@
       "time-note": "Heures de Dakar (GMT).",
       "continuous": "départs en continu jusqu'à {until}",
       "boarding": "Embarquement : {address}",
-      "per-passenger": "{price} par passager",
+      "per-passenger": "{price} par passager, frais de service inclus",
       "sold-out": "Complet",
       "closed": "Vente fermée",
       "seats-left": "{count, plural, one {Plus que # place} other {Plus que # places}}",
@@ -937,7 +937,8 @@
       "back-to-results": "Retour aux départs",
       "total": "{count, plural, one {Total pour # passager : {total}} other {Total pour # passagers : {total}}}",
       "to-payment": "Continuer vers le paiement",
-      "back-to-travellers": "Modifier les passagers"
+      "back-to-travellers": "Modifier les passagers",
+      "fees": "dont {fees} de frais de service Book In Pass"
     },
     "travellers": {
       "title": "Passagers",
@@ -990,7 +991,9 @@
       "operator": "Transporteur",
       "total": "Total payé",
       "code": "Code du billet {code}",
-      "present": "Présentez le code de chaque passager au contrôleur. Arrivez à la gare 30 minutes avant le départ."
+      "present": "Présentez le QR code ou le code de chaque passager au contrôleur. Arrivez à la gare 30 minutes avant le départ.",
+      "fees": "dont {fees} de frais de service",
+      "qr": "QR code du billet {code}"
     },
     "lookup": {
       "title": "Mes billets de car",

@@ -48,6 +48,7 @@
       </p>
       <p class="text-muted text-sm">{{ t('search.boarding', {address: d.origin.name + (d.origin.address ? ', ' + d.origin.address : '')}) }}</p>
       <p class="mt-2 font-semibold">{{ t('book.total', {count: choice()!.passengers, total: (d.total | bipMoney: d.currency)}) }}</p>
+      <p class="text-muted text-xs">{{ t('book.fees', {fees: (feesOf(d) | bipMoney: d.currency)}) }}</p>
     </section>
 
     @if (step() === 'travellers') {

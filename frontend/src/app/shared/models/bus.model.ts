@@ -26,8 +26,10 @@ export interface IBusDeparture {
   readonly departs_at: string;
   /** Service continu : dernier départ, le billet vaut toute la plage ; `null` pour un départ à heure fixe. */
   readonly last_departure_at: string | null;
-  /** Par passager ; `total` pour tous les passagers demandés. Décimal, en `currency` (XOF). */
+  /** Prix de l'exploitant par passager ; `fee` : frais de service Book In Pass par passager. Décimaux, en `currency` (XOF). */
   readonly price: string;
+  readonly fee: string;
+  /** (prix + frais) pour tous les passagers demandés : le montant débité. */
   readonly total: string;
   readonly currency: string;
   /** `null` : places non comptées (service continu). */
@@ -48,11 +50,18 @@ export interface IBusPassenger {
   family_name: string;
 }
 
+/** QR code dessiné par le serveur : `<svg viewBox="0 0 size size"><path [attr.d]="path"/></svg>`. */
+export interface IBusTicketQr {
+  readonly size: number;
+  readonly path: string;
+}
+
 export interface IBusTicket {
   readonly given_name: string;
   readonly family_name: string;
-  /** Présent une fois la réservation confirmée. */
+  /** Code et QR code présents une fois la réservation confirmée. */
   readonly code: string | null;
+  readonly qr: IBusTicketQr | null;
 }
 
 export interface IBusBooking {
@@ -65,6 +74,8 @@ export interface IBusBooking {
   readonly departs_at: string;
   readonly last_departure_at: string | null;
   readonly tickets: readonly IBusTicket[];
+  /** Frais de service Book In Pass compris dans `total`. */
+  readonly fees: string;
   readonly total: string;
   readonly currency: string;
 }

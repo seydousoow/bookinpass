@@ -55,6 +55,9 @@ import { IBusBooking } from '@shared/models/bus.model';
           <div>
             <dt class="text-muted text-xs">{{ t('total') }}</dt>
             <dd class="font-semibold">{{ b.total | bipMoney: b.currency }}</dd>
+            @if (+b.fees > 0) {
+              <dd class="text-muted text-xs">{{ t('fees', {fees: (b.fees | bipMoney: b.currency)}) }}</dd>
+            }
           </div>
         </dl>
       </section>
@@ -63,10 +66,19 @@ import { IBusBooking } from '@shared/models/bus.model';
         <h2 class="mb-2 font-bold">{{ t('title') }}</h2>
         <ul class="grid gap-2">
           @for (ticket of b.tickets; track $index) {
-            <li class="rounded-card bg-brand-soft flex flex-wrap items-center justify-between gap-2 p-3">
-              <span>{{ ticket.given_name }} {{ ticket.family_name }}</span>
-              @if (ticket.code) {
-                <span [attr.aria-label]="t('code', {code: ticket.code})" class="text-brand-primary font-mono text-lg font-bold tracking-widest">{{ ticket.code }}</span>
+            <li class="rounded-card bg-brand-soft flex flex-wrap items-center justify-between gap-3 p-3">
+              <div>
+                <p>{{ ticket.given_name }} {{ ticket.family_name }}</p>
+                @if (ticket.code) {
+                  <p [attr.aria-label]="t('code', {code: ticket.code})" class="text-brand-primary font-mono text-lg font-bold tracking-widest">{{ ticket.code }}</p>
+                }
+              </div>
+              @if (ticket.qr; as qr) {
+                <!-- Fond blanc et modules noirs dans les deux thèmes : un lecteur de QR code a besoin du contraste. -->
+                <svg [attr.aria-label]="t('qr', {code: ticket.code})" [attr.viewBox]="'0 0 ' + qr.size + ' ' + qr.size"
+                     class="size-36 shrink-0 rounded bg-white" role="img" shape-rendering="crispEdges">
+                  <path [attr.d]="qr.path" fill="#000"/>
+                </svg>
               }
             </li>
           }

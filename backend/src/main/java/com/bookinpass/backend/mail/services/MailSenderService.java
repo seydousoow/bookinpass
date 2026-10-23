@@ -32,11 +32,13 @@ public class MailSenderService {
     }
 
     /**
-     * @param tags étiquettes SES ({@code X-SES-MESSAGE-TAGS}), renvoyées sur les événements de remise
+     * @param tags         étiquettes SES ({@code X-SES-MESSAGE-TAGS}), renvoyées sur les événements de remise
+     * @param inlineImages images PNG du corps, par identifiant ({@code cid:…} dans le HTML)
      * @return {@code true} si SES a accepté l'e-mail
      */
     public boolean sendEmailWithRetry(String type, String from, String personal, String to, Set<String> bcc, String subject,
-                                      String body, Map<String, String> tags, Map<String, byte[]> attachments) {
+                                      String body, Map<String, String> tags, Map<String, byte[]> attachments,
+                                      Map<String, byte[]> inlineImages) {
         SimpleEmailServiceJavaMailSender sender = javaMailSender.getIfAvailable();
         if (sender == null) {
             log.warn("Mail [{}] not sent: SES is not configured (MAIL_ENABLED=false)", type);
@@ -44,7 +46,7 @@ public class MailSenderService {
         }
         for (int attempt = 1; attempt <= MAX_RETRIES; attempt++) {
             try {
-                send(sender, from, personal, to, bcc, subject, body, tags, attachments);
+                send(sender, from, personal, to, bcc, subject, body, tags, attachments, inlineImages);
                 log.info("Mail [{}] sent", type);
                 return true;
             } catch (Exception e) {
@@ -62,8 +64,8 @@ public class MailSenderService {
     }
 
     private static void send(SimpleEmailServiceJavaMailSender sender, String from, String personal, String to, Set<String> bcc,
-                             String subject, String body, Map<String, String> tags, Map<String, byte[]> attachments)
-            throws MessagingException {
+                             String subject, String body, Map<String, String> tags, Map<String, byte[]> attachments,
+                             Map<String, byte[]> inlineImages) throws MessagingException {
         var message = sender.createMimeMessage();
         var helper = new MimeMessageHelper(message, MimeMessageHelper.MULTIPART_MODE_MIXED_RELATED, StandardCharsets.UTF_8.name());
         try {
@@ -88,6 +90,12 @@ public class MailSenderService {
                 }
                 String type = attachment.getKey().toLowerCase().endsWith(".pdf") ? "application/pdf" : "application/octet-stream";
                 helper.addAttachment(attachment.getKey(), new ByteArrayDataSource(attachment.getValue(), type));
+            }
+        }
+        // Après le texte : JavaMail exige le corps avant les parties qu'il référence.
+        if (inlineImages != null) {
+            for (Map.Entry<String, byte[]> image : inlineImages.entrySet()) {
+                helper.addInline(image.getKey(), new ByteArrayDataSource(image.getValue(), "image/png"));
             }
         }
         if (tags != null && !tags.isEmpty()) {
