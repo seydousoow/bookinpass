@@ -36,8 +36,10 @@ public class TransportStation {
     @Column(nullable = false)
     private String name;
 
-    @Column(name = "city_id")
-    private Integer cityId;
+    /** Ville GeoNames ; vide pour une gare d'aéroport. */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "city_id")
+    private City city;
 
     @JdbcTypeCode(SqlTypes.CHAR)
     @Column(name = "airport_iata", length = 3)
@@ -47,4 +49,14 @@ public class TransportStation {
 
     /** Téléphone de la gare, E.164 ; à défaut, celui de l'exploitant. */
     private String phone;
+
+    /** Lieu de recherche : identifiant GeoNames de la ville, ou code IATA de l'aéroport. */
+    public String placeId() {
+        return city != null ? city.getId().toString() : airportIata;
+    }
+
+    /** Nom du lieu : la ville, ou la gare elle-même pour un aéroport. */
+    public String placeName() {
+        return city != null ? city.getName() : name;
+    }
 }

@@ -13,6 +13,7 @@ import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.json.JsonMapper;
 
 import java.io.IOException;
+import java.time.Instant;
 import java.util.Map;
 
 /**
@@ -47,7 +48,19 @@ public class StripeClient {
      */
     public JsonNode createCheckoutSession(long amount, String currency, String label, String returnUrl, String locale,
                                           Map<String, String> metadata, String idempotencyKey) {
+        return createCheckoutSession(amount, currency, label, returnUrl, locale, metadata, idempotencyKey, null);
+    }
+
+    /**
+     * @param expiresAt fin de la session (30 minutes au moins après sa création, exigence Stripe) ; {@code null} : 24 h,
+     *                  la valeur par défaut de Stripe
+     */
+    public JsonNode createCheckoutSession(long amount, String currency, String label, String returnUrl, String locale,
+                                          Map<String, String> metadata, String idempotencyKey, Instant expiresAt) {
         MultiValueMap<String, String> form = new LinkedMultiValueMap<>();
+        if (expiresAt != null) {
+            form.add("expires_at", Long.toString(expiresAt.getEpochSecond()));
+        }
         form.add("ui_mode", "form");
         form.add("mode", "payment");
         form.add("billing_address_collection", "required");

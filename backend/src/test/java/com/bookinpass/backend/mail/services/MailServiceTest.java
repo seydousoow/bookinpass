@@ -7,6 +7,7 @@ import com.bookinpass.backend.mail.resources.BookingCancellationMailProperties;
 import com.bookinpass.backend.mail.resources.BookingChangeMailProperties;
 import com.bookinpass.backend.mail.resources.BookingConfirmationMailProperties;
 import com.bookinpass.backend.mail.resources.BookingMailProperties;
+import com.bookinpass.backend.mail.resources.BusTicketMailProperties;
 import com.bookinpass.backend.mail.resources.FlightItinerary;
 import com.bookinpass.backend.mail.resources.MailLang;
 import org.junit.jupiter.api.Test;
@@ -134,6 +135,24 @@ class MailServiceTest {
             assertThat(mails.render(BookingCancellationMailProperties.builder().name("Amina").lang(lang).pnr("RZPNX8")
                     .segments(List.of()).passengers(List.of()).refund("200.00 EUR").build()).body()).contains("200.00 EUR");
         }
+    }
+
+    @Test
+    void busTicketsShowEachPassengerCodeAndTheLink() throws Exception {
+        BusTicketMailProperties.BusTicketMailPropertiesBuilder<?, ?> tickets = BusTicketMailProperties.builder().name("Awa Sène")
+                .pnr("K7MPQ2").lastName("Sène").from("Dakar").to("Touba").departure("lundi 26 octobre 2026 · 07:00")
+                .originStation("Terminus Liberté 5").originAddress("Liberté 5, Dakar").destinationStation("Touba")
+                .operator("Dakar Dem Dikk").operatorPhone("+221338241010").amount("8 000 F CFA")
+                .tickets(List.of(new BusTicketMailProperties.Ticket("Awa Sène", "ABCD234EFG"), new BusTicketMailProperties.Ticket("Moussa Diop", "HJKL567MNP")));
+
+        MailService.Rendered fr = service(false).render(tickets.lang(MailLang.FR).build());
+        assertThat(fr.subject()).isEqualTo("Vos billets de car K7MPQ2");
+        assertThat(fr.body()).contains("Dakar → Touba", "ABCD234EFG", "HJKL567MNP", "Terminus Liberté 5", "8 000 F CFA",
+                "/bus/booking?n=K7MPQ2&amp;l=S%C3%A8ne").doesNotContain("continu");
+
+        MailService.Rendered en = service(false).render(tickets.lang(MailLang.EN).lastDeparture("19:00").build());
+        assertThat(en.subject()).isEqualTo("Your bus tickets K7MPQ2");
+        assertThat(en.body()).contains("Continuous departures until 19:00", "View my tickets");
     }
 
     @Test

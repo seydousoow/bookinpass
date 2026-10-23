@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<!--/* Billets de car d'une réservation confirmée : trajet, départ, gare, un code par passager, montant payé. */-->
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout :: mail(~{::content})}">
+<body>
+<th:block th:fragment="content">
+    <tr><td style="padding-top:28px;font-size:20px;font-weight:bold;color:#15803d;" th:text="|#{mail.bus.title} ✓|">Vos billets de car sont confirmés</td></tr>
+    <tr><td style="padding-top:16px;" th:text="#{mail.bus.intro(${name})}">Bonjour Amina, …</td></tr>
+
+    <tr><td style="padding-top:20px;">
+        <table role="presentation" width="100%" border="0" cellpadding="0" cellspacing="0" style="border:1px solid #e4e4e7;border-radius:6px;">
+            <tr><td style="padding:18px;">
+                <div style="font-size:13px;color:#71717a;" th:text="#{mail.bus.reference}">Référence</div>
+                <div style="font-size:15px;font-weight:bold;letter-spacing:1px;" th:text="${pnr}">K7MPQ2</div>
+                <div style="padding-top:12px;font-size:17px;font-weight:bold;" th:text="|${from} → ${to}|">Dakar → Touba</div>
+                <div style="padding-top:4px;" th:text="${departure}">samedi 25 octobre 2026 à 07:00</div>
+                <div th:if="${lastDeparture != null}" style="padding-top:4px;font-size:12px;color:#71717a;"
+                     th:text="#{mail.bus.continuous(${lastDeparture})}">Départs en continu jusqu'à 19:00</div>
+                <div style="padding-top:12px;font-size:13px;color:#71717a;" th:text="#{mail.bus.boarding}">Embarquement</div>
+                <div><strong th:text="${originStation}">Terminus Liberté 5</strong><th:block th:if="${originAddress != null}"> — <span th:text="${originAddress}">Liberté 5, Dakar</span></th:block></div>
+                <div style="padding-top:8px;font-size:13px;color:#71717a;" th:text="#{mail.bus.arrival}">Arrivée</div>
+                <div th:text="${destinationStation}">Touba</div>
+                <div style="padding-top:8px;font-size:12px;color:#71717a;" th:text="|#{mail.bus.operator} : ${operator}${operatorPhone != null ? ' · ' + operatorPhone : ''}|">Dakar Dem Dikk</div>
+            </td></tr>
+        </table>
+    </td></tr>
+
+    <tr><td style="padding-top:24px;font-size:17px;font-weight:bold;" th:text="#{mail.bus.tickets}">Vos billets</td></tr>
+    <tr th:each="ticket : ${tickets}"><td style="padding-top:8px;">
+        <table role="presentation" width="100%" border="0" cellpadding="0" cellspacing="0" style="background:#eee9ff;border-radius:6px;">
+            <tr>
+                <td style="padding:12px 16px;" th:text="${ticket.passenger}">Amina Sow</td>
+                <td align="right" style="padding:12px 16px;font-family:'Courier New',monospace;font-size:16px;font-weight:bold;letter-spacing:2px;color:#5125d7;"
+                    th:text="${ticket.code}">ABCD234EFG</td>
+            </tr>
+        </table>
+    </td></tr>
+    <tr><td style="padding-top:12px;font-size:12px;color:#71717a;" th:text="#{mail.bus.present}">Présentez le code …</td></tr>
+
+    <tr><td style="padding-top:20px;" th:text="|#{mail.prices.total} : ${amount}|">Prix total : 8 000 XOF</td></tr>
+    <tr><td style="padding-top:24px;">
+        <a th:href="@{${baseUrl + '/bus/booking'}(n=${pnr},l=${lastName})}" th:text="#{mail.bus.view}"
+           style="display:inline-block;background:#5125d7;color:#ffffff;font-weight:bold;font-size:14px;text-decoration:none;padding:10px 20px;border-radius:999px;">Voir mes billets</a>
+    </td></tr>
+</th:block>
+</body>
+</html>

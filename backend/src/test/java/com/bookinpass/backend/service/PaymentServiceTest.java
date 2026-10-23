@@ -50,7 +50,7 @@ class PaymentServiceTest {
     private final FlightService flights = mock(FlightService.class);
     private final StayService stays = mock(StayService.class);
     private final BookingRecorder recorder = mock(BookingRecorder.class);
-    private final PaymentService payments = new PaymentService(new StripeProperties("https://api.stripe.com", "sk_test_x", "pk_test_x", "2026-03-25.dahlia", "whsec_test", "http://localhost:4200/"), stripe, flights, stays, json, CLOCK, recorder);
+    private final PaymentService payments = new PaymentService(new StripeProperties("https://api.stripe.com", "sk_test_x", "pk_test_x", "2026-03-25.dahlia", "whsec_test", "http://localhost:4200/"), stripe, flights, stays, json, CLOCK, recorder, event -> {});
 
     /**
      * Tarification comme Duffel : l'offre relue, son {@code total_amount} augmenté des services prévus (bagages de l'offre,
@@ -145,7 +145,7 @@ class PaymentServiceTest {
 
     @Test
     void withoutStripeKeysPaymentsAreUnavailable() {
-        PaymentService unconfigured = new PaymentService(new StripeProperties("https://api.stripe.com", "", "", "2026-03-25.dahlia", "", "http://localhost:4200"), stripe, flights, stays, json, CLOCK, recorder);
+        PaymentService unconfigured = new PaymentService(new StripeProperties("https://api.stripe.com", "", "", "2026-03-25.dahlia", "", "http://localhost:4200"), stripe, flights, stays, json, CLOCK, recorder, event -> {});
 
         assertThatThrownBy(() -> unconfigured.createFlightCheckout("off_1", List.of(), "/flight/x", 0, "fr"))
                 .isInstanceOf(PaymentException.class).hasFieldOrPropertyWithValue("code", "payments-unavailable");
@@ -165,7 +165,7 @@ class PaymentServiceTest {
 
     @Test
     void withoutWebhookSecretEventsAreRefused() {
-        PaymentService unconfigured = new PaymentService(new StripeProperties("https://api.stripe.com", "sk_test_x", "pk_test_x", "2026-03-25.dahlia", "", "http://localhost:4200"), stripe, flights, stays, json, CLOCK, recorder);
+        PaymentService unconfigured = new PaymentService(new StripeProperties("https://api.stripe.com", "sk_test_x", "pk_test_x", "2026-03-25.dahlia", "", "http://localhost:4200"), stripe, flights, stays, json, CLOCK, recorder, event -> {});
 
         assertThatThrownBy(() -> unconfigured.handleWebhook(new byte[0], "t=1,v1=00"))
                 .isInstanceOf(PaymentException.class).hasFieldOrPropertyWithValue("code", "payments-unavailable");

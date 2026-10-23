@@ -56,4 +56,8 @@ public class TransportRoute {
 
     @Column(nullable = false)
     private boolean active;
+
+    /** Places d'un car ; sans effet sur un service continu (horaire avec {@code last_departure}). */
+    @Column(nullable = false)
+    private short capacity;
 }

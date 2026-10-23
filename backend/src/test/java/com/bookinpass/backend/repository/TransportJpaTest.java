@@ -40,7 +40,7 @@ class TransportJpaTest {
         assertThat(routeRepository.findByCode("DKR-LIB5_TOUBA")).hasValueSatisfying(touba -> {
             assertThat(touba.getNetwork()).isEqualTo(TransportNetwork.INTERURBAN);
             assertThat(touba.getOrigin().getName()).isEqualTo("Terminus Liberté 5");
-            assertThat(touba.getDestination().getCityId()).isEqualTo(2244322);
+            assertThat(touba.getDestination().placeId()).isEqualTo("2244322");
             assertThat(touba.getPrice()).isEqualByComparingTo("4000");
             assertThat(touba.getCurrency()).isEqualTo("XOF");
             assertThat(touba.isActive()).isTrue();
@@ -49,7 +49,7 @@ class TransportJpaTest {
                 assertThat(banjul.getNetwork()).isEqualTo(TransportNetwork.INTERNATIONAL));
         assertThat(routeRepository.findByCode("DKR-HLMGY_AIBD")).hasValueSatisfying(aibd -> {
             assertThat(aibd.getDestination().getAirportIata()).isEqualTo("DSS");
-            assertThat(aibd.getDestination().getCityId()).isNull();
+            assertThat(aibd.getDestination().getCity()).isNull();
         });
     }
 
