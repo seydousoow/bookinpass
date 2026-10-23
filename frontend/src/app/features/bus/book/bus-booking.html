@@ -1,0 +1,96 @@
+<ng-container *transloco="let t; prefix: 'bus'">
+  <nav [attr.aria-label]="t('steps.label')" class="bg-surface-muted -mx-2 mb-4 px-4 py-3">
+    <ol class="flex items-center gap-3 overflow-x-auto">
+      @for (s of steps; track s; let i = $index, last = $last) {
+        <li [attr.aria-current]="i === stepIndex() ? 'step' : null" [class.max-md:hidden]="i !== stepIndex()" [class.text-muted]="i > stepIndex()"
+            class="flex shrink-0 items-center gap-2 text-sm font-semibold">
+          <span [class]="i === stepIndex() ? 'bg-brand-primary border-brand-primary text-onbrand' : i < stepIndex() ? 'border-brand-primary text-brand-primary' : 'border-ink'"
+                class="flex size-6 items-center justify-center rounded-full border-2 text-xs">{{ i + 1 }}</span>
+          {{ t('steps.' + s) }}
+        </li>
+        @if (!last) {
+          <li aria-hidden="true" class="bg-border-strong h-px w-10 shrink-0 max-md:hidden"></li>
+        }
+      }
+    </ol>
+  </nav>
+
+  @if (step() === 'done' && booking(); as confirmed) {
+    <bip-bus-tickets [booking]="confirmed"/>
+    <p class="text-muted mt-4 text-sm">{{ t('pay.mail-sent', {email: details().email}) }}</p>
+  } @else if (!choice()) {
+    <div class="flex flex-col items-center gap-4 py-16 text-center">
+      <p class="text-lg font-semibold">{{ t('book.missing') }}</p>
+      <bip-button (clicked)="backToResults()" variant="primary">{{ t('book.new-search') }}</bip-button>
+    </div>
+  } @else if (loading() && !departure()) {
+    <div class="flex justify-center py-16"><bip-spinner showLabel/></div>
+  } @else if (failed()) {
+    <div class="flex flex-col items-center gap-4 py-16 text-center" role="alert">
+      <p class="text-lg font-semibold">{{ t('search.failed') }}</p>
+      <bip-button (clicked)="retry()" variant="primary">{{ t('search.retry') }}</bip-button>
+    </div>
+  } @else if (!departure()) {
+    <div class="flex flex-col items-center gap-4 py-16 text-center">
+      <p class="text-lg font-semibold">{{ t('book.unavailable') }}</p>
+      <bip-button (clicked)="backToResults()" variant="primary">{{ t('book.back-to-results') }}</bip-button>
+    </div>
+  } @else {
+    @let d = departure()!;
+    <section class="rounded-card border-border-subtle bg-surface-card mb-6 border p-4">
+      <p class="flex flex-wrap items-center gap-1 text-lg font-bold">
+        {{ d.origin.place }} <ng-icon aria-hidden="true" class="text-muted" name="heroArrowRight"/> {{ d.destination.place }}
+      </p>
+      <p class="first-letter:uppercase">{{ d.departs_at | bipDate: day }} · {{ d.departs_at | bipDate: time }}
+        @if (d.last_departure_at) {
+          <span class="text-muted text-sm">({{ t('search.continuous', {until: (d.last_departure_at | bipDate: time)}) }})</span>
+        }
+      </p>
+      <p class="text-muted text-sm">{{ t('search.boarding', {address: d.origin.name + (d.origin.address ? ', ' + d.origin.address : '')}) }}</p>
+      <p class="mt-2 font-semibold">{{ t('book.total', {count: choice()!.passengers, total: (d.total | bipMoney: d.currency)}) }}</p>
+    </section>
+
+    @if (step() === 'travellers') {
+      <bip-bus-traveller-form [(value)]="details"/>
+      @if (incomplete()) {
+        <p class="text-state-error mt-4 text-sm" role="alert">{{ t('travellers.incomplete') }}</p>
+      }
+      <div class="mt-6 flex justify-between gap-2">
+        <bip-button (clicked)="backToResults()" variant="ghost">{{ t('book.back-to-results') }}</bip-button>
+        <bip-button (clicked)="toPayment()" [disabled]="!d.available" variant="primary">{{ t('book.to-payment') }}</bip-button>
+      </div>
+    } @else {
+      <section class="space-y-4">
+        <h2 class="text-xl font-bold">{{ t('pay.title') }}</h2>
+        @if (holding()) {
+          <div class="flex justify-center py-8"><bip-spinner [label]="'bus.pay.holding'" showLabel/></div>
+        } @else if (holdError(); as error) {
+          <p class="bg-state-error-soft text-state-error rounded-card p-3 text-sm" role="alert">{{ t(error) }}</p>
+          <div class="flex flex-wrap gap-2">
+            <bip-button (clicked)="backToTravellers()" variant="ghost">{{ t('book.back-to-travellers') }}</bip-button>
+            @if (error === 'pay.errors.sold-out' || error === 'pay.errors.departure-closed') {
+              <bip-button (clicked)="backToResults()" variant="primary">{{ t('book.back-to-results') }}</bip-button>
+            } @else {
+              <bip-button (clicked)="placeHold()" variant="primary">{{ t('search.retry') }}</bip-button>
+            }
+          </div>
+        } @else if (hold(); as held) {
+          <p class="bg-state-info-soft text-state-info rounded-card p-3 text-sm">{{ t('pay.held', {until: (held.hold_expires_at | bipDate: time)}) }}</p>
+          @if (confirming()) {
+            <div class="flex justify-center py-8"><bip-spinner [label]="'bus.pay.confirming'" showLabel/></div>
+          } @else if (confirmError(); as error) {
+            <p class="bg-state-error-soft text-state-error rounded-card p-3 text-sm" role="alert">{{ t(error) }}</p>
+            @if (error === 'pay.errors.confirm-failed') {
+              <bip-button (clicked)="retryConfirmation()" variant="primary">{{ t('search.retry') }}</bip-button>
+            } @else {
+              <bip-button (clicked)="backToResults()" variant="primary">{{ t('book.back-to-results') }}</bip-button>
+            }
+          } @else {
+            <bip-payment-form (authorised)="onAuthorised($event)" [session]="held.checkout"/>
+            <bip-button (clicked)="backToTravellers()" variant="ghost">{{ t('book.back-to-travellers') }}</bip-button>
+          }
+        }
+      </section>
+    }
+  }
+</ng-container>

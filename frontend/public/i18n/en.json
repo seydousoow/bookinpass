@@ -71,7 +71,8 @@
     "stays": "Accommodation",
     "uiKit": "Design system",
     "currency": "Currency",
-    "language": "Language"
+    "language": "Language",
+    "bus": "Bus"
   },
   "footer": {
     "tagline": "Book your flights, stays, and activities in Senegal and beyond.",
@@ -625,7 +626,8 @@
       "label": "What are you looking for?",
       "flights": "Flights",
       "stays": "Stays",
-      "manage": "Manage my flight"
+      "manage": "Manage my flight",
+      "bus": "Bus"
     }
   },
   "stay": {
@@ -886,5 +888,117 @@
       "expired": "The payment session has expired: reload the page to start again."
     },
     "processing": "Processing payment…"
+  },
+  "bus": {
+    "network": {
+      "interurban": "Intercity",
+      "international": "International",
+      "airport": "Airport shuttle"
+    },
+    "search": {
+      "from": "From",
+      "to": "To",
+      "date": "Travel date",
+      "date-placeholder": "Pick a date",
+      "passengers": "Passengers",
+      "submit": "Search",
+      "places-failed": "Bus routes could not be loaded. Reload the page.",
+      "incomplete": "Choose where from, where to and a date.",
+      "invalid": "Enter your trip to see departures.",
+      "passenger-count": "{count, plural, one {# passenger} other {# passengers}}",
+      "edit": "Edit",
+      "close": "Close",
+      "days": "Travel day",
+      "previous-day": "Previous day",
+      "next-day": "Next day",
+      "failed": "Departures could not be loaded.",
+      "retry": "Try again",
+      "empty-title": "No departures that day",
+      "empty-message": "This route does not run that day. Try another day.",
+      "time-note": "Dakar time (GMT).",
+      "continuous": "continuous departures until {until}",
+      "boarding": "Boarding: {address}",
+      "per-passenger": "{price} per passenger",
+      "sold-out": "Sold out",
+      "closed": "Sales closed",
+      "seats-left": "{count, plural, one {Only # seat left} other {Only # seats left}}",
+      "choose": "Select"
+    },
+    "steps": {
+      "label": "Booking steps",
+      "travellers": "Passengers",
+      "pay": "Payment",
+      "done": "Tickets"
+    },
+    "book": {
+      "missing": "No departure selected.",
+      "new-search": "Search for a bus",
+      "unavailable": "This departure is no longer offered.",
+      "back-to-results": "Back to departures",
+      "total": "{count, plural, one {Total for # passenger: {total}} other {Total for # passengers: {total}}}",
+      "to-payment": "Continue to payment",
+      "back-to-travellers": "Edit passengers"
+    },
+    "travellers": {
+      "title": "Passengers",
+      "subtitle": "Each passenger's name is printed on their ticket.",
+      "passenger": "Passenger {index}",
+      "given-name": "First name",
+      "family-name": "Last name",
+      "contact": "Contact details",
+      "email": "Email",
+      "email-hint": "Your tickets will be sent here.",
+      "phone": "Phone",
+      "phone-hint": "In case your departure changes.",
+      "incomplete": "Fill in the passengers' names and your contact details.",
+      "errors": {
+        "name": "Letters, spaces, apostrophes and hyphens only.",
+        "name-length": "50 characters at most.",
+        "email": "Invalid email address.",
+        "phone": "Invalid phone number."
+      }
+    },
+    "pay": {
+      "title": "Payment",
+      "holding": "Booking your seats…",
+      "confirming": "Confirming your booking…",
+      "held": "Your seats are held until {until} (Dakar time): pay before then to keep them.",
+      "mail-sent": "Your tickets have been sent to {email}.",
+      "errors": {
+        "sold-out": "Not enough seats are left on this departure.",
+        "departure-closed": "This departure is no longer on sale.",
+        "departure-not-found": "This departure no longer exists.",
+        "route-not-found": "This route is no longer sold.",
+        "hold-expired": "Time ran out and your seats were released. Try again to book new ones.",
+        "payments-unavailable": "Online payment is temporarily unavailable.",
+        "failed": "Your seats could not be booked. Try again.",
+        "sold-out-paid": "The last seats were sold during your payment. Nothing was charged.",
+        "confirm-failed": "Your payment is authorised but the booking could not be confirmed. Try again: you will not be charged twice."
+      }
+    },
+    "tickets": {
+      "confirmed": "Booking confirmed",
+      "title": "Tickets",
+      "status": {
+        "held": "Payment pending: tickets become valid once payment is received.",
+        "released": "Unpaid booking: the seats were released."
+      },
+      "reference": "Booking reference",
+      "continuous": "Continuous departures until {until}",
+      "boarding": "Boarding",
+      "arrival": "Arrival",
+      "operator": "Operator",
+      "total": "Total paid",
+      "code": "Ticket code {code}",
+      "present": "Show each passenger's code to the inspector. Be at the station 30 minutes before departure."
+    },
+    "lookup": {
+      "title": "My bus tickets",
+      "reference": "Booking reference",
+      "last-name": "A passenger's last name",
+      "submit": "Show",
+      "not-found": "No booking matches this reference and name.",
+      "failed": "Tickets could not be loaded. Try again."
+    }
   }
 }

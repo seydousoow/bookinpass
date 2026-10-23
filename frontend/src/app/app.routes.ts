@@ -58,6 +58,29 @@ export const routes: Routes = [
     ],
   },
   {
+    path: 'bus',
+    children: [
+      {
+        path: '',
+        pathMatch: 'full',
+        loadComponent: () => import('@features/home/home').then((m) => m.Home),
+        children: [{ path: '', loadComponent: () => import('@features/bus/search-form/bus-search-form').then((m) => m.BusSearchForm) }],
+      },
+      {
+        path: 'search',
+        loadComponent: () => import('@features/bus/search/bus-search').then((m) => m.BusSearch),
+      },
+      {
+        path: 'book',
+        loadComponent: () => import('@features/bus/book/bus-booking').then((m) => m.BusBooking),
+      },
+      {
+        path: 'booking',
+        loadComponent: () => import('@features/bus/booking/bus-booking-lookup').then((m) => m.BusBookingLookup),
+      },
+    ],
+  },
+  {
     path: 'ui-kit',
     loadComponent: () => import('@features/ui-kit/ui-kit.page').then((m) => m.UiKitPage),
     title: 'Design system — Book In Pass',

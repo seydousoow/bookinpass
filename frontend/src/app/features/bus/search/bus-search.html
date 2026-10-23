@@ -1,0 +1,90 @@
+<ng-container *transloco="let t; prefix: 'bus'">
+  <div class="mx-auto grid max-w-4xl grid-cols-1 gap-3 px-2 py-3">
+    @if (search(); as criteria) {
+      <section class="rounded-card border-border-subtle bg-surface-card border p-3">
+        <div class="flex flex-wrap items-center justify-between gap-2">
+          <p class="text-sm">
+            <span class="font-bold">{{ route()?.from }} → {{ route()?.to }}</span>
+            · {{ criteria.date | bipDate: day }} · {{ t('search.passenger-count', {count: criteria.passengers}) }}
+          </p>
+          <bip-button (clicked)="editing.set(!editing())" [expanded]="editing()" size="sm" variant="outline">
+            {{ t(editing() ? 'search.close' : 'search.edit') }}
+          </bip-button>
+        </div>
+        @if (editing()) {
+          <div class="mt-3">
+            <bip-bus-search-form [initial]="criteria"/>
+          </div>
+        }
+      </section>
+
+      <nav [attr.aria-label]="t('search.days')" class="flex items-center justify-between gap-2">
+        <bip-button (clicked)="changeDay(-1)" [disabled]="!canGoBack()" size="sm" variant="ghost">
+          <ng-icon aria-hidden="true" name="heroChevronLeft"/> {{ t('search.previous-day') }}
+        </bip-button>
+        <h1 class="text-base font-bold first-letter:uppercase">{{ criteria.date | bipDate: day }}</h1>
+        <bip-button (clicked)="changeDay(1)" [disabled]="!canGoForward()" size="sm" variant="ghost">
+          {{ t('search.next-day') }} <ng-icon aria-hidden="true" name="heroChevronRight"/>
+        </bip-button>
+      </nav>
+
+      @if (loading()) {
+        <div class="flex justify-center py-16"><bip-spinner showLabel/></div>
+      } @else if (failed()) {
+        <div class="mx-auto flex max-w-md flex-col items-center gap-4 px-4 py-16 text-center" role="alert">
+          <p class="text-lg font-semibold">{{ t('search.failed') }}</p>
+          <bip-button (clicked)="retry()" variant="primary">{{ t('search.retry') }}</bip-button>
+        </div>
+      } @else if (!departures().length) {
+        <div class="mx-auto flex max-w-md flex-col items-center gap-4 px-4 py-16 text-center">
+          <ng-icon class="text-muted text-4xl" name="heroMagnifyingGlass"/>
+          <p class="text-lg font-semibold">{{ t('search.empty-title') }}</p>
+          <p class="text-muted text-sm">{{ t('search.empty-message') }}</p>
+        </div>
+      } @else {
+        <p class="text-muted text-xs">{{ t('search.time-note') }}</p>
+        <ul class="grid gap-3">
+          @for (departure of departures(); track departure.route_code + departure.departs_at) {
+            <li [class.opacity-60]="!departure.available"
+                class="rounded-card border-border-subtle bg-surface-card flex flex-col gap-3 border p-4 sm:flex-row sm:items-center">
+              <div class="min-w-0 flex-1">
+                <p class="flex items-center gap-2 text-xl font-bold">
+                  {{ departure.departs_at | bipDate: time }}
+                  @if (departure.last_departure_at) {
+                    <span class="text-muted text-sm font-normal">{{ t('search.continuous', {until: (departure.last_departure_at | bipDate: time)}) }}</span>
+                  }
+                </p>
+                <p class="mt-1 flex flex-wrap items-center gap-1 text-sm">
+                  <span class="font-semibold">{{ departure.origin.name }}</span>
+                  <ng-icon aria-hidden="true" class="text-muted" name="heroArrowRight"/>
+                  <span class="font-semibold">{{ departure.destination.name }}</span>
+                </p>
+                @if (departure.origin.address) {
+                  <p class="text-muted text-xs">{{ t('search.boarding', {address: departure.origin.address}) }}</p>
+                }
+                <p class="text-muted text-xs">{{ departure.operator }} · {{ t('network.' + departure.network) }}</p>
+              </div>
+              <div class="flex items-center justify-between gap-4 sm:flex-col sm:items-end">
+                <div class="sm:text-right">
+                  <p class="text-lg font-bold">{{ departure.total | bipMoney: departure.currency }}</p>
+                  <p class="text-muted text-xs">{{ t('search.per-passenger', {price: (departure.price | bipMoney: departure.currency)}) }}</p>
+                  @if (!departure.available) {
+                    <p class="text-state-error text-xs font-semibold">{{ t(departure.seats_left === 0 || (departure.seats_left !== null && departure.seats_left < criteria.passengers) ? 'search.sold-out' : 'search.closed') }}</p>
+                  } @else if (departure.seats_left !== null && departure.seats_left <= 10) {
+                    <p class="text-state-warning text-xs font-semibold">{{ t('search.seats-left', {count: departure.seats_left}) }}</p>
+                  }
+                </div>
+                <bip-button (clicked)="choose(departure)" [disabled]="!departure.available" variant="primary">{{ t('search.choose') }}</bip-button>
+              </div>
+            </li>
+          }
+        </ul>
+      }
+    } @else {
+      <section class="rounded-card border-border-subtle bg-surface-card border p-3">
+        <p class="mb-3 text-sm">{{ t('search.invalid') }}</p>
+        <bip-bus-search-form/>
+      </section>
+    }
+  </div>
+</ng-container>
