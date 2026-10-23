@@ -60,6 +60,16 @@ services:
         sync: false
       - key: CORS_ALLOWED_ORIGINS
         sync: false
+      # Back-office du personnel (application séparée), sur le même site que l'API : cookie de session SameSite=Lax.
+      # Valeur conseillée : https://bip-admin.dicortex.com
+      - key: BACKOFFICE_URL
+        sync: false
+      # Premier administrateur, créé au démarrage s'il n'en existe aucun ; mot de passe provisoire (10 caractères, une
+      # lettre et un chiffre) à changer à la première connexion. À retirer ensuite.
+      - key: BOOTSTRAP_ADMIN_USERNAME
+        sync: false
+      - key: BOOTSTRAP_ADMIN_PASSWORD
+        sync: false
 
       # Valeur conseillée : https://api.duffel.com
       - key: DUFFEL_BASE_URL

@@ -121,6 +121,13 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
         return problem;
     }
 
+    @ExceptionHandler(StaffException.class)
+    ProblemDetail staff(StaffException e) {
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(e.status(), e.getMessage());
+        problem.setProperty("code", e.code());
+        return problem;
+    }
+
     @ExceptionHandler(TransportException.class)
     ProblemDetail transport(TransportException e) {
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(e.status(), e.getMessage());

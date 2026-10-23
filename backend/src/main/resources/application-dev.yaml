@@ -10,3 +10,8 @@ spring:
     redis:
       # 6380 = port publié par compose.yaml (6379 est souvent déjà pris sur la machine).
       port: 6380
+
+bookinpass:
+  # http://localhost : le cookie de session du back-office ne peut pas être Secure.
+  staff:
+    cookie-secure: false
