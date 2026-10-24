@@ -248,4 +248,44 @@ class StaffOperationsIntegrationTest {
                         .formatted(station("TOUBA"), station("KAOLACK"))))
                 .andExpect(status().isConflict()).andExpect(jsonPath("$.code").value("route-exists"));
     }
+
+    @Test
+    @Order(7)
+    @DisplayName("Guichet : réservation retrouvée par référence, téléphone ou nom ; billets renvoyés par le chef de gare")
+    void bookingsAreFoundAtTheDesk() throws Exception {
+        mvc.perform(get("/staff/bookings").param("q", "qzk7mp").cookie(inspector))
+                .andExpect(status().isOk()).andExpect(jsonPath("$[0].reference").value("QZK7MP"))
+                .andExpect(jsonPath("$[0].tickets[0].code").value("AAAA234BCD"));
+        mvc.perform(get("/staff/bookings").param("q", "77 123 45 67").cookie(chief)).andExpect(jsonPath("$[0].reference").value("QZK7MP"));
+        mvc.perform(get("/staff/bookings").param("q", "Diop").cookie(chief)).andExpect(jsonPath("$[0].reference").value("QZK7MP"));
+        // Touba voit les réservations des cars qui y arrivent.
+        mvc.perform(get("/staff/bookings").param("q", "QZK7MP").cookie(toubaInspector)).andExpect(jsonPath("$.length()").value(1));
+        mvc.perform(get("/staff/bookings").param("q", "x").cookie(chief))
+                .andExpect(status().isBadRequest()).andExpect(jsonPath("$.code").value("query-too-short"));
+
+        mvc.perform(write(post("/staff/bookings/QZK7MP/resend").cookie(inspector))).andExpect(status().isForbidden());
+        mvc.perform(write(post("/staff/bookings/QZK7MP/resend").cookie(chief)))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.status").value("confirmed"));
+    }
+
+    @Test
+    @Order(8)
+    @DisplayName("Remboursements : paiement mobile tardif listé pour les responsables, noté remboursé une seule fois")
+    void lateMobilePaymentsAreRefundedByHand() throws Exception {
+        int booking = jdbc.queryForObject("SELECT id FROM transport_booking WHERE reference = 'QZK7MP'", Integer.class);
+        int payment = jdbc.queryForObject("""
+                INSERT INTO transport_mobile_payment (booking_id, invoice_token, status, amount, currency, receipt_url, completed_at)
+                VALUES (?, 'test_late', 'refund_needed', 8240, 'XOF', 'https://paydunya/receipt', now()) RETURNING id""", Integer.class, booking);
+
+        mvc.perform(get("/staff/refunds").cookie(chief)).andExpect(status().isForbidden());
+        mvc.perform(get("/staff/refunds").cookie(admin))
+                .andExpect(status().isOk()).andExpect(jsonPath("$[0].reference").value("QZK7MP"))
+                .andExpect(jsonPath("$[0].amount").value("8240")).andExpect(jsonPath("$[0].passengers").value("Awa Sène, Moussa Diop"));
+        mvc.perform(write(post("/staff/refunds/" + payment + "/refunded").cookie(admin), "{\"note\":\"Wave +221771234567, réf. T123\"}"))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.status").value("refunded")).andExpect(jsonPath("$.refunded_by").value("Administrateur"));
+        mvc.perform(write(post("/staff/refunds/" + payment + "/refunded").cookie(admin), "{\"note\":\"encore\"}"))
+                .andExpect(status().isConflict()).andExpect(jsonPath("$.code").value("not-refundable"));
+        mvc.perform(get("/staff/refunds").cookie(admin)).andExpect(jsonPath("$.length()").value(0));
+        mvc.perform(get("/staff/refunds").param("all", "true").cookie(admin)).andExpect(jsonPath("$[0].refund_note").value("Wave +221771234567, réf. T123"));
+    }
 }

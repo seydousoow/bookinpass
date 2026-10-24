@@ -23,3 +23,5 @@ provisoire, à changer à la première connexion).
   est `SameSite=Lax`. Sur `*.vercel.app`, Safari et les navigateurs qui bloquent les cookies tiers refuseraient la session.
 - Côté API (Render) : `BACKOFFICE_URL` = l'origine exacte du back-office (CORS avec cookies et contrôle `Origin` des écritures).
 - La caméra demande HTTPS (ou `localhost`).
+- `vercel.json` pose une Content Security Policy dont `connect-src` nomme l'API (`https://bip-back.dicortex.com`) :
+  à changer avec `API_BASE_URL` si l'API change de domaine, sinon le back-office ne pourra plus l'appeler.

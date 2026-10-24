@@ -2,7 +2,7 @@ import { inject, Injectable } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { APP_CONFIG } from './config';
-import { Departure, DepartureDetail, Incident, IncidentType, Luggage, Route, StaffRole, StaffUser, Station, TicketCheck } from './models';
+import { Departure, DepartureDetail, DeskBooking, Incident, IncidentType, Luggage, Refund, Route, StaffRole, StaffUser, Station, TicketCheck } from './models';
 
 /** Code d'erreur stable renvoyé par l'API (`forbidden`, `capacity-too-low`…), ou `network` sans réponse. */
 export function errorCode(error: unknown): string {
@@ -161,5 +161,22 @@ export class StaffApi {
 
   resetPassword(id: number, temporaryPassword: string): Observable<StaffUser> {
     return this.http.post<StaffUser>(`${this.url}/users/${id}/password`, { temporary_password: temporaryPassword });
+  }
+
+  /** Guichet : référence, téléphone ou nom de famille d'un passager. */
+  searchBookings(query: string): Observable<DeskBooking[]> {
+    return this.http.get<DeskBooking[]>(`${this.url}/bookings`, { params: { q: query } });
+  }
+
+  resendTickets(reference: string): Observable<DeskBooking> {
+    return this.http.post<DeskBooking>(`${this.url}/bookings/${encodeURIComponent(reference)}/resend`, null);
+  }
+
+  refunds(all: boolean): Observable<Refund[]> {
+    return this.http.get<Refund[]>(`${this.url}/refunds`, { params: { all: String(all) } });
+  }
+
+  markRefunded(id: number, note: string): Observable<Refund> {
+    return this.http.post<Refund>(`${this.url}/refunds/${id}/refunded`, { note });
   }
 }

@@ -21,7 +21,8 @@ import java.time.Instant;
 
 /**
  * Facture PayDunya d'une réservation de car (Wave, Orange Money, Free Money). Statuts : {@code pending},
- * {@code completed}, {@code cancelled}, {@code failed}, {@code refund_needed} (payée après la revente des places).
+ * {@code completed}, {@code cancelled}, {@code failed}, {@code refund_needed} (payée après la revente des places),
+ * {@code refunded} (remboursée à la main).
  */
 @Entity
 @Table(name = "transport_mobile_payment")
@@ -32,6 +33,7 @@ public class TransportMobilePayment {
     public static final String PENDING = "pending";
     public static final String COMPLETED = "completed";
     public static final String REFUND_NEEDED = "refund_needed";
+    public static final String REFUNDED = "refunded";
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -67,6 +69,17 @@ public class TransportMobilePayment {
     @Column(name = "completed_at")
     private Instant completedAt;
 
+    /** Remboursement fait à la main, noté au back-office. */
+    @Column(name = "refunded_at")
+    private Instant refundedAt;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "refunded_by")
+    private StaffUser refundedBy;
+
+    @Column(name = "refund_note")
+    private String refundNote;
+
     public TransportMobilePayment(TransportBooking booking, String invoiceToken, BigDecimal amount, String currency) {
         this.booking = booking;
         this.provider = "paydunya";
@@ -91,6 +104,14 @@ public class TransportMobilePayment {
         this.status = REFUND_NEEDED;
         this.receiptUrl = receiptUrl;
         this.completedAt = at;
+    }
+
+    /** Client remboursé (opérateur, référence de transaction dans {@code note}). */
+    public void refunded(StaffUser by, String note, Instant at) {
+        this.status = REFUNDED;
+        this.refundedBy = by;
+        this.refundNote = note;
+        this.refundedAt = at;
     }
 
     /** {@code cancelled} ou {@code failed}, tel que PayDunya le dit. */

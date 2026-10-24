@@ -17,7 +17,9 @@
     "luggage": "Luggage",
     "incidents": "Incidents",
     "routes": "Routes",
-    "staff": "Staff"
+    "staff": "Staff",
+    "bookings": "Bookings",
+    "refunds": "Refunds"
   },
   "login": {
     "subtitle": "Station staff area.",
@@ -223,6 +225,52 @@
     "station-required": "Station chiefs and inspectors work in a station.",
     "own-account": "You cannot change your own role or deactivate yourself.",
     "staff-not-found": "Account not found.",
-    "schedule-not-found": "Schedule not found."
+    "schedule-not-found": "Schedule not found.",
+    "query-too-short": "Type a reference (6 characters), a phone number or a name (at least 2 letters).",
+    "booking-not-found": "Booking not found.",
+    "booking-not-confirmed": "Only a paid booking has tickets.",
+    "refund-not-found": "Payment not found.",
+    "not-refundable": "This payment is not waiting for a refund."
+  },
+  "bookings": {
+    "title": "Bookings",
+    "query": "Reference, phone or a passenger's last name",
+    "search": "Search",
+    "none": "No booking found (routes of your station).",
+    "status": {
+      "held": "Awaiting payment",
+      "confirmed": "Paid",
+      "released": "Unpaid, seats released"
+    },
+    "method": {
+      "card": "Card",
+      "mobile_money": "Mobile money"
+    },
+    "not-scanned": "not checked",
+    "resend": "Resend the tickets by email",
+    "payment": {
+      "authorised": "authorised",
+      "captured": "captured",
+      "capture_failed": "capture to retry",
+      "released": "released, nothing charged",
+      "failed": "declined",
+      "partially_refunded": "partly refunded",
+      "refunded": "refunded",
+      "pending": "pending",
+      "completed": "paid",
+      "cancelled": "cancelled",
+      "refund_needed": "to refund"
+    }
+  },
+  "refunds": {
+    "title": "Refunds",
+    "show-done": "Also show completed refunds",
+    "hint": "Wave / Orange Money payments received after the seats were resold: the customer has no ticket. Refund them from the PayDunya account or the operator, then record it here.",
+    "none": "No refund pending.",
+    "paid-at": "Paid on {{time}}",
+    "receipt": "PayDunya receipt",
+    "note": "How: operator, number, transaction reference",
+    "mark": "Refund done",
+    "done": "Refunded on {{time}} by {{name}}"
   }
 }

@@ -137,3 +137,44 @@ export interface Route {
   readonly active: boolean;
   readonly schedules: readonly Schedule[];
 }
+
+export interface DeskBooking {
+  readonly reference: string;
+  readonly status: 'held' | 'confirmed' | 'released';
+  readonly origin: string;
+  readonly destination: string;
+  readonly departure_id: number;
+  readonly departs_at: string;
+  readonly email: string;
+  readonly phone: string;
+  readonly total: string;
+  readonly currency: string;
+  /** `card`, `mobile_money`, ou `null` : pas encore payée. */
+  readonly payment_method: 'card' | 'mobile_money' | null;
+  readonly payment_status: string | null;
+  readonly created_at: string;
+  readonly confirmed_at: string | null;
+  readonly tickets: readonly { given_name: string; family_name: string; code: string | null; scanned_at: string | null }[];
+}
+
+/** Paiement mobile reçu après la revente des places : à rembourser à la main. */
+export interface Refund {
+  readonly id: number;
+  readonly reference: string;
+  readonly passengers: string;
+  readonly email: string;
+  readonly phone: string;
+  readonly origin: string;
+  readonly destination: string;
+  readonly departs_at: string;
+  readonly amount: string;
+  readonly currency: string;
+  readonly provider: string;
+  readonly invoice_token: string;
+  readonly receipt_url: string | null;
+  readonly paid_at: string | null;
+  readonly status: 'refund_needed' | 'refunded';
+  readonly refunded_at: string | null;
+  readonly refunded_by: string | null;
+  readonly refund_note: string | null;
+}

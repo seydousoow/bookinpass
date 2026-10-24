@@ -64,6 +64,8 @@ export class Shell {
     { key: 'scan', route: '/scan', roles: ALL },
     { key: 'luggage', route: '/luggage', roles: ['admin', 'manager', 'station_chief'] },
     { key: 'incidents', route: '/incidents', roles: ALL },
+    { key: 'bookings', route: '/bookings', roles: ALL },
+    { key: 'refunds', route: '/refunds', roles: ['admin', 'manager'] },
     { key: 'routes', route: '/routes', roles: ['admin', 'manager'] },
     { key: 'staff', route: '/staff', roles: ['admin', 'manager'] },
   ];

@@ -17,7 +17,9 @@
     "luggage": "Bagages",
     "incidents": "Incidents",
     "routes": "Lignes",
-    "staff": "Personnel"
+    "staff": "Personnel",
+    "bookings": "Réservations",
+    "refunds": "Remboursements"
   },
   "login": {
     "subtitle": "Espace du personnel des gares.",
@@ -223,6 +225,52 @@
     "station-required": "Un chef de gare ou un contrôleur travaille dans une gare.",
     "own-account": "Vous ne pouvez ni changer votre rôle ni vous désactiver.",
     "staff-not-found": "Compte introuvable.",
-    "schedule-not-found": "Horaire introuvable."
+    "schedule-not-found": "Horaire introuvable.",
+    "query-too-short": "Tapez une référence (6 caractères), un numéro de téléphone ou un nom (2 lettres au moins).",
+    "booking-not-found": "Réservation introuvable.",
+    "booking-not-confirmed": "Seule une réservation payée a des billets.",
+    "refund-not-found": "Paiement introuvable.",
+    "not-refundable": "Ce paiement n'attend pas de remboursement."
+  },
+  "bookings": {
+    "title": "Réservations",
+    "query": "Référence, téléphone ou nom d'un passager",
+    "search": "Rechercher",
+    "none": "Aucune réservation trouvée (lignes de votre gare).",
+    "status": {
+      "held": "En attente de paiement",
+      "confirmed": "Payée",
+      "released": "Non payée, places rendues"
+    },
+    "method": {
+      "card": "Carte",
+      "mobile_money": "Mobile money"
+    },
+    "not-scanned": "non contrôlé",
+    "resend": "Renvoyer les billets par e-mail",
+    "payment": {
+      "authorised": "autorisé",
+      "captured": "encaissé",
+      "capture_failed": "encaissement à reprendre",
+      "released": "libéré, rien débité",
+      "failed": "refusé",
+      "partially_refunded": "remboursé en partie",
+      "refunded": "remboursé",
+      "pending": "en attente",
+      "completed": "payé",
+      "cancelled": "annulé",
+      "refund_needed": "à rembourser"
+    }
+  },
+  "refunds": {
+    "title": "Remboursements",
+    "show-done": "Afficher aussi les remboursements faits",
+    "hint": "Paiements Wave / Orange Money reçus après la revente des places : le client n'a pas de billet. Remboursez-le depuis le compte PayDunya ou l'opérateur, puis notez-le ici.",
+    "none": "Aucun remboursement en attente.",
+    "paid-at": "Payé le {{time}}",
+    "receipt": "Reçu PayDunya",
+    "note": "Comment : opérateur, numéro, référence de la transaction",
+    "mark": "Remboursement fait",
+    "done": "Remboursé le {{time}} par {{name}}"
   }
 }

@@ -20,6 +20,13 @@ export const routes: Routes = [
         loadComponent: () => import('./pages/luggage').then((m) => m.LuggagePage),
       },
       { path: 'incidents', loadComponent: () => import('./pages/incidents').then((m) => m.IncidentsPage) },
+      { path: 'bookings', loadComponent: () => import('./pages/bookings').then((m) => m.BookingsPage) },
+      {
+        path: 'refunds',
+        canActivate: [roleGuard],
+        data: { roles: ['admin', 'manager'] },
+        loadComponent: () => import('./pages/refunds').then((m) => m.RefundsPage),
+      },
       {
         path: 'routes',
         canActivate: [roleGuard],
