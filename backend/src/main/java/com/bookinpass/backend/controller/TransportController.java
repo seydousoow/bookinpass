@@ -1,13 +1,18 @@
 package com.bookinpass.backend.controller;
 
 import com.bookinpass.backend.config.OpenApiConfig;
+import com.bookinpass.backend.config.StripeProperties;
 import com.bookinpass.backend.dto.request.TransportBookingRequest;
 import com.bookinpass.backend.dto.request.TransportConfirmationRequest;
+import com.bookinpass.backend.dto.request.TransportMobilePaymentRequest;
 import com.bookinpass.backend.dto.response.TransportBookingResponse;
 import com.bookinpass.backend.dto.response.TransportDepartureResponse;
 import com.bookinpass.backend.dto.response.TransportHoldResponse;
+import com.bookinpass.backend.dto.response.TransportMobilePaymentResponse;
+import com.bookinpass.backend.dto.response.TransportPaymentMethodsResponse;
 import com.bookinpass.backend.dto.response.TransportPlaceResponse;
 import com.bookinpass.backend.service.transport.TransportBookingService;
+import com.bookinpass.backend.service.transport.TransportMobilePaymentService;
 import com.bookinpass.backend.service.transport.TransportSearchService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -27,6 +32,8 @@ import org.springframework.aot.hint.annotation.RegisterReflection;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.MediaType;
 import org.springframework.http.ProblemDetail;
+import org.springframework.http.ResponseEntity;
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -46,7 +53,8 @@ import java.util.List;
 @RestController
 @RequiredArgsConstructor
 @Tag(name = OpenApiConfig.TAG_TRANSPORT)
-@RegisterReflection(classes = {TransportBookingRequest.class, TransportBookingRequest.Passenger.class, TransportConfirmationRequest.class},
+@RegisterReflection(classes = {TransportBookingRequest.class, TransportBookingRequest.Passenger.class, TransportConfirmationRequest.class,
+        TransportMobilePaymentRequest.class},
         memberCategories = {MemberCategory.INVOKE_DECLARED_CONSTRUCTORS, MemberCategory.INVOKE_DECLARED_METHODS, MemberCategory.ACCESS_DECLARED_FIELDS})
 @RequestMapping(path = "transport", produces = MediaType.APPLICATION_JSON_VALUE)
 public class TransportController {
@@ -57,6 +65,38 @@ public class TransportController {
 
     private final TransportSearchService search;
     private final TransportBookingService bookings;
+    private final TransportMobilePaymentService mobile;
+    private final StripeProperties stripe;
+
+    @GetMapping("payment-methods")
+    @Operation(summary = "Moyens de paiement", description = "Carte (Stripe) et mobile money (Wave, Orange Money, Free Money via PayDunya), selon la configuration.")
+    public TransportPaymentMethodsResponse paymentMethods() {
+        return new TransportPaymentMethodsResponse(stripe.enabled(), mobile.available());
+    }
+
+    @PostMapping(path = "bookings/{reference}/mobile-payment", consumes = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Payer par Wave / Orange Money",
+            description = "Ferme la session de carte, crée une facture PayDunya et rend sa page de paiement ; places bloquées 20 minutes au moins.")
+    @ApiResponse(responseCode = "409", description = "Places rendues (`hold-expired`) ou déjà payé par carte (`already-paid`)", content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE, schema = @Schema(implementation = ProblemDetail.class)))
+    @ApiResponse(responseCode = "503", description = "Mobile money non configuré (`payments-unavailable`)", content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE, schema = @Schema(implementation = ProblemDetail.class)))
+    public TransportMobilePaymentResponse mobilePayment(@Parameter(example = "K7MPQ2") @PathVariable @Pattern(regexp = REFERENCE) String reference,
+                                                       @Valid @RequestBody TransportMobilePaymentRequest request) {
+        return new TransportMobilePaymentResponse(mobile.start(reference.toUpperCase(), request.returnPath()));
+    }
+
+    @PostMapping("bookings/{reference}/mobile-payment/confirmation")
+    @Operation(summary = "Retour de PayDunya", description = "Relit la facture chez PayDunya : réservation confirmée (billets envoyés) ou encore `held` si le paiement est en attente.")
+    public TransportBookingResponse mobileConfirmation(@Parameter(example = "K7MPQ2") @PathVariable @Pattern(regexp = REFERENCE) String reference) {
+        return mobile.confirm(reference.toUpperCase());
+    }
+
+    /** IPN : formulaire {@code data[...]} ; seul le jeton de facture est lu, le statut est relu chez PayDunya. */
+    @PostMapping(path = "payments/paydunya", consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
+    @Operation(summary = "IPN PayDunya", description = "Appelé par PayDunya uniquement. Le contenu n'est pas cru : la facture est relue chez PayDunya.")
+    public ResponseEntity<Void> payDunyaNotification(@RequestParam MultiValueMap<String, String> form) {
+        mobile.notified(form.getFirst("data[invoice][token]"));
+        return ResponseEntity.ok().build();
+    }
 
     @GetMapping("places")
     @Operation(summary = "Lieux desservis", description = "Villes et aéroports de départ, triés par nom, chacun avec les lieux qu'il dessert.")

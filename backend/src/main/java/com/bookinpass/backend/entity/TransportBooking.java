@@ -133,6 +133,13 @@ public class TransportBooking {
         this.checkoutSessionId = checkoutSessionId;
     }
 
+    /** Paiement mobile en cours : les places restent bloquées jusqu'à {@code until} au moins. */
+    public void extendHold(Instant until) {
+        if (until.isAfter(holdExpiresAt)) {
+            this.holdExpiresAt = until;
+        }
+    }
+
     public void confirm(Instant at) {
         this.status = TransportBookingStatus.CONFIRMED;
         this.confirmedAt = at;

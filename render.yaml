@@ -96,6 +96,20 @@ services:
       - key: STRIPE_WEBHOOK_SECRET
         sync: false
 
+      # PayDunya : billets de car payés par Wave / Orange Money / Free Money. Clés vides = moyen masqué.
+      # Valeur conseillée : https://app.paydunya.com/sandbox-api/v1 (test), puis https://app.paydunya.com/api/v1
+      - key: PAYDUNYA_BASE_URL
+        sync: false
+      - key: PAYDUNYA_MASTER_KEY
+        sync: false
+      - key: PAYDUNYA_PRIVATE_KEY
+        sync: false
+      - key: PAYDUNYA_TOKEN
+        sync: false
+      # Valeur conseillée : https://bip-back.dicortex.com/api/transport/payments/paydunya
+      - key: PAYDUNYA_CALLBACK_URL
+        sync: false
+
       # E-mails aux voyageurs par AWS SES : true pour les envoyer (identifiants AWS et expéditeur vérifié dans SES
       # requis) ; false = rendus et journalisés, jamais envoyés.
       # Valeur conseillée : true

@@ -974,7 +974,22 @@
         "payments-unavailable": "Online payment is temporarily unavailable.",
         "failed": "Your seats could not be booked. Try again.",
         "sold-out-paid": "The last seats were sold during your payment. Nothing was charged.",
-        "confirm-failed": "Your payment is authorised but the booking could not be confirmed. Try again: you will not be charged twice."
+        "confirm-failed": "Your payment is authorised but the booking could not be confirmed. Try again: you will not be charged twice.",
+        "already-paid": "This booking has already been paid by card.",
+        "mobile-failed": "The mobile payment could not be checked. Try again."
+      },
+      "mobile": {
+        "title": "Wave, Orange Money or Free Money",
+        "hint": "You approve the payment on your phone, on PayDunya's secure page.",
+        "pay": "Pay with mobile money",
+        "or-card": "or by card",
+        "redirecting": "Opening the payment page…",
+        "checking": "Checking your payment…",
+        "pending": "Payment pending: approve it on your phone. This page updates by itself.",
+        "check-again": "Check again",
+        "cancelled": "Payment cancelled: nothing was charged. Your seats stay held for a few minutes.",
+        "retry": "Try Wave / Orange Money again",
+        "use-card": "Pay by card"
       }
     },
     "tickets": {

@@ -99,7 +99,8 @@ public class TransportBookingService {
         }
     }
 
-    private enum Settlement {CONFIRMED_NOW, ALREADY_CONFIRMED, SOLD_OUT}
+    /** Issue de la vente des places d'une réservation payée. */
+    enum Settlement {CONFIRMED_NOW, ALREADY_CONFIRMED, SOLD_OUT}
 
     /**
      * Bloque les places et ouvre la session de paiement. Rejouable : le même {@code request_id} retrouve la même
@@ -202,13 +203,25 @@ public class TransportBookingService {
             capture(intentId, checkoutSessionId, held.minorUnits(), reference);
         }
         if (settlement == Settlement.CONFIRMED_NOW) {
-            safely("tickets mail of " + reference, () -> mailer.send(reference));
+            sendTickets(reference);
         }
         return view(reference);
     }
 
     private Settlement settle(String reference, String checkoutSessionId) {
         TransportBooking booking = bookings.lockByReference(reference).orElseThrow();
+        Settlement settlement = sellSeats(booking);
+        if (settlement == Settlement.CONFIRMED_NOW) {
+            payments.findByCheckoutSessionId(checkoutSessionId).ifPresent(payment -> payment.attachTo(booking));
+        }
+        return settlement;
+    }
+
+    /**
+     * Paiement reçu (carte ou mobile money) : places bloquées vendues, ou revendues si elles avaient été rendues et
+     * qu'il en reste. Réservation déjà verrouillée par l'appelant.
+     */
+    Settlement sellSeats(TransportBooking booking) {
         Integer departure = booking.getDeparture().getId();
         switch (booking.getStatus()) {
             case CONFIRMED -> {
@@ -222,8 +235,12 @@ public class TransportBookingService {
             }
         }
         booking.confirm(clock.instant());
-        payments.findByCheckoutSessionId(checkoutSessionId).ifPresent(payment -> payment.attachTo(booking));
         return Settlement.CONFIRMED_NOW;
+    }
+
+    /** Billets envoyés par e-mail ; un échec d'envoi ne défait pas la vente. */
+    void sendTickets(String reference) {
+        safely("tickets mail of " + reference, () -> mailer.send(reference));
     }
 
     /** Places bloquées rendues ; sans effet sur une réservation confirmée ou déjà libérée. */
@@ -285,7 +302,7 @@ public class TransportBookingService {
                 .orElseThrow(TransportBookingService::notFound);
     }
 
-    private TransportBookingResponse view(String reference) {
+    TransportBookingResponse view(String reference) {
         return tx.execute(status -> bookings.findByReference(reference).map(TransportBookingService::response)).orElseThrow();
     }
 

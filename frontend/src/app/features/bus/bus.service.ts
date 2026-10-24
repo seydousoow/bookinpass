@@ -46,6 +46,21 @@ export class BusService {
     return this.http.post<IBusHold>(`${this.url}/bookings`, { ...request, locale: this.transloco.getActiveLang() });
   }
 
+  /** Moyens de paiement configurés : carte (Stripe), mobile money (Wave, Orange Money via PayDunya). */
+  paymentMethods(): Observable<{ card: boolean; mobile_money: boolean }> {
+    return this.http.get<{ card: boolean; mobile_money: boolean }>(`${this.url}/payment-methods`);
+  }
+
+  /** Page PayDunya où payer par Wave / Orange Money ; la session de carte est fermée. */
+  mobilePayment(reference: string, returnPath: string): Observable<{ url: string }> {
+    return this.http.post<{ url: string }>(`${this.url}/bookings/${encodeURIComponent(reference)}/mobile-payment`, { return_path: returnPath });
+  }
+
+  /** Retour de PayDunya : réservation confirmée, ou encore `held` tant que le paiement attend sa validation. */
+  confirmMobile(reference: string): Observable<IBusBooking> {
+    return this.http.post<IBusBooking>(`${this.url}/bookings/${encodeURIComponent(reference)}/mobile-payment/confirmation`, null);
+  }
+
   /** Paiement autorisé : places vendues, paiement encaissé, billets envoyés. Rejouable. */
   confirm(reference: string, checkoutSessionId: string): Observable<IBusBooking> {
     return this.http.post<IBusBooking>(`${this.url}/bookings/${encodeURIComponent(reference)}/confirmation`, {

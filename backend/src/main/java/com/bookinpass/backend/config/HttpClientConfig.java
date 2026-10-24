@@ -7,6 +7,7 @@ import com.bookinpass.backend.client.FixtureStaysClient;
 import com.bookinpass.backend.client.HttpDuffelClient;
 import com.bookinpass.backend.client.HttpStaysClient;
 import com.bookinpass.backend.client.StaysClient;
+import com.bookinpass.backend.client.PayDunyaClient;
 import com.bookinpass.backend.client.StripeClient;
 import com.bookinpass.backend.dto.duffel.DuffelCustomerUser;
 import com.bookinpass.backend.dto.duffel.DuffelOfferRequest;
@@ -113,6 +114,30 @@ public class HttpClientConfig {
                 .defaultHeader("Stripe-Version", properties.apiVersion())
                 .build();
         return new StripeClient(client, json);
+    }
+
+    /** PayDunya : trois clés en en-têtes ; corps non journalisés (coordonnées des clients). */
+    @Bean
+    PayDunyaClient payDunyaClient(PayDunyaProperties properties, RestClient.Builder builder, JsonMapper json) {
+        if (!properties.enabled()) {
+            log.info("PAYDUNYA_* keys are not set: Wave / Orange Money are hidden");
+        }
+        HttpClientSettings settings = HttpClientSettings.defaults()
+                .withConnectTimeout(Duration.ofSeconds(5))
+                .withReadTimeout(Duration.ofSeconds(30));
+        RestClient client = builder.clone()
+                .baseUrl(properties.baseUrl())
+                .requestFactory(ClientHttpRequestFactoryBuilder.jdk().build(settings))
+                .defaultHeader(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE)
+                .defaultHeader("PAYDUNYA-MASTER-KEY", nullToEmpty(properties.masterKey()))
+                .defaultHeader("PAYDUNYA-PRIVATE-KEY", nullToEmpty(properties.privateKey()))
+                .defaultHeader("PAYDUNYA-TOKEN", nullToEmpty(properties.token()))
+                .build();
+        return new PayDunyaClient(client, json);
+    }
+
+    private static String nullToEmpty(String value) {
+        return value == null ? "" : value;
     }
 
     @Bean

@@ -974,7 +974,22 @@
         "payments-unavailable": "Le paiement en ligne est momentanément indisponible.",
         "failed": "Vos places n'ont pas pu être réservées. Réessayez.",
         "sold-out-paid": "Les dernières places ont été vendues pendant votre paiement. Rien n'a été débité.",
-        "confirm-failed": "Votre paiement est autorisé mais la réservation n'a pas pu être confirmée. Réessayez : vous ne serez pas débité deux fois."
+        "confirm-failed": "Votre paiement est autorisé mais la réservation n'a pas pu être confirmée. Réessayez : vous ne serez pas débité deux fois.",
+        "already-paid": "Cette réservation a déjà été payée par carte.",
+        "mobile-failed": "Le paiement mobile n'a pas pu être vérifié. Réessayez."
+      },
+      "mobile": {
+        "title": "Wave, Orange Money ou Free Money",
+        "hint": "Vous validez le paiement sur votre téléphone, sur la page sécurisée de PayDunya.",
+        "pay": "Payer par mobile money",
+        "or-card": "ou par carte bancaire",
+        "redirecting": "Ouverture de la page de paiement…",
+        "checking": "Vérification de votre paiement…",
+        "pending": "Paiement en attente : validez-le sur votre téléphone. Cette page se met à jour toute seule.",
+        "check-again": "Vérifier à nouveau",
+        "cancelled": "Paiement annulé : rien n'a été débité. Vos places restent réservées quelques minutes.",
+        "retry": "Réessayer avec Wave / Orange Money",
+        "use-card": "Payer par carte"
       }
     },
     "tickets": {

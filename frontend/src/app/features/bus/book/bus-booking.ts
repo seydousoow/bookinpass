@@ -1,9 +1,9 @@
 import { Component, computed, DestroyRef, effect, inject, input, signal, untracked, viewChild } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
-import { rxResource, takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { ViewportScroller } from '@angular/common';
+import { rxResource, takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
+import { DOCUMENT, ViewportScroller } from '@angular/common';
 import { Router } from '@angular/router';
-import { finalize } from 'rxjs';
+import { catchError, finalize, of } from 'rxjs';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { NgIcon, provideIcons } from '@ng-icons/core';
 import { heroArrowRight } from '@ng-icons/heroicons/outline';
@@ -44,6 +44,9 @@ export class BusBooking {
   readonly passengers = input<string>();
   readonly from = input<string>();
   readonly to = input<string>();
+  /** Retour de PayDunya (Wave, Orange Money) : référence de la réservation, et `cancelled=1` si le client a abandonné. */
+  readonly mobile = input<string>();
+  readonly cancelled = input<string>();
 
   protected readonly steps = BUS_STEPS;
   protected readonly step = signal<TBusStep>('travellers');
@@ -93,11 +96,22 @@ export class BusBooking {
   protected readonly confirming = signal(false);
   protected readonly confirmError = signal<string | null>(null);
   protected readonly booking = signal<IBusBooking | null>(null);
+  /** Moyens de paiement du serveur : Wave / Orange Money seulement si PayDunya est configuré. */
+  protected readonly methods = toSignal(this.api.paymentMethods().pipe(catchError(() => of({ card: true, mobile_money: false }))), {
+    initialValue: { card: true, mobile_money: false },
+  });
+  /** Paiement mobile : redirection vers PayDunya, puis vérification au retour (en attente de validation sur le téléphone). */
+  protected readonly mobileState = signal<'idle' | 'redirecting' | 'checking' | 'pending' | 'cancelled' | 'failed'>('idle');
+  private readonly mobileReference = signal<string | null>(null);
+  /** Réservation en cours : celle des places bloquées, ou celle payée sur PayDunya. */
+  private readonly reference = computed(() => this.hold()?.reference ?? this.mobileReference());
+  private mobileChecks = 0;
 
   private requestId: string = crypto.randomUUID();
   private readonly router = inject(Router);
   private readonly scroller = inject(ViewportScroller);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly document = inject(DOCUMENT);
 
   constructor() {
     const draft = loadBusDraft();
@@ -114,7 +128,12 @@ export class BusBooking {
         this.details.set({ ...details, passengers: fitPassengers(details.passengers, choice.passengers) });
         if (same) {
           this.requestId = draft.requestId;
-          if (draft.reference) {
+          if (draft.reference && this.mobile() === draft.reference) {
+            // Retour de PayDunya : la réservation est vérifiée, pas de nouvelle session de carte.
+            this.mobileReference.set(draft.reference);
+            this.goTo('pay');
+            this.checkMobile(this.cancelled() === '1');
+          } else if (draft.reference) {
             this.goTo('pay');
             this.placeHold();
           }
@@ -125,7 +144,7 @@ export class BusBooking {
     effect(() => {
       const choice = this.choice();
       if (choice && !this.booking()) {
-        saveBusDraft({ ...choice, requestId: this.requestId, details: this.details(), reference: this.hold()?.reference ?? null });
+        saveBusDraft({ ...choice, requestId: this.requestId, details: this.details(), reference: this.reference() });
       }
     });
     effect(() => {
@@ -154,6 +173,8 @@ export class BusBooking {
   /** Retour aux passagers : une nouvelle demande sera faite (les noms des billets peuvent changer). */
   protected backToTravellers(): void {
     this.hold.set(null);
+    this.mobileReference.set(null);
+    this.mobileState.set('idle');
     this.holdError.set(null);
     this.requestId = crypto.randomUUID();
     this.goTo('travellers');
@@ -223,6 +244,66 @@ export class BusBooking {
     if (hold) {
       this.onAuthorised({ checkoutSessionId: hold.checkout.checkout_session_id });
     }
+  }
+
+  /** Wave / Orange Money : la session de carte est fermée côté serveur, puis direction la page PayDunya. */
+  protected payMobile(): void {
+    const reference = this.reference();
+    if (!reference) {
+      return;
+    }
+    this.mobileState.set('redirecting');
+    this.confirmError.set(null);
+    this.api
+      .mobilePayment(reference, '/bus/book')
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: ({ url }) => this.document.location.assign(url),
+        error: (error: unknown) => {
+          this.mobileState.set('failed');
+          const code = codeOf(error);
+          this.confirmError.set(code === 'hold-expired' || code === 'already-paid' ? `pay.errors.${code}` : 'pay.errors.mobile-failed');
+        },
+      });
+  }
+
+  /**
+   * Retour de PayDunya : le serveur relit la facture. En attente (validation sur le téléphone) : nouvelle lecture toutes
+   * les 4 secondes, 3 minutes au plus ; abandon : le client peut réessayer ou payer par carte.
+   */
+  protected checkMobile(cancelled = false): void {
+    const reference = this.reference();
+    if (!reference) {
+      return;
+    }
+    this.mobileState.set('checking');
+    this.api
+      .confirmMobile(reference)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (booking) => {
+          if (booking.status === 'confirmed') {
+            this.mobileState.set('idle');
+            this.booking.set(booking);
+            clearBusDraft();
+            this.goTo('done');
+          } else if (booking.status === 'released') {
+            this.mobileState.set('failed');
+            this.confirmError.set('pay.errors.hold-expired');
+          } else if (cancelled) {
+            this.mobileState.set('cancelled');
+          } else if (++this.mobileChecks <= 45) {
+            this.mobileState.set('pending');
+            setTimeout(() => this.mobileState() === 'pending' && this.checkMobile(), 4000);
+          } else {
+            this.mobileState.set('pending');
+          }
+        },
+        error: () => {
+          this.mobileState.set('failed');
+          this.confirmError.set('pay.errors.mobile-failed');
+        },
+      });
   }
 
   protected backToResults(): void {

@@ -99,6 +99,14 @@ public class StripeClient {
         return json.readTree(body);
     }
 
+    /**
+     * {@code POST /v1/checkout/sessions/{id}/expire} — ferme une session encore ouverte : plus aucun paiement possible
+     * avec elle (le client a choisi un autre moyen de paiement). Stripe refuse une session déjà payée ou expirée.
+     */
+    public JsonNode expireCheckoutSession(String sessionId, String idempotencyKey) {
+        return post("/v1/checkout/sessions/" + sessionId + "/expire", new LinkedMultiValueMap<>(), idempotencyKey, "checkout session expiry");
+    }
+
     /** {@code POST /v1/payment_intents/{id}/capture} — encaisse l'autorisation, une fois la commande créée. */
     public JsonNode capturePaymentIntent(String paymentIntentId, String idempotencyKey) {
         return post("/v1/payment_intents/" + paymentIntentId + "/capture", new LinkedMultiValueMap<>(), idempotencyKey, "capture");

@@ -63,7 +63,32 @@
     } @else {
       <section class="space-y-4">
         <h2 class="text-xl font-bold">{{ t('pay.title') }}</h2>
-        @if (holding()) {
+        @if (mobileState() !== 'idle') {
+          <!-- Wave / Orange Money : redirection vers PayDunya, puis vérification au retour. -->
+          @switch (mobileState()) {
+            @case ('pending') {
+              <p class="bg-state-info-soft text-state-info rounded-card p-3 text-sm" role="status">{{ t('pay.mobile.pending') }}</p>
+              <bip-button (clicked)="checkMobile()" variant="primary">{{ t('pay.mobile.check-again') }}</bip-button>
+            }
+            @case ('cancelled') {
+              <p class="bg-state-warning-soft rounded-card p-3 text-sm" role="status">{{ t('pay.mobile.cancelled') }}</p>
+              <div class="flex flex-wrap gap-2">
+                <bip-button (clicked)="payMobile()" variant="primary">{{ t('pay.mobile.retry') }}</bip-button>
+                <bip-button (clicked)="backToTravellers()" variant="ghost">{{ t('pay.mobile.use-card') }}</bip-button>
+              </div>
+            }
+            @case ('failed') {
+              <p class="bg-state-error-soft text-state-error rounded-card p-3 text-sm" role="alert">{{ t(confirmError() ?? 'pay.errors.mobile-failed') }}</p>
+              <div class="flex flex-wrap gap-2">
+                <bip-button (clicked)="checkMobile()" variant="primary">{{ t('search.retry') }}</bip-button>
+                <bip-button (clicked)="backToTravellers()" variant="ghost">{{ t('book.back-to-travellers') }}</bip-button>
+              </div>
+            }
+            @default {
+              <div class="flex justify-center py-8"><bip-spinner [label]="mobileState() === 'redirecting' ? 'bus.pay.mobile.redirecting' : 'bus.pay.mobile.checking'" showLabel/></div>
+            }
+          }
+        } @else if (holding()) {
           <div class="flex justify-center py-8"><bip-spinner [label]="'bus.pay.holding'" showLabel/></div>
         } @else if (holdError(); as error) {
           <p class="bg-state-error-soft text-state-error rounded-card p-3 text-sm" role="alert">{{ t(error) }}</p>
@@ -87,6 +112,16 @@
               <bip-button (clicked)="backToResults()" variant="primary">{{ t('book.back-to-results') }}</bip-button>
             }
           } @else {
+            @if (methods().mobile_money) {
+              <div class="rounded-card border-border-subtle bg-surface-card flex flex-wrap items-center justify-between gap-3 border p-4">
+                <div>
+                  <p class="font-semibold">{{ t('pay.mobile.title') }}</p>
+                  <p class="text-muted text-xs">{{ t('pay.mobile.hint') }}</p>
+                </div>
+                <bip-button (clicked)="payMobile()" variant="accent">{{ t('pay.mobile.pay') }}</bip-button>
+              </div>
+              <p class="text-muted text-center text-xs">{{ t('pay.mobile.or-card') }}</p>
+            }
             <bip-payment-form (authorised)="onAuthorised($event)" [session]="held.checkout"/>
             <bip-button (clicked)="backToTravellers()" variant="ghost">{{ t('book.back-to-travellers') }}</bip-button>
           }
