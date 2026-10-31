@@ -38,7 +38,7 @@ RUN --mount=type=cache,target=/root/.m2 ./mvnw -B -Pnative -DskipTests native:co
 # ---------------------------------------------------------------------------
 FROM deps AS jvm-build
 RUN --mount=type=cache,target=/root/.m2 ./mvnw -B -q -DskipTests package \
- && java -Djarmode=tools -jar target/backend-*.jar extract --layers --launcher --destination target/extracted
+ && java -Djarmode=tools -jar target/bookinpass.jar extract --layers --launcher --destination target/extracted
 
 # ---------------------------------------------------------------------------
 # Image JVM.

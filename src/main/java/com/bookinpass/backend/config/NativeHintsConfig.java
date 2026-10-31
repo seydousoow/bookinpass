@@ -9,6 +9,7 @@ import com.bookinpass.backend.mail.resources.BookingChangeMailProperties;
 import com.bookinpass.backend.mail.resources.BookingConfirmationMailProperties;
 import com.bookinpass.backend.mail.resources.BookingMailProperties;
 import com.bookinpass.backend.mail.resources.FlightItinerary;
+import org.hibernate.type.descriptor.jdbc.LocalTimeJdbcType;
 import org.springframework.aot.hint.BindingReflectionHintsRegistrar;
 import org.springframework.aot.hint.MemberCategory;
 import org.springframework.aot.hint.RuntimeHints;
@@ -21,6 +22,9 @@ import org.springframework.context.annotation.ImportRuntimeHints;
  * Réflexion invisible à l'analyse de l'image native. Flyway exécute les {@code COPY … FROM STDIN} (migration V6 des
  * villes) avec le {@code CopyManager} du pilote PostgreSQL, qu'il instancie par réflexion
  * ({@code new CopyManager(BaseConnection)}) : sans cette indication, « Unable to find PostgreSQL CopyManager class ».
+ *
+ * <p>Hibernate fait instancier par Spring le type de {@code @JdbcType(LocalTimeJdbcType.class)} (horaires de car) :
+ * sans son constructeur, « No default constructor found » et l'application ne démarre pas.
  *
  * <p>E-mails : les variables des gabarits sont lues par Jackson (accesseurs, records) ; les gabarits Thymeleaf et leurs
  * libellés sont des ressources chargées à l'exécution ; {@code #lists}, {@code #strings} et {@code #messages} sont
@@ -37,6 +41,7 @@ class NativeHintsConfig {
             hints.reflection().registerType(TypeReference.of("org.postgresql.copy.CopyManager"), MemberCategory.INVOKE_PUBLIC_CONSTRUCTORS,
                     MemberCategory.INVOKE_PUBLIC_METHODS);
             hints.reflection().registerType(TypeReference.of("org.postgresql.core.BaseConnection"), MemberCategory.INVOKE_PUBLIC_METHODS);
+            hints.reflection().registerType(LocalTimeJdbcType.class, MemberCategory.INVOKE_DECLARED_CONSTRUCTORS);
 
             new BindingReflectionHintsRegistrar().registerReflectionHints(hints.reflection(),
                     BaseMailProperties.class, BookingMailProperties.class, BookingMailProperties.Segment.class,

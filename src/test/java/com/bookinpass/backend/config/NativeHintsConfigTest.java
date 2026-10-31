@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.bookinpass.backend.mail.resources.BaseMailProperties;
 import com.bookinpass.backend.mail.resources.BookingConfirmationMailProperties;
 import com.bookinpass.backend.mail.resources.FlightItinerary;
+import org.hibernate.type.descriptor.jdbc.LocalTimeJdbcType;
 import org.junit.jupiter.api.Test;
 import org.postgresql.copy.CopyManager;
 import org.postgresql.core.BaseConnection;
@@ -19,6 +20,14 @@ class NativeHintsConfigTest {
         new NativeHintsConfig.Hints().registerHints(hints, getClass().getClassLoader());
 
         assertThat(RuntimeHintsPredicates.reflection().onConstructorInvocation(CopyManager.class.getConstructor(BaseConnection.class))).accepts(hints);
+    }
+
+    @Test
+    void springCanInstantiateTheJdbcTypeOfTheSchedulesInANativeImage() throws NoSuchMethodException {
+        RuntimeHints hints = new RuntimeHints();
+        new NativeHintsConfig.Hints().registerHints(hints, getClass().getClassLoader());
+
+        assertThat(RuntimeHintsPredicates.reflection().onConstructorInvocation(LocalTimeJdbcType.class.getDeclaredConstructor())).accepts(hints);
     }
 
     @Test
