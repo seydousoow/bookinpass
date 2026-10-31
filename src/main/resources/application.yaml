@@ -46,6 +46,8 @@ spring:
   web:
     error:
       include-message: never
+  main:
+    banner-mode: console
 # Image native : le crochet d'arrêt de Logback n'y a pas sa place (Spring gère l'arrêt).
 logging:
   register-shutdown-hook: false
