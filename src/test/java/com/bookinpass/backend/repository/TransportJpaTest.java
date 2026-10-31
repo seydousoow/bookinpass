@@ -17,7 +17,9 @@ import java.time.LocalTime;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-/** Lignes et horaires Dem Dikk posés par Flyway (V15), relus par JPA : le chargement valide aussi le mapping. */
+/**
+ * Lignes et horaires Dem Dikk posés par Flyway (V15), relus par JPA : le chargement valide aussi le mapping.
+ */
 @DataJpaTest(properties = "spring.jpa.hibernate.ddl-auto=validate")
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 @Testcontainers

@@ -2,10 +2,10 @@ package com.bookinpass.backend.staff;
 
 import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestMethodOrder;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Order;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestMethodOrder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
@@ -40,16 +40,16 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 class StaffAuthIntegrationTest {
 
+    static final String ORIGIN = "https://bip-admin.example.com";
     @Container
     @ServiceConnection
     static PostgreSQLContainer postgres = new PostgreSQLContainer("postgres:18.6");
-
-    static final String ORIGIN = "https://bip-admin.example.com";
-
     @Autowired
     MockMvc mvc;
 
-    /** Écriture depuis le back-office : JSON et origine admise. */
+    /**
+     * Écriture depuis le back-office : JSON et origine admise.
+     */
     private static MockHttpServletRequestBuilder write(MockHttpServletRequestBuilder request, String json) {
         return request.header("Origin", ORIGIN).contentType(MediaType.APPLICATION_JSON).content(json);
     }
@@ -63,7 +63,9 @@ class StaffAuthIntegrationTest {
         return cookie;
     }
 
-    /** Administrateur dont le mot de passe provisoire a été remplacé. */
+    /**
+     * Administrateur dont le mot de passe provisoire a été remplacé.
+     */
     private Cookie admin() throws Exception {
         return login("admin", "AdminChosen2026");
     }

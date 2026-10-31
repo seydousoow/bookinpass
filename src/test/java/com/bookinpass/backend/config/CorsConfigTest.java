@@ -1,18 +1,11 @@
 package com.bookinpass.backend.config;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 import org.junit.jupiter.api.Test;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 
-class CorsConfigTest {
+import static org.assertj.core.api.Assertions.assertThat;
 
-    /** Accès aux règles enregistrées (protégées dans {@link CorsRegistry}). */
-    private static final class Registry extends CorsRegistry {
-        java.util.Map<String, org.springframework.web.cors.CorsConfiguration> rules() {
-            return getCorsConfigurations();
-        }
-    }
+class CorsConfigTest {
 
     @Test
     void allowsEachConfiguredOrigin() {
@@ -39,5 +32,14 @@ class CorsConfigTest {
         assertThat(registry.rules().get("/staff/**").getAllowedOrigins()).containsExactly("https://bip-admin.dicortex.com");
         assertThat(registry.rules().get("/staff/**").getAllowCredentials()).isTrue();
         assertThat(registry.rules().get("/**").getAllowCredentials()).isNull();
+    }
+
+    /**
+     * Accès aux règles enregistrées (protégées dans {@link CorsRegistry}).
+     */
+    private static final class Registry extends CorsRegistry {
+        java.util.Map<String, org.springframework.web.cors.CorsConfiguration> rules() {
+            return getCorsConfigurations();
+        }
     }
 }

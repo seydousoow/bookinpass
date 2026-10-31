@@ -1,25 +1,26 @@
 package com.bookinpass.backend.service.transport;
 
-import com.bookinpass.backend.service.booking.TransportMobilePaymentService;
-import com.bookinpass.backend.service.booking.TransportBookingService;
-import com.bookinpass.backend.client.StripeClient;
 import com.bookinpass.backend.client.PayDunyaClient;
+import com.bookinpass.backend.client.StripeClient;
 import com.bookinpass.backend.config.PayDunyaProperties;
 import com.bookinpass.backend.config.PaymentDataProperties;
-import com.bookinpass.backend.dto.request.MobilePaymentRequest;
-import com.bookinpass.backend.service.payment.PayDunyaCheckout;
-import com.bookinpass.backend.service.payment.PaymentDataCipher;
-import com.bookinpass.backend.service.payment.PaymentMethod;
 import com.bookinpass.backend.config.StripeProperties;
+import com.bookinpass.backend.dto.request.MobilePaymentRequest;
 import com.bookinpass.backend.dto.request.TransportBookingRequest;
 import com.bookinpass.backend.dto.response.MobilePaymentResponse;
 import com.bookinpass.backend.dto.response.TransportBookingResponse;
 import com.bookinpass.backend.dto.response.TransportDepartureResponse;
 import com.bookinpass.backend.dto.response.TransportHoldResponse;
+import com.bookinpass.backend.dto.response.TransportPlaceResponse;
 import com.bookinpass.backend.exception.PaymentException;
 import com.bookinpass.backend.exception.TransportException;
 import com.bookinpass.backend.service.BookingRecorder;
 import com.bookinpass.backend.service.StripeCheckoutEvent;
+import com.bookinpass.backend.service.booking.TransportBookingService;
+import com.bookinpass.backend.service.booking.TransportMobilePaymentService;
+import com.bookinpass.backend.service.payment.PayDunyaCheckout;
+import com.bookinpass.backend.service.payment.PaymentDataCipher;
+import com.bookinpass.backend.service.payment.PaymentMethod;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -40,6 +41,7 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.postgresql.PostgreSQLContainer;
 import tools.jackson.databind.json.JsonMapper;
 
+import java.sql.Timestamp;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
@@ -48,6 +50,7 @@ import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
@@ -57,10 +60,10 @@ import java.util.concurrent.Future;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyMap;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.BDDMockito.given;
@@ -80,45 +83,17 @@ import static org.mockito.Mockito.verify;
 @Import({TransportSearchService.class, TransportBookingService.class, TransportMobilePaymentService.class, BookingRecorder.class, PayDunyaCheckout.class, PaymentDataCipher.class, TransportSaleTest.Config.class})
 class TransportSaleTest {
 
-    @Container
-    @ServiceConnection
-    static PostgreSQLContainer postgres = new PostgreSQLContainer("postgres:18.6");
-
-    /** Dimanche 25 octobre 2026, midi à Dakar ; le lendemain est un lundi. */
+    /**
+     * Dimanche 25 octobre 2026, midi à Dakar ; le lendemain est un lundi.
+     */
     static final Instant NOW = Instant.parse("2026-10-25T12:00:00Z");
     static final String DAKAR = "2253354";
     static final String TOUBA = "2244322";
     static final Instant MONDAY_7AM = Instant.parse("2026-10-26T07:00:00Z");
-
-    @TestConfiguration
-    static class Config {
-        @Bean
-        MutableClock clock() {
-            return new MutableClock(NOW);
-        }
-
-        @Bean
-        JsonMapper jsonMapper() {
-            return JsonMapper.builder().build();
-        }
-
-        @Bean
-        PayDunyaProperties payDunyaProperties() {
-            return new PayDunyaProperties("https://app.paydunya.com/sandbox-api/v1", "master", "private", "token",
-                    List.of(), "https://api.example.com/api/webhooks/paydunya", "Book In Pass");
-        }
-
-        @Bean
-        PaymentDataProperties paymentDataProperties() {
-            return new PaymentDataProperties("k1:" + java.util.Base64.getEncoder().encodeToString(new byte[32]));
-        }
-
-        @Bean
-        StripeProperties stripeProperties() {
-            return new StripeProperties("https://api.stripe.com", "sk_test_x", "pk_test_x", "2026-03-25.dahlia", "whsec_test", "http://localhost:4200");
-        }
-    }
-
+    @Container
+    @ServiceConnection
+    static PostgreSQLContainer postgres = new PostgreSQLContainer("postgres:18.6");
+    private final JsonMapper json = JsonMapper.builder().build();
     @MockitoBean
     StripeClient stripe;
 
@@ -146,8 +121,20 @@ class TransportSaleTest {
     @Autowired
     JdbcTemplate jdbc;
 
-    private final JsonMapper json = JsonMapper.builder().build();
+    private static TransportBookingRequest request(UUID id, String... familyNames) {
+        List<TransportBookingRequest.Passenger> passengers = java.util.Arrays.stream(familyNames)
+                .map(name -> new TransportBookingRequest.Passenger("Awa", name)).toList();
+        return new TransportBookingRequest(id, "DKR-LIB5_TOUBA", MONDAY_7AM, passengers, "awa@example.com", "+221771234567", "/bus/book", "fr");
+    }
 
+    /**
+     * Wave Sénégal depuis notre page, numéro national.
+     */
+    private static MobilePaymentRequest wave() {
+        return new MobilePaymentRequest("wave-senegal", "77 123 45 67", null, "/bus/book");
+    }
+
+    @SuppressWarnings("SqlWithoutWhere")
     @BeforeEach
     void cleanSlate() {
         clock.set(NOW);
@@ -166,13 +153,9 @@ class TransportSaleTest {
                 });
     }
 
-    private static TransportBookingRequest request(UUID id, String... familyNames) {
-        List<TransportBookingRequest.Passenger> passengers = java.util.Arrays.stream(familyNames)
-                .map(name -> new TransportBookingRequest.Passenger("Awa", name)).toList();
-        return new TransportBookingRequest(id, "DKR-LIB5_TOUBA", MONDAY_7AM, passengers, "awa@example.com", "+221771234567", "/bus/book", "fr");
-    }
-
-    /** Paiement autorisé par Stripe pour la réservation {@code reference}, au montant {@code amount} XOF. */
+    /**
+     * Paiement autorisé par Stripe pour la réservation {@code reference}, au montant {@code amount} XOF.
+     */
     private void paid(String reference, long amount) {
         given(stripe.retrieveCheckoutSession("cs_" + reference)).willReturn(json.readTree("""
                 {"id":"cs_%s","status":"complete","amount_total":%d,"currency":"xof","livemode":false,
@@ -259,13 +242,10 @@ class TransportSaleTest {
                 return e.code();
             }
         };
-        ExecutorService pool = Executors.newFixedThreadPool(2);
-        try {
+        try (ExecutorService pool = Executors.newFixedThreadPool(2)) {
             List<Future<String>> results = pool.invokeAll(List.of(buyer, buyer));
             List<String> outcomes = List.of(results.get(0).get(), results.get(1).get());
             assertThat(outcomes).containsOnlyOnce("sold-out");
-        } finally {
-            pool.shutdown();
         }
         assertThat(mondayAt7().seatsLeft()).isZero();
         assertThat(mondayAt7().available()).isFalse();
@@ -344,19 +324,18 @@ class TransportSaleTest {
                 .isInstanceOfSatisfying(TransportException.class, e -> assertThat(e.code()).isEqualTo("departure-closed"));
     }
 
-    /** Wave Sénégal depuis notre page, numéro national. */
-    private static MobilePaymentRequest wave(String returnPath) {
-        return new MobilePaymentRequest("wave-senegal", "77 123 45 67", null, returnPath);
-    }
-
-    /** Facture PayDunya {@code token} relue : statut et montant payé. */
+    /**
+     * Facture PayDunya {@code token} relue : statut et montant payé.
+     */
     private void invoice(String token, String status, long amount, String booking) {
         given(paydunya.confirm(token)).willReturn(json.readTree("""
                 {"response_code":"00","status":"%s","invoice":{"total_amount":%d},"custom_data":{"booking":"%s"},"receipt_url":"https://paydunya/r"}"""
                 .formatted(status, amount, booking)));
     }
 
-    /** Session de carte encore ouverte (à fermer avant le mobile money). */
+    /**
+     * Session de carte encore ouverte (à fermer avant le mobile money).
+     */
     private void cardSession(String reference, String status) {
         given(stripe.retrieveCheckoutSession("cs_" + reference)).willReturn(json.readTree(
                 "{\"id\":\"cs_%s\",\"status\":\"%s\"}".formatted(reference, status)));
@@ -374,12 +353,12 @@ class TransportSaleTest {
                 .willReturn(new PayDunyaClient.Invoice(token, "https://paydunya/checkout/" + token));
         clock.set(NOW.plus(Duration.ofMinutes(30)));
 
-        MobilePaymentResponse next = mobile.start(hold.reference(), wave("/bus/book"));
+        MobilePaymentResponse next = mobile.start(hold.reference(), wave());
 
         assertThat(next).isEqualTo(new MobilePaymentResponse("redirect", "https://pay.wave.com/c/test", null, null, "held"));
         verify(paydunya).softpay(eq(PaymentMethod.WAVE_SENEGAL), eq(token), any(), eq("771234567"), isNull());
         verify(stripe).expireCheckoutSession("cs_" + hold.reference(), "bip-expire-cs_" + hold.reference());
-        assertThat(jdbc.queryForObject("SELECT hold_expires_at FROM transport_booking", java.sql.Timestamp.class).toInstant())
+        assertThat(Objects.requireNonNull(jdbc.queryForObject("SELECT hold_expires_at FROM transport_booking", Timestamp.class)).toInstant())
                 .isEqualTo(NOW.plus(Duration.ofMinutes(50)));
         Map<String, Object> row = jdbc.queryForMap("SELECT status, method, phone_masked, phone_encrypted FROM transport_mobile_payment");
         assertThat(row).containsEntry("status", "pending").containsEntry("method", "wave-senegal").containsEntry("phone_masked", "+221 77*****67");
@@ -445,10 +424,10 @@ class TransportSaleTest {
         given(paydunya.createInvoice(anyLong(), anyString(), anyString(), any(), anyMap(), anyString(), anyString(), anyString(), any()))
                 .willAnswer(i -> new PayDunyaClient.Invoice("test_" + UUID.randomUUID(), "https://paydunya/checkout"));
         for (int i = 0; i < PayDunyaCheckout.MAX_ATTEMPTS; i++) {
-            mobile.start(hold.reference(), wave("/bus/book"));
+            mobile.start(hold.reference(), wave());
         }
 
-        assertThatThrownBy(() -> mobile.start(hold.reference(), wave("/bus/book")))
+        assertThatThrownBy(() -> mobile.start(hold.reference(), wave()))
                 .isInstanceOfSatisfying(PaymentException.class, e -> assertThat(e.status()).isEqualTo(HttpStatus.TOO_MANY_REQUESTS));
     }
 
@@ -476,7 +455,7 @@ class TransportSaleTest {
         cardSession(hold.reference(), "open");
         given(paydunya.createInvoice(anyLong(), anyString(), anyString(), any(), anyMap(), anyString(), anyString(), anyString(), any()))
                 .willReturn(new PayDunyaClient.Invoice(token, "https://paydunya/checkout/" + token));
-        mobile.start(hold.reference(), wave("/bus/book"));
+        mobile.start(hold.reference(), wave());
 
         invoice(token, "pending", 4120, hold.reference());
         assertThat(mobile.confirm(hold.reference()).status()).isEqualTo("held");
@@ -499,7 +478,7 @@ class TransportSaleTest {
         cardSession(hold.reference(), "expired");
         given(paydunya.createInvoice(anyLong(), anyString(), anyString(), any(), anyMap(), anyString(), anyString(), anyString(), any()))
                 .willReturn(new PayDunyaClient.Invoice(token, "https://paydunya/checkout/" + token));
-        mobile.start(hold.reference(), wave("/bus/book"));
+        mobile.start(hold.reference(), wave());
         invoice(token, "completed", 100, hold.reference());
 
         assertThat(mobile.confirm(hold.reference()).status()).isEqualTo("held");
@@ -513,7 +492,7 @@ class TransportSaleTest {
         TransportHoldResponse hold = sale.hold(request(UUID.randomUUID(), "Sène"));
         cardSession(hold.reference(), "complete");
 
-        assertThatThrownBy(() -> mobile.start(hold.reference(), wave("/bus/book")))
+        assertThatThrownBy(() -> mobile.start(hold.reference(), wave()))
                 .isInstanceOfSatisfying(TransportException.class, e -> assertThat(e.code()).isEqualTo("already-paid"));
         verify(paydunya, never()).createInvoice(anyLong(), anyString(), anyString(), any(), anyMap(), anyString(), anyString(), anyString(), any());
     }
@@ -527,7 +506,7 @@ class TransportSaleTest {
         cardSession(late.reference(), "open");
         given(paydunya.createInvoice(anyLong(), anyString(), anyString(), any(), anyMap(), anyString(), anyString(), anyString(), any()))
                 .willReturn(new PayDunyaClient.Invoice(token, "https://paydunya/checkout/" + token));
-        mobile.start(late.reference(), wave("/bus/book"));
+        mobile.start(late.reference(), wave());
         clock.set(NOW.plus(Duration.ofHours(1)));
         sale.releaseExpired();
         clock.set(NOW);
@@ -540,7 +519,50 @@ class TransportSaleTest {
         verify(mailer, never()).send(late.reference());
     }
 
-    /** Horloge réglable d'un test à l'autre. */
+    @Test
+    @DisplayName("Lieux : chaque origine vendue avec ses destinations, triés par nom sans tenir compte des accents")
+    void placesListTheirDestinations() {
+        List<TransportPlaceResponse> places = search.places();
+
+        assertThat(places).extracting(TransportPlaceResponse::id).contains(DAKAR);
+        assertThat(places).filteredOn(p -> p.id().equals(DAKAR)).singleElement().satisfies(p -> {
+            assertThat(p.destinations()).contains(TOUBA);
+            assertThat(p.countryCode()).isEqualTo("SN");
+        });
+    }
+
+    @TestConfiguration
+    static class Config {
+        @Bean
+        MutableClock clock() {
+            return new MutableClock(NOW);
+        }
+
+        @Bean
+        JsonMapper jsonMapper() {
+            return JsonMapper.builder().build();
+        }
+
+        @Bean
+        PayDunyaProperties payDunyaProperties() {
+            return new PayDunyaProperties("https://app.paydunya.com/sandbox-api/v1", "master", "private", "token",
+                    List.of(), "https://api.example.com/api/webhooks/paydunya", "Book In Pass");
+        }
+
+        @Bean
+        PaymentDataProperties paymentDataProperties() {
+            return new PaymentDataProperties("k1:" + java.util.Base64.getEncoder().encodeToString(new byte[32]));
+        }
+
+        @Bean
+        StripeProperties stripeProperties() {
+            return new StripeProperties("https://api.stripe.com", "sk_test_x", "pk_test_x", "2026-03-25.dahlia", "whsec_test", "http://localhost:4200");
+        }
+    }
+
+    /**
+     * Horloge réglable d'un test à l'autre.
+     */
     static class MutableClock extends Clock {
         private volatile Instant now;
 

@@ -22,6 +22,7 @@ import static org.springframework.test.web.client.response.MockRestResponseCreat
 
 class PayDunyaClientTest {
 
+    private static final PayDunyaClient.Customer AWA = new PayDunyaClient.Customer("Awa Sène", "awa@example.com", "+221771234567");
     private final RestClient.Builder builder = RestClient.builder().baseUrl("https://app.paydunya.com/sandbox-api/v1")
             .defaultHeader("PAYDUNYA-MASTER-KEY", "master").defaultHeader("PAYDUNYA-PRIVATE-KEY", "private").defaultHeader("PAYDUNYA-TOKEN", "token");
     private final MockRestServiceServer server = MockRestServiceServer.bindTo(builder).build();
@@ -78,7 +79,7 @@ class PayDunyaClientTest {
                 .andExpect(jsonPath("$.wave_senegal_phone").value("771234567"))
                 .andExpect(jsonPath("$.wave_senegal_payment_token").value("test_abc"))
                 .andRespond(withSuccess("""
-                        {"success":true,"message":"Rediriger vers cette URL pour completer le paiement.","url":"https://pay.wave.com/c/x","fees":100,"currency":"XOF"}""",
+                                {"success":true,"message":"Rediriger vers cette URL pour completer le paiement.","url":"https://pay.wave.com/c/x","fees":100,"currency":"XOF"}""",
                         MediaType.APPLICATION_JSON));
 
         assertThat(paydunya.softpay(PaymentMethod.WAVE_SENEGAL, "test_abc", AWA, "771234567", null))
@@ -91,7 +92,7 @@ class PayDunyaClientTest {
                 .andExpect(jsonPath("$.phone_number").value("771234567"))
                 .andExpect(jsonPath("$.invoice_token").value("test_abc"))
                 .andRespond(withSuccess("""
-                        {"success":true,"message":"ok","url":"https://qr","other_url":{"om_url":"https://om","maxit_url":"https://maxit"}}""",
+                                {"success":true,"message":"ok","url":"https://qr","other_url":{"om_url":"https://om","maxit_url":"https://maxit"}}""",
                         MediaType.APPLICATION_JSON));
 
         assertThat(paydunya.softpay(PaymentMethod.ORANGE_MONEY_SENEGAL, "test_abc", AWA, "771234567", null))
@@ -122,6 +123,4 @@ class PayDunyaClientTest {
                     assertThat(e.getMessage()).doesNotContain("OTP invalide");
                 });
     }
-
-    private static final PayDunyaClient.Customer AWA = new PayDunyaClient.Customer("Awa Sène", "awa@example.com", "+221771234567");
 }

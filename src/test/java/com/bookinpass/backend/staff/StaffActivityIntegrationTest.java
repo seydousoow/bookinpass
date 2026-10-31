@@ -42,12 +42,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class StaffActivityIntegrationTest {
 
+    static final String ORIGIN = "https://bip-admin.example.com";
     @Container
     @ServiceConnection
     static PostgreSQLContainer postgres = new PostgreSQLContainer("postgres:18.6");
-
-    static final String ORIGIN = "https://bip-admin.example.com";
-
     @Autowired
     MockMvc mvc;
 
@@ -74,7 +72,7 @@ class StaffActivityIntegrationTest {
         admin = signIn("admin", "FirstAdmin2026");
         int station = jdbc.queryForObject("SELECT id FROM transport_station WHERE code = 'DKR-LIB5'", Integer.class);
         mvc.perform(write(post("/staff/users").cookie(admin), """
-                {"username":"controle","full_name":"Contrôle","role":"inspector","station_id":%d,"temporary_password":"Welcome2026"}""".formatted(station)))
+                        {"username":"controle","full_name":"Contrôle","role":"inspector","station_id":%d,"temporary_password":"Welcome2026"}""".formatted(station)))
                 .andExpect(status().isOk());
         inspector = signIn("controle", "Welcome2026");
     }

@@ -1,18 +1,19 @@
 package com.bookinpass.backend.client;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-
 import com.bookinpass.backend.dto.duffel.DuffelQuoteRequest;
 import com.bookinpass.backend.dto.request.StaySearchRequest;
 import com.bookinpass.backend.exception.DuffelException;
-import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.springframework.core.io.DefaultResourceLoader;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.json.JsonMapper;
+
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.util.List;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 /**
  * Lit les vraies fixtures de {@code fixtures/duffel/stays}.

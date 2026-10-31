@@ -1,7 +1,5 @@
 package com.bookinpass.backend.config;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 import com.bookinpass.backend.mail.resources.BaseMailProperties;
 import com.bookinpass.backend.mail.resources.BookingConfirmationMailProperties;
 import com.bookinpass.backend.mail.resources.FlightItinerary;
@@ -11,6 +9,8 @@ import org.postgresql.copy.CopyManager;
 import org.postgresql.core.BaseConnection;
 import org.springframework.aot.hint.RuntimeHints;
 import org.springframework.aot.hint.predicate.RuntimeHintsPredicates;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 class NativeHintsConfigTest {
 

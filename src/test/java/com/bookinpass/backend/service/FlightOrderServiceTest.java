@@ -25,8 +25,8 @@ import java.util.List;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -34,7 +34,9 @@ import static org.mockito.Mockito.verify;
 
 class FlightOrderServiceTest {
 
-    /** Adulte + bébé, Dakar → Paris : 184.47 € + 5 % = 193.69 € ; un bagage à 20 € (24 € vendu) → 217.69 € vendu, 204.47 € Duffel. */
+    /**
+     * Adulte + bébé, Dakar → Paris : 184.47 € + 5 % = 193.69 € ; un bagage à 20 € (24 € vendu) → 217.69 € vendu, 204.47 € Duffel.
+     */
     private static final String OFFER = """
             {"data":{"id":"off_1","total_amount":"184.47","total_currency":"EUR",
              "passengers":[{"id":"pas_adult","type":"adult"},{"id":"pas_baby","type":"infant_without_seat"}],
@@ -52,7 +54,8 @@ class FlightOrderServiceTest {
     private final BookingRecorder recorder = mock(BookingRecorder.class);
     private final PaymentService payments = new PaymentService(
             new StripeProperties("https://api.stripe.com", "sk_test_x", "pk_test_x", "2026-03-25.dahlia", "", "http://localhost:4200"),
-            stripe, flights, stays, json, Clock.systemUTC(), recorder, event -> {});
+            stripe, flights, stays, json, Clock.systemUTC(), recorder, event -> {
+    });
     private final DuffelCustomerService customers = mock(DuffelCustomerService.class);
     private final FlightOrderCache orderCache = mock(FlightOrderCache.class);
     private final BookingMailer mailer = mock(BookingMailer.class);

@@ -58,16 +58,6 @@ class MailServiceTest {
     private final MailSenderService sender = mock(MailSenderService.class);
     private final MailVerifierService verifier = mock(MailVerifierService.class);
 
-    private MailService service(boolean enabled) {
-        ResourceBundleMessageSource messages = new ResourceBundleMessageSource();
-        messages.setBasename("i18n/mail");
-        messages.setDefaultEncoding("UTF-8");
-        messages.setFallbackToSystemLocale(false);
-        return new MailService(MailTemplateConfig.engine(messages), sender, verifier,
-                new AwsSesProperties("reservations@bookinpass.com", "Book In Pass", "eu-west-1"),
-                new MailProperties(enabled, "http://localhost:4200/"), messages);
-    }
-
     private static BookingConfirmationMailProperties confirmation(MailLang lang, String name) {
         Locale locale = lang.toLocale();
         return BookingConfirmationMailProperties.builder()
@@ -84,12 +74,24 @@ class MailServiceTest {
                 .build();
     }
 
-    /** Aperçu dans un navigateur : {@code -Dmail.preview.dir=…} écrit les e-mails rendus. */
+    /**
+     * Aperçu dans un navigateur : {@code -Dmail.preview.dir=…} écrit les e-mails rendus.
+     */
     private static void preview(String file, MailService.Rendered mail) throws Exception {
         String dir = System.getProperty("mail.preview.dir");
         if (dir != null) {
             Files.writeString(Path.of(dir, file), mail.body());
         }
+    }
+
+    private MailService service(boolean enabled) {
+        ResourceBundleMessageSource messages = new ResourceBundleMessageSource();
+        messages.setBasename("i18n/mail");
+        messages.setDefaultEncoding("UTF-8");
+        messages.setFallbackToSystemLocale(false);
+        return new MailService(MailTemplateConfig.engine(messages), sender, verifier,
+                new AwsSesProperties("reservations@bookinpass.com", "Book In Pass", "eu-west-1"),
+                new MailProperties(enabled, "http://localhost:4200/"), messages);
     }
 
     @Test
