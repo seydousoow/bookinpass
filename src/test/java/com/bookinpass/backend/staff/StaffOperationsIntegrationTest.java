@@ -26,6 +26,7 @@ import java.time.LocalDate;
 import java.time.ZoneOffset;
 import java.util.List;
 
+import static org.hamcrest.Matchers.hasSize;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -38,6 +39,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * Exploitation des gares de bout en bout : départs du jour par gare, contrôle des billets, bagages, incidents, réseau.
  * Un chef de gare et un contrôleur à Dakar (Liberté 5), un contrôleur à Touba.
  */
+@SuppressWarnings("DataFlowIssue")
 @SpringBootTest(properties = {
         "spring.cache.type=none",
         "bookinpass.staff.bootstrap-admin-username=admin",
@@ -236,6 +238,11 @@ class StaffOperationsIntegrationTest {
         String withSchedule = mvc.perform(write(post("/staff/routes/" + route + "/schedules").cookie(admin), "{\"days\":[3],\"departs_at\":\"21:00\"}"))
                 .andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
         Integer schedule = JsonPath.<List<Integer>>read(withSchedule, "$.schedules[?(@.departs_at == '21:00')].id").getFirst();
+        // Un jour qui a déjà cet horaire est laissé tel quel ; même jour à une autre heure, ou autre jour : ajoutés.
+        mvc.perform(write(post("/staff/routes/" + route + "/schedules").cookie(admin), "{\"days\":[3],\"departs_at\":\"21:30\"}"))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.schedules[?(@.departs_at == '21:30')]", hasSize(1)));
+        mvc.perform(write(post("/staff/routes/" + route + "/schedules").cookie(admin), "{\"days\":[3,4],\"departs_at\":\"21:30\"}"))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.schedules[?(@.departs_at == '21:30')]", hasSize(2)));
         mvc.perform(delete("/staff/schedules/" + schedule).header("Origin", ORIGIN).cookie(admin))
                 .andExpect(status().isOk()).andExpect(jsonPath("$.schedules[?(@.departs_at == '21:00')]").isEmpty());
 
