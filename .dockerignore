@@ -1,0 +1,13 @@
+target/
+.idea/
+*.iml
+.env
+HELP.md
+.git/
+.github/
+.claude/
+.agents/
+docs/
+*.md
+qodana.yaml
+render.yaml

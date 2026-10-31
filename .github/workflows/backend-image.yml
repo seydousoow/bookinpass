@@ -12,7 +12,7 @@ name: backend-image
 on:
   push:
     branches: [ main ]
-    paths: [ 'backend/**', '.github/workflows/backend-image.yml' ]
+    paths: [ 'src/**', 'fixtures/**', '.mvn/**', 'pom.xml', 'Dockerfile', '.dockerignore', '.github/workflows/backend-image.yml' ]
   workflow_dispatch:
     inputs:
       target:
@@ -52,7 +52,7 @@ jobs:
       # qui tourne sur tout processeur x86-64 ; x86-64-v3 par défaut exige AVX2). Sans effet sur la cible jvm.
       - uses: docker/build-push-action@v6
         with:
-          context: backend
+          context: .
           target: ${{ env.TARGET }}
           platforms: linux/amd64
           build-args: NATIVE_IMAGE_OPTIONS=-J-Xmx12g -Ob -march=compatibility

@@ -14,7 +14,7 @@ None of the integration's values are placeholders.
   the currency is the offer's.
 
 **Files containing these values:**
-- [backend/src/main/java/com/bookinpass/backend/client/StripeClient.java](backend/src/main/java/com/bookinpass/backend/client/StripeClient.java)
+- [src/main/java/com/bookinpass/backend/client/StripeClient.java](src/main/java/com/bookinpass/backend/client/StripeClient.java)
 - [backend/src/main/java/com/bookinpass/backend/service/PaymentService.java](backend/src/main/java/com/bookinpass/backend/service/PaymentService.java)
 
 | Field | Current Value | What to Set |
@@ -28,7 +28,7 @@ These parameters were configured in Checkout Studio and are already set correctl
 
 **Files containing these parameters:**
 - [backend/src/main/java/com/bookinpass/backend/client/StripeClient.java](backend/src/main/java/com/bookinpass/backend/client/StripeClient.java)
-- [frontend/src/app/core/payment/payment-form/payment-form.ts](frontend/src/app/core/payment/payment-form/payment-form.ts) (appearance)
+- `apps/front/src/app/core/payment/payment-form/payment-form.ts` in bookinpass-nx (appearance)
 
 | Parameter | Value |
 |-----------|-------|
@@ -59,7 +59,7 @@ same session (reload, return from a redirect). The front increments `attempt` wh
 
 ## Setup
 
-1. **Keys.** Put them in `backend/.env`, never in code. `.env.example` lists them:
+1. **Keys.** Put them in `.env`, never in code. `.env.example` lists them:
    - `STRIPE_SECRET_KEY=sk_test_…`: server only.
    - `STRIPE_PUBLISHABLE_KEY=pk_test_…`: sent to the browser with each session, so the frontend needs no env var.
    - `STRIPE_WEBHOOK_SECRET=whsec_…`
@@ -84,7 +84,7 @@ same session (reload, return from a redirect). The front increments `attempt` wh
 
 | File | Role |
 |------|------|
-| `backend/.../client/StripeClient.java` | `POST /v1/checkout/sessions` |
+| `.../client/StripeClient.java` | `POST /v1/checkout/sessions` |
 | `backend/.../client/StripeWebhookVerifier.java` | `Stripe-Signature` check (HMAC-SHA256, 5-minute tolerance) |
 | `backend/.../service/PaymentService.java` | Selling price recomputed from Duffel, session creation, webhook handling |
 | `backend/.../controller/PaymentController.java` | `POST /payments/flights/{offerId}/checkout-session`, `POST /payments/webhooks/stripe` |
