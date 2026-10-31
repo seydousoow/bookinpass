@@ -11,6 +11,7 @@ import com.bookinpass.backend.service.pricing.FlightPricing;
 import com.bookinpass.backend.service.pricing.StayPricing;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import tools.jackson.databind.JsonNode;
@@ -47,6 +48,7 @@ public class PaymentService {
     private final JsonMapper json;
     private final Clock clock;
     private final BookingRecorder recorder;
+    private final ApplicationEventPublisher events;
 
     /**
      * {@code ase_1x2,ase_2x1} : services de la session, gardés dans ses métadonnées.
@@ -189,6 +191,9 @@ public class PaymentService {
         recorder.recordStripeEvent(event);
         String type = event.path("type").asString("");
         JsonNode session = event.path("data").path("object");
+        if (type.startsWith("checkout.session.")) {
+            events.publishEvent(new StripeCheckoutEvent(type, session));
+        }
         switch (type) {
             // Autorisation obtenue : la commande suit depuis le navigateur. Onglet fermé avant : l'autorisation reste
             //  sans commande et expire d'elle-même (≈ 7 jours, rien n'est débité) — TODO : l'annuler plus tôt.

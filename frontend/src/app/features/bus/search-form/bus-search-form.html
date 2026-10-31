@@ -1,0 +1,17 @@
+<form (submit)="submit($event)" *transloco="let t; prefix: 'bus.search'" class="grid w-full grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-[2fr_2fr_1.5fr_1fr_auto] xl:items-end" novalidate>
+  <bip-select [(value)]="from" [invalid]="attempted() && !from()[0]" [options]="fromOptions()" [touched]="attempted()" label="bus.search.from" name="bus-from"/>
+  <bip-select [(value)]="to" [disabled]="!from()[0]" [invalid]="attempted() && !to()[0]" [options]="toOptions()" [touched]="attempted()" label="bus.search.to" name="bus-to"/>
+  <bip-date-picker [(value)]="date"
+                   [label]="t('date')"
+                   [maxDate]="maxDate"
+                   [minDate]="minDate"
+                   [placeholder]="t('date-placeholder')"
+                   mode="single"/>
+  <bip-select [(value)]="passengers" [options]="passengerOptions" label="bus.search.passengers" name="bus-passengers"/>
+  <button bipButton class="w-full xl:w-auto" size="lg" type="submit" variant="accent">{{ t('submit') }}</button>
+  @if (places() === null) {
+    <p class="text-state-error text-sm md:col-span-2 xl:col-span-5" role="alert">{{ t('places-failed') }}</p>
+  } @else if (attempted() && !valid()) {
+    <p class="text-state-error text-sm md:col-span-2 xl:col-span-5" role="alert">{{ t('incomplete') }}</p>
+  }
+</form>

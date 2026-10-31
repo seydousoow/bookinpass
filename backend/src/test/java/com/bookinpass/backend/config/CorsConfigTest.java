@@ -17,7 +17,7 @@ class CorsConfigTest {
     @Test
     void allowsEachConfiguredOrigin() {
         Registry registry = new Registry();
-        new CorsConfig(" https://bookinpass.com , https://www.bookinpass.com,").addCorsMappings(registry);
+        new CorsConfig(" https://bookinpass.com , https://www.bookinpass.com,", "").addCorsMappings(registry);
 
         assertThat(registry.rules().get("/**").getAllowedOrigins()).containsExactly("https://bookinpass.com", "https://www.bookinpass.com");
     }
@@ -25,8 +25,19 @@ class CorsConfigTest {
     @Test
     void noOriginNoCors() {
         Registry registry = new Registry();
-        new CorsConfig("").addCorsMappings(registry);
+        new CorsConfig("", "").addCorsMappings(registry);
 
         assertThat(registry.rules()).isEmpty();
+    }
+
+    @Test
+    void backOfficeGetsItsOwnRuleWithCookiesFirst() {
+        Registry registry = new Registry();
+        new CorsConfig("https://bookinpass.com", "https://bip-admin.dicortex.com").addCorsMappings(registry);
+
+        assertThat(registry.rules().keySet()).containsExactly("/staff/**", "/**");
+        assertThat(registry.rules().get("/staff/**").getAllowedOrigins()).containsExactly("https://bip-admin.dicortex.com");
+        assertThat(registry.rules().get("/staff/**").getAllowCredentials()).isTrue();
+        assertThat(registry.rules().get("/**").getAllowCredentials()).isNull();
     }
 }

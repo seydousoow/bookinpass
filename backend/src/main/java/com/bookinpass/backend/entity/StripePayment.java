@@ -36,6 +36,11 @@ public class StripePayment {
     @JoinColumn(name = "order_id")
     private FlightOrder order;
 
+    /** Réservation de car payée (jamais en même temps qu'une commande de vol). */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "transport_booking_id")
+    private TransportBooking transportBooking;
+
     @Column(name = "checkout_session_id", nullable = false, unique = true)
     private String checkoutSessionId;
 
@@ -118,6 +123,10 @@ public class StripePayment {
 
     public void attachTo(FlightOrder order) {
         this.order = order;
+    }
+
+    public void attachTo(TransportBooking booking) {
+        this.transportBooking = booking;
     }
 
     public void captured(long amount, Instant at) {

@@ -17,6 +17,7 @@
     <properties>
         <java.version>25</java.version>
         <spring-cloud-aws.version>4.2.0</spring-cloud-aws.version>
+        <zxing.version>3.5.3</zxing.version>
         <commons-validator.version>1.11.0</commons-validator.version>
         <dnsjava.version>3.6.5</dnsjava.version>
     </properties>
@@ -58,6 +59,17 @@
         <dependency>
             <groupId>org.thymeleaf</groupId>
             <artifactId>thymeleaf-spring6</artifactId>
+        </dependency>
+        <!-- Hachage des mots de passe du personnel (BCrypt) : la seule brique de Spring Security utilisée. -->
+        <dependency>
+            <groupId>org.springframework.security</groupId>
+            <artifactId>spring-security-crypto</artifactId>
+        </dependency>
+        <!-- QR code des billets de car (Java pur, sans AWT : compatible image native). -->
+        <dependency>
+            <groupId>com.google.zxing</groupId>
+            <artifactId>core</artifactId>
+            <version>${zxing.version}</version>
         </dependency>
         <dependency>
             <groupId>commons-validator</groupId>

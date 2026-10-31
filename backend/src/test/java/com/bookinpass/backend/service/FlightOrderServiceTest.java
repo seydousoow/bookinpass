@@ -52,7 +52,7 @@ class FlightOrderServiceTest {
     private final BookingRecorder recorder = mock(BookingRecorder.class);
     private final PaymentService payments = new PaymentService(
             new StripeProperties("https://api.stripe.com", "sk_test_x", "pk_test_x", "2026-03-25.dahlia", "", "http://localhost:4200"),
-            stripe, flights, stays, json, Clock.systemUTC(), recorder);
+            stripe, flights, stays, json, Clock.systemUTC(), recorder, event -> {});
     private final DuffelCustomerService customers = mock(DuffelCustomerService.class);
     private final FlightOrderCache orderCache = mock(FlightOrderCache.class);
     private final BookingMailer mailer = mock(BookingMailer.class);

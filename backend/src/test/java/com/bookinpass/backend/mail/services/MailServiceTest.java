@@ -7,6 +7,7 @@ import com.bookinpass.backend.mail.resources.BookingCancellationMailProperties;
 import com.bookinpass.backend.mail.resources.BookingChangeMailProperties;
 import com.bookinpass.backend.mail.resources.BookingConfirmationMailProperties;
 import com.bookinpass.backend.mail.resources.BookingMailProperties;
+import com.bookinpass.backend.mail.resources.BusTicketMailProperties;
 import com.bookinpass.backend.mail.resources.FlightItinerary;
 import com.bookinpass.backend.mail.resources.MailLang;
 import org.junit.jupiter.api.Test;
@@ -137,16 +138,36 @@ class MailServiceTest {
     }
 
     @Test
+    void busTicketsShowEachPassengerCodeAndTheLink() throws Exception {
+        BusTicketMailProperties.BusTicketMailPropertiesBuilder<?, ?> tickets = BusTicketMailProperties.builder().name("Awa Sène")
+                .pnr("K7MPQ2").lastName("Sène").from("Dakar").to("Touba").departure("lundi 26 octobre 2026 · 07:00")
+                .originStation("Terminus Liberté 5").originAddress("Liberté 5, Dakar").destinationStation("Touba")
+                .operator("Dakar Dem Dikk").operatorPhone("+221338241010").amount("8 240 F CFA").fees("240 F CFA")
+                .tickets(List.of(new BusTicketMailProperties.Ticket("Awa Sène", "ABCD234EFG", "qr-ABCD234EFG"),
+                        new BusTicketMailProperties.Ticket("Moussa Diop", "HJKL567MNP", "qr-HJKL567MNP")));
+
+        MailService.Rendered fr = service(false).render(tickets.lang(MailLang.FR).build());
+        assertThat(fr.subject()).isEqualTo("Vos billets de car K7MPQ2");
+        assertThat(fr.body()).contains("Dakar → Touba", "ABCD234EFG", "HJKL567MNP", "Terminus Liberté 5", "8 240 F CFA",
+                "dont 240 F CFA de frais de service", "src=\"cid:qr-ABCD234EFG\"",
+                "/bus/booking?n=K7MPQ2&amp;l=S%C3%A8ne").doesNotContain("continu");
+
+        MailService.Rendered en = service(false).render(tickets.lang(MailLang.EN).lastDeparture("19:00").build());
+        assertThat(en.subject()).isEqualTo("Your bus tickets K7MPQ2");
+        assertThat(en.body()).contains("Continuous departures until 19:00", "View my tickets");
+    }
+
+    @Test
     void sentThroughSesOnlyWhenEnabledAndTheAddressIsValid() {
         given(verifier.isValid("amina@example.com")).willReturn(true);
 
         service(false).sendMail(confirmation(MailLang.FR, "Amina"));
-        verify(sender, never()).sendEmailWithRetry(anyString(), anyString(), anyString(), anyString(), any(), anyString(), anyString(), any(), any());
+        verify(sender, never()).sendEmailWithRetry(anyString(), anyString(), anyString(), anyString(), any(), anyString(), anyString(), any(), any(), any());
 
         service(true).sendMail(confirmation(MailLang.FR, "Amina"));
         verify(sender).sendEmailWithRetry(org.mockito.ArgumentMatchers.eq("BOOKING_CONFIRMATION"), org.mockito.ArgumentMatchers.eq("reservations@bookinpass.com"),
                 org.mockito.ArgumentMatchers.eq("Book In Pass"), org.mockito.ArgumentMatchers.eq("amina@example.com"), any(),
-                org.mockito.ArgumentMatchers.eq("Votre réservation RZPNX8 est confirmée"), anyString(), any(), any());
+                org.mockito.ArgumentMatchers.eq("Votre réservation RZPNX8 est confirmée"), anyString(), any(), any(), any());
     }
 
     @Test
@@ -155,6 +176,6 @@ class MailServiceTest {
 
         service(true).sendMail(confirmation(MailLang.FR, "Amina"));
 
-        verify(sender, never()).sendEmailWithRetry(anyString(), anyString(), anyString(), anyString(), any(), anyString(), anyString(), any(), any());
+        verify(sender, never()).sendEmailWithRetry(anyString(), anyString(), anyString(), anyString(), any(), anyString(), anyString(), any(), any(), any());
     }
 }

@@ -56,6 +56,9 @@ COPY --from=jvm-build /workspace/target/extracted/dependencies/ ./
 COPY --from=jvm-build /workspace/target/extracted/spring-boot-loader/ ./
 COPY --from=jvm-build /workspace/target/extracted/snapshot-dependencies/ ./
 COPY --from=jvm-build /workspace/target/extracted/application/ ./
+# Réponses de démo (Duffel sans jeton, Duffel Stays désactivé) : dans l'image, au chemin que compose.yaml monte aussi.
+COPY fixtures/duffel /fixtures/duffel
+ENV DUFFEL_FIXTURES_DIR=file:/fixtures/duffel/
 
 USER app
 EXPOSE 8080
@@ -75,6 +78,10 @@ RUN apt-get update \
  && rm -rf /var/lib/apt/lists/* \
  && useradd --system --uid 10001 app
 COPY --from=native-build /workspace/target/backend /app/backend
+# Réponses de démo, comme pour l'image JVM (sans elles, l'hébergement de démo échoue : « Missing demo fixture »).
+COPY fixtures/duffel /fixtures/duffel
+ENV DUFFEL_FIXTURES_DIR=file:/fixtures/duffel/
+WORKDIR /app
 USER app
 EXPOSE 8080
 HEALTHCHECK --interval=10s --timeout=3s --start-period=10s --retries=5 \

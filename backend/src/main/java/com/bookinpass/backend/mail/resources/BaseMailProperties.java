@@ -42,6 +42,10 @@ public abstract class BaseMailProperties {
     @JsonIgnore
     @Builder.Default
     private Map<String, byte[]> attachments = new HashMap<>();
+    /** Images PNG affichées dans le corps (identifiant → contenu), lues par le gabarit en {@code src="cid:identifiant"}. */
+    @JsonIgnore
+    @Builder.Default
+    private Map<String, byte[]> inlineImages = new HashMap<>();
 
     @JsonIgnore
     public abstract MailType getMailType();
@@ -53,6 +57,7 @@ public abstract class BaseMailProperties {
         map.remove("destination");
         map.remove("bccRecipients");
         map.remove("attachments");
+        map.remove("inlineImages");
         map.put("baseUrl", siteUrl == null ? "" : siteUrl.replaceAll("/+$", ""));
         map.put("lang", (lang == null ? MailLang.FR : lang).name().toLowerCase(java.util.Locale.ROOT));
         return map;

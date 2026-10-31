@@ -71,7 +71,8 @@
     "stays": "Hébergement",
     "uiKit": "Design system",
     "currency": "Devise",
-    "language": "Langue"
+    "language": "Langue",
+    "bus": "Car"
   },
   "footer": {
     "tagline": "Réservez vos vols, séjours et activités au Sénégal et au-delà.",
@@ -625,7 +626,8 @@
       "label": "Que recherchez-vous ?",
       "flights": "Vols",
       "stays": "Hébergement",
-      "manage": "Gérer mon vol"
+      "manage": "Gérer mon vol",
+      "bus": "Car"
     }
   },
   "stay": {
@@ -886,5 +888,135 @@
       "expired": "La session de paiement a expiré : rechargez la page pour recommencer."
     },
     "processing": "Paiement en cours…"
+  },
+  "bus": {
+    "network": {
+      "interurban": "Interurbain",
+      "international": "International",
+      "airport": "Navette aéroport"
+    },
+    "search": {
+      "from": "Départ",
+      "to": "Arrivée",
+      "date": "Date du voyage",
+      "date-placeholder": "Choisir une date",
+      "passengers": "Passagers",
+      "submit": "Rechercher",
+      "places-failed": "Les lignes de car n'ont pas pu être chargées. Rechargez la page.",
+      "incomplete": "Choisissez un départ, une arrivée et une date.",
+      "invalid": "Indiquez votre trajet pour voir les départs.",
+      "passenger-count": "{count, plural, one {# passager} other {# passagers}}",
+      "edit": "Modifier",
+      "close": "Fermer",
+      "days": "Jour du voyage",
+      "previous-day": "Jour précédent",
+      "next-day": "Jour suivant",
+      "failed": "Les départs n'ont pas pu être chargés.",
+      "retry": "Réessayer",
+      "empty-title": "Aucun départ ce jour-là",
+      "empty-message": "Cette ligne ne circule pas ce jour-là. Essayez un autre jour.",
+      "time-note": "Heures de Dakar (GMT).",
+      "continuous": "départs en continu jusqu'à {until}",
+      "boarding": "Embarquement : {address}",
+      "per-passenger": "{price} par passager, frais de service inclus",
+      "sold-out": "Complet",
+      "closed": "Vente fermée",
+      "seats-left": "{count, plural, one {Plus que # place} other {Plus que # places}}",
+      "choose": "Choisir"
+    },
+    "steps": {
+      "label": "Étapes de la réservation",
+      "travellers": "Passagers",
+      "pay": "Paiement",
+      "done": "Billets"
+    },
+    "book": {
+      "missing": "Aucun départ choisi.",
+      "new-search": "Rechercher un car",
+      "unavailable": "Ce départ n'est plus proposé.",
+      "back-to-results": "Retour aux départs",
+      "total": "{count, plural, one {Total pour # passager : {total}} other {Total pour # passagers : {total}}}",
+      "to-payment": "Continuer vers le paiement",
+      "back-to-travellers": "Modifier les passagers",
+      "fees": "dont {fees} de frais de service Book In Pass"
+    },
+    "travellers": {
+      "title": "Passagers",
+      "subtitle": "Le nom de chaque passager figure sur son billet.",
+      "passenger": "Passager {index}",
+      "given-name": "Prénom",
+      "family-name": "Nom",
+      "contact": "Coordonnées",
+      "email": "E-mail",
+      "email-hint": "Vos billets y seront envoyés.",
+      "phone": "Téléphone",
+      "phone-hint": "En cas de changement sur votre départ.",
+      "incomplete": "Complétez les noms des passagers et vos coordonnées.",
+      "errors": {
+        "name": "Lettres, espaces, apostrophes et traits d'union uniquement.",
+        "name-length": "50 caractères au plus.",
+        "email": "Adresse e-mail invalide.",
+        "phone": "Numéro de téléphone invalide."
+      }
+    },
+    "pay": {
+      "title": "Paiement",
+      "holding": "Réservation de vos places…",
+      "confirming": "Confirmation de votre réservation…",
+      "held": "Vos places sont réservées jusqu'à {until} (heure de Dakar) : payez avant pour les garder.",
+      "mail-sent": "Vos billets ont été envoyés à {email}.",
+      "errors": {
+        "sold-out": "Il ne reste plus assez de places sur ce départ.",
+        "departure-closed": "Ce départ n'est plus en vente.",
+        "departure-not-found": "Ce départ n'existe plus.",
+        "route-not-found": "Cette ligne n'est plus vendue.",
+        "hold-expired": "Le délai est dépassé et vos places ont été libérées. Réessayez pour en réserver de nouvelles.",
+        "payments-unavailable": "Le paiement en ligne est momentanément indisponible.",
+        "failed": "Vos places n'ont pas pu être réservées. Réessayez.",
+        "sold-out-paid": "Les dernières places ont été vendues pendant votre paiement. Rien n'a été débité.",
+        "confirm-failed": "Votre paiement est autorisé mais la réservation n'a pas pu être confirmée. Réessayez : vous ne serez pas débité deux fois.",
+        "already-paid": "Cette réservation a déjà été payée par carte.",
+        "mobile-failed": "Le paiement mobile n'a pas pu être vérifié. Réessayez."
+      },
+      "mobile": {
+        "title": "Wave, Orange Money ou Free Money",
+        "hint": "Vous validez le paiement sur votre téléphone, sur la page sécurisée de PayDunya.",
+        "pay": "Payer par mobile money",
+        "or-card": "ou par carte bancaire",
+        "redirecting": "Ouverture de la page de paiement…",
+        "checking": "Vérification de votre paiement…",
+        "pending": "Paiement en attente : validez-le sur votre téléphone. Cette page se met à jour toute seule.",
+        "check-again": "Vérifier à nouveau",
+        "cancelled": "Paiement annulé : rien n'a été débité. Vos places restent réservées quelques minutes.",
+        "retry": "Réessayer avec Wave / Orange Money",
+        "use-card": "Payer par carte"
+      }
+    },
+    "tickets": {
+      "confirmed": "Réservation confirmée",
+      "title": "Billets",
+      "status": {
+        "held": "Paiement en attente : les billets seront valables une fois le paiement reçu.",
+        "released": "Réservation non payée : les places ont été libérées."
+      },
+      "reference": "Référence de réservation",
+      "continuous": "Départs en continu jusqu'à {until}",
+      "boarding": "Embarquement",
+      "arrival": "Arrivée",
+      "operator": "Transporteur",
+      "total": "Total payé",
+      "code": "Code du billet {code}",
+      "present": "Présentez le QR code ou le code de chaque passager au contrôleur. Arrivez à la gare 30 minutes avant le départ.",
+      "fees": "dont {fees} de frais de service",
+      "qr": "QR code du billet {code}"
+    },
+    "lookup": {
+      "title": "Mes billets de car",
+      "reference": "Référence de réservation",
+      "last-name": "Nom d'un passager",
+      "submit": "Afficher",
+      "not-found": "Aucune réservation ne correspond à cette référence et ce nom.",
+      "failed": "Les billets n'ont pas pu être chargés. Réessayez."
+    }
   }
 }

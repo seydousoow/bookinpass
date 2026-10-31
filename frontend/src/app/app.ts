@@ -37,6 +37,7 @@ export class App implements OnInit {
     { labelKey: 'nav.flights', route: '/flight', disabled: false },
     { labelKey: 'nav.tourism', route: '/tourism', disabled: true },
     { labelKey: 'nav.stays', route: '/stays', disabled: false },
+    { labelKey: 'nav.bus', route: '/bus', disabled: false },
     { labelKey: 'nav.uiKit', route: '/ui-kit', disabled: false },
   ];
   protected readonly footerColumns: readonly FooterColumn[] = [

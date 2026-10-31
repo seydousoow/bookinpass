@@ -60,6 +60,16 @@ services:
         sync: false
       - key: CORS_ALLOWED_ORIGINS
         sync: false
+      # Back-office du personnel (application séparée), sur le même site que l'API : cookie de session SameSite=Lax.
+      # Valeur conseillée : https://bip-admin.dicortex.com
+      - key: BACKOFFICE_URL
+        sync: false
+      # Premier administrateur, créé au démarrage s'il n'en existe aucun ; mot de passe provisoire (10 caractères, une
+      # lettre et un chiffre) à changer à la première connexion. À retirer ensuite.
+      - key: BOOTSTRAP_ADMIN_USERNAME
+        sync: false
+      - key: BOOTSTRAP_ADMIN_PASSWORD
+        sync: false
 
       # Valeur conseillée : https://api.duffel.com
       - key: DUFFEL_BASE_URL
@@ -84,6 +94,20 @@ services:
       - key: STRIPE_PUBLISHABLE_KEY
         sync: false
       - key: STRIPE_WEBHOOK_SECRET
+        sync: false
+
+      # PayDunya : billets de car payés par Wave / Orange Money / Free Money. Clés vides = moyen masqué.
+      # Valeur conseillée : https://app.paydunya.com/sandbox-api/v1 (test), puis https://app.paydunya.com/api/v1
+      - key: PAYDUNYA_BASE_URL
+        sync: false
+      - key: PAYDUNYA_MASTER_KEY
+        sync: false
+      - key: PAYDUNYA_PRIVATE_KEY
+        sync: false
+      - key: PAYDUNYA_TOKEN
+        sync: false
+      # Valeur conseillée : https://bip-back.dicortex.com/api/transport/payments/paydunya
+      - key: PAYDUNYA_CALLBACK_URL
         sync: false
 
       # E-mails aux voyageurs par AWS SES : true pour les envoyer (identifiants AWS et expéditeur vérifié dans SES

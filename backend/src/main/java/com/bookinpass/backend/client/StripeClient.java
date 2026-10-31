@@ -13,6 +13,7 @@ import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.json.JsonMapper;
 
 import java.io.IOException;
+import java.time.Instant;
 import java.util.Map;
 
 /**
@@ -47,7 +48,19 @@ public class StripeClient {
      */
     public JsonNode createCheckoutSession(long amount, String currency, String label, String returnUrl, String locale,
                                           Map<String, String> metadata, String idempotencyKey) {
+        return createCheckoutSession(amount, currency, label, returnUrl, locale, metadata, idempotencyKey, null);
+    }
+
+    /**
+     * @param expiresAt fin de la session (30 minutes au moins après sa création, exigence Stripe) ; {@code null} : 24 h,
+     *                  la valeur par défaut de Stripe
+     */
+    public JsonNode createCheckoutSession(long amount, String currency, String label, String returnUrl, String locale,
+                                          Map<String, String> metadata, String idempotencyKey, Instant expiresAt) {
         MultiValueMap<String, String> form = new LinkedMultiValueMap<>();
+        if (expiresAt != null) {
+            form.add("expires_at", Long.toString(expiresAt.getEpochSecond()));
+        }
         form.add("ui_mode", "form");
         form.add("mode", "payment");
         form.add("billing_address_collection", "required");
@@ -84,6 +97,14 @@ public class StripeClient {
                 })
                 .body(String.class);
         return json.readTree(body);
+    }
+
+    /**
+     * {@code POST /v1/checkout/sessions/{id}/expire} — ferme une session encore ouverte : plus aucun paiement possible
+     * avec elle (le client a choisi un autre moyen de paiement). Stripe refuse une session déjà payée ou expirée.
+     */
+    public JsonNode expireCheckoutSession(String sessionId, String idempotencyKey) {
+        return post("/v1/checkout/sessions/" + sessionId + "/expire", new LinkedMultiValueMap<>(), idempotencyKey, "checkout session expiry");
     }
 
     /** {@code POST /v1/payment_intents/{id}/capture} — encaisse l'autorisation, une fois la commande créée. */
