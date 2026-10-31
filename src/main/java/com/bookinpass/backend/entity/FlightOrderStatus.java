@@ -5,13 +5,21 @@ import jakarta.persistence.Converter;
 
 import java.util.Arrays;
 
-/** Statut d'une commande, de la confirmation à l'annulation (colonne {@code flight_order.status}). */
+/**
+ * Statut d'une commande, de la confirmation à l'annulation (colonne {@code flight_order.status}).
+ */
 public enum FlightOrderStatus {
-    /** Réservée chez la compagnie, billet émis. */
+    /**
+     * Réservée chez la compagnie, billet émis.
+     */
     CONFIRMED,
-    /** Modifiée depuis (horaire changé par la compagnie, ou changement demandé). */
+    /**
+     * Modifiée depuis (horaire changé par la compagnie, ou changement demandé).
+     */
     CHANGED,
-    /** Annulation demandée, en attente de confirmation chez Duffel. */
+    /**
+     * Annulation demandée, en attente de confirmation chez Duffel.
+     */
     CANCELLATION_PENDING,
     CANCELLED;
 

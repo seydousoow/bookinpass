@@ -28,7 +28,7 @@ import java.time.Instant;
 @Table(name = "transport_mobile_payment")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class TransportMobilePayment {
+public class TransportMobilePayment implements SeatMobilePayment {
 
     public static final String PENDING = "pending";
     public static final String COMPLETED = "completed";
@@ -59,11 +59,15 @@ public class TransportMobilePayment {
     @Column(nullable = false, length = 3)
     private String currency;
 
-    /** Moyen PayDunya ({@code wave-senegal}…) ; nul avant le paiement sur notre page. */
+    /**
+     * Moyen PayDunya ({@code wave-senegal}…) ; nul avant le paiement sur notre page.
+     */
     @Column(length = 30)
     private String method;
 
-    /** Numéro qui paie, chiffré ({@code PaymentDataCipher}). */
+    /**
+     * Numéro qui paie, chiffré ({@code PaymentDataCipher}).
+     */
     @Column(name = "phone_encrypted")
     private String phoneEncrypted;
 
@@ -80,7 +84,9 @@ public class TransportMobilePayment {
     @Column(name = "completed_at")
     private Instant completedAt;
 
-    /** Remboursement fait à la main, noté au back-office. */
+    /**
+     * Remboursement fait à la main, noté au back-office.
+     */
     @Column(name = "refunded_at")
     private Instant refundedAt;
 
@@ -92,7 +98,7 @@ public class TransportMobilePayment {
     private String refundNote;
 
     public TransportMobilePayment(TransportBooking booking, String invoiceToken, BigDecimal amount, String currency, String method,
-                                      String phoneEncrypted, String phoneMasked) {
+                                  String phoneEncrypted, String phoneMasked) {
         this.booking = booking;
         this.provider = "paydunya";
         this.invoiceToken = invoiceToken;
@@ -114,14 +120,18 @@ public class TransportMobilePayment {
         this.completedAt = at;
     }
 
-    /** Payée alors que les places n'étaient plus disponibles : à rembourser à la main. */
+    /**
+     * Payée alors que les places n'étaient plus disponibles : à rembourser à la main.
+     */
     public void refundNeeded(String receiptUrl, Instant at) {
         this.status = REFUND_NEEDED;
         this.receiptUrl = receiptUrl;
         this.completedAt = at;
     }
 
-    /** Client remboursé (opérateur, référence de transaction dans {@code note}). */
+    /**
+     * Client remboursé (opérateur, référence de transaction dans {@code note}).
+     */
     public void refunded(StaffUser by, String note, Instant at) {
         this.status = REFUNDED;
         this.refundedBy = by;
@@ -129,7 +139,9 @@ public class TransportMobilePayment {
         this.refundedAt = at;
     }
 
-    /** {@code cancelled} ou {@code failed}, tel que PayDunya le dit. */
+    /**
+     * {@code cancelled} ou {@code failed}, tel que PayDunya le dit.
+     */
     public void close(String status) {
         this.status = status;
     }

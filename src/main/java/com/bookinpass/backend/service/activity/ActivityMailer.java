@@ -10,6 +10,7 @@ import com.bookinpass.backend.mail.resources.MailLang;
 import com.bookinpass.backend.mail.services.MailService;
 import com.bookinpass.backend.repository.ActivityBookingRepository;
 import com.bookinpass.backend.repository.ActivityRefundRepository;
+import com.bookinpass.backend.service.booking.ActivityBookingService;
 import com.bookinpass.backend.service.transport.TicketQr;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -37,6 +38,22 @@ public class ActivityMailer {
     private final ActivityBookingRepository bookings;
     private final ActivityRefundRepository refunds;
     private final MailService mails;
+
+    private static String when(Instant instant, ZoneId zone, Locale locale) {
+        DateTimeFormatter date = DateTimeFormatter.ofLocalizedDate(FormatStyle.FULL).withLocale(locale).withZone(zone);
+        DateTimeFormatter time = DateTimeFormatter.ofPattern("HH:mm").withZone(zone);
+        return date.format(instant) + " · " + time.format(instant);
+    }
+
+    private static String participants(ActivityBooking booking, MailLang lang) {
+        boolean fr = lang == MailLang.FR;
+        String adults = booking.getAdults() + (fr ? (booking.getAdults() > 1 ? " adultes" : " adulte") : (booking.getAdults() > 1 ? " adults" : " adult"));
+        if (booking.getChildren() == 0) {
+            return adults;
+        }
+        String children = booking.getChildren() + (fr ? (booking.getChildren() > 1 ? " enfants" : " enfant") : (booking.getChildren() > 1 ? " children" : " child"));
+        return booking.getAdults() == 0 ? children : adults + ", " + children;
+    }
 
     @Transactional(readOnly = true)
     public void sendVoucher(String reference) {
@@ -76,21 +93,5 @@ public class ActivityMailer {
                 .refund(refunded.signum() == 0 ? null : FlightItinerary.money(refunded, booking.getCurrency(), locale))
                 .manualRefund(manual)
                 .build());
-    }
-
-    private static String when(Instant instant, ZoneId zone, Locale locale) {
-        DateTimeFormatter date = DateTimeFormatter.ofLocalizedDate(FormatStyle.FULL).withLocale(locale).withZone(zone);
-        DateTimeFormatter time = DateTimeFormatter.ofPattern("HH:mm").withZone(zone);
-        return date.format(instant) + " · " + time.format(instant);
-    }
-
-    private static String participants(ActivityBooking booking, MailLang lang) {
-        boolean fr = lang == MailLang.FR;
-        String adults = booking.getAdults() + (fr ? (booking.getAdults() > 1 ? " adultes" : " adulte") : (booking.getAdults() > 1 ? " adults" : " adult"));
-        if (booking.getChildren() == 0) {
-            return adults;
-        }
-        String children = booking.getChildren() + (fr ? (booking.getChildren() > 1 ? " enfants" : " enfant") : (booking.getChildren() > 1 ? " children" : " child"));
-        return booking.getAdults() == 0 ? children : adults + ", " + children;
     }
 }

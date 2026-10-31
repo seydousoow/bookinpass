@@ -31,17 +31,23 @@ public class StripePayment {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    /** Commande payée ; vide tant qu'elle n'existe pas (ou si elle a échoué). */
+    /**
+     * Commande payée ; vide tant qu'elle n'existe pas (ou si elle a échoué).
+     */
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "order_id")
     private FlightOrder order;
 
-    /** Réservation de car payée (jamais en même temps qu'une commande de vol). */
+    /**
+     * Réservation de car payée (jamais en même temps qu'une commande de vol).
+     */
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "transport_booking_id")
     private TransportBooking transportBooking;
 
-    /** Réservation d'activité payée. */
+    /**
+     * Réservation d'activité payée.
+     */
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "activity_booking_id")
     private ActivityBooking activityBooking;
@@ -160,7 +166,9 @@ public class StripePayment {
         this.failureReason = reason;
     }
 
-    /** Remboursement cumulé : total ou partiel selon le montant encaissé. */
+    /**
+     * Remboursement cumulé : total ou partiel selon le montant encaissé.
+     */
     public void refunded(long totalRefunded, Instant at) {
         this.amountRefunded = totalRefunded;
         this.refundedAt = at;

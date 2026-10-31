@@ -2,9 +2,9 @@ package com.bookinpass.backend.controller;
 
 import com.bookinpass.backend.service.DuffelWebhookService;
 import com.bookinpass.backend.service.PaymentService;
-import com.bookinpass.backend.service.activity.ActivityMobilePaymentService;
+import com.bookinpass.backend.service.booking.ActivityMobilePaymentService;
 import com.bookinpass.backend.service.payment.PayDunyaCheckout;
-import com.bookinpass.backend.service.transport.TransportMobilePaymentService;
+import com.bookinpass.backend.service.booking.TransportMobilePaymentService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;

@@ -26,20 +26,21 @@ import java.util.stream.Collectors;
  * Recherche d'hébergement, avec les paramètres courts de l'URL du front ({@code /stays/search?l=2253354&in=…}).
  * Règles Duffel : arrivée à 330 jours au plus, 99 nuits au plus, au moins un adulte par chambre, enfants de 0 à 17 ans.
  */
-public record StaySearchRequest(@Parameter(name = "l", description = "Identifiant GeoNames de la ville (`/stays/destinations`)", required = true, example = "2253354")
-                                @BindParam("l") @NotNull @Pattern(regexp = "[1-9][0-9]{0,8}") String location,
-                                @Parameter(name = "in", description = "Date d'arrivée (aujourd'hui ou après)", required = true, example = "2026-11-20")
-                                @BindParam("in") @NotNull @FutureOrPresent LocalDate checkIn,
-                                @Parameter(name = "out", description = "Date de départ, après l'arrivée", required = true, example = "2026-11-23")
-                                @BindParam("out") @NotNull LocalDate checkOut,
-                                @Parameter(name = "adt", description = "Adultes",
-                                        schema = @Schema(type = "integer", minimum = "1", maximum = "16", defaultValue = "2"))
-                                @BindParam("adt") @Min(1) @Max(16) Integer adults,
-                                @Parameter(name = "chd", description = "Âge de chaque enfant, séparés par des virgules", example = "7,4")
-                                @BindParam("chd") @Size(max = 8) List<@NotNull @Min(0) @Max(17) Integer> childAges,
-                                @Parameter(name = "rooms", description = "Chambres",
-                                        schema = @Schema(type = "integer", minimum = "1", maximum = "8", defaultValue = "1"))
-                                @BindParam("rooms") @Min(1) @Max(8) Integer rooms) {
+public record StaySearchRequest(
+        @Parameter(name = "l", description = "Identifiant GeoNames de la ville (`/stays/destinations`)", required = true, example = "2253354")
+        @BindParam("l") @NotNull @Pattern(regexp = "[1-9][0-9]{0,8}") String location,
+        @Parameter(name = "in", description = "Date d'arrivée (aujourd'hui ou après)", required = true, example = "2026-11-20")
+        @BindParam("in") @NotNull @FutureOrPresent LocalDate checkIn,
+        @Parameter(name = "out", description = "Date de départ, après l'arrivée", required = true, example = "2026-11-23")
+        @BindParam("out") @NotNull LocalDate checkOut,
+        @Parameter(name = "adt", description = "Adultes",
+                schema = @Schema(type = "integer", minimum = "1", maximum = "16", defaultValue = "2"))
+        @BindParam("adt") @Min(1) @Max(16) Integer adults,
+        @Parameter(name = "chd", description = "Âge de chaque enfant, séparés par des virgules", example = "7,4")
+        @BindParam("chd") @Size(max = 8) List<@NotNull @Min(0) @Max(17) Integer> childAges,
+        @Parameter(name = "rooms", description = "Chambres",
+                schema = @Schema(type = "integer", minimum = "1", maximum = "8", defaultValue = "1"))
+        @BindParam("rooms") @Min(1) @Max(8) Integer rooms) {
 
     public static final int MAX_NIGHTS = 99;
     public static final int MAX_DAYS_AHEAD = 330;

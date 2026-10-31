@@ -5,7 +5,9 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.experimental.SuperBuilder;
 
-/** E-mail {@link MailType#BOOKING_CHANGE}. */
+/**
+ * E-mail {@link MailType#BOOKING_CHANGE}.
+ */
 @Getter
 @SuperBuilder
 @AllArgsConstructor(access = AccessLevel.PRIVATE)

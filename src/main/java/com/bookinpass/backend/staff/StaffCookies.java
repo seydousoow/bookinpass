@@ -9,7 +9,9 @@ import org.springframework.http.ResponseCookie;
 import java.time.Duration;
 import java.util.Arrays;
 
-/** Cookie de session du back-office : HttpOnly (invisible au JavaScript), limité aux chemins {@code /staff}. */
+/**
+ * Cookie de session du back-office : HttpOnly (invisible au JavaScript), limité aux chemins {@code /staff}.
+ */
 final class StaffCookies {
 
     private StaffCookies() {

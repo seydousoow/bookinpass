@@ -15,7 +15,9 @@ public interface ActivityRefundRepository extends JpaRepository<ActivityRefund, 
     @Query("select r from ActivityRefund r left join fetch r.requestedBy left join fetch r.refundedBy where r.booking.id = :bookingId order by r.id")
     List<ActivityRefund> findByBookingId(@Param("bookingId") Integer bookingId);
 
-    /** Remboursements d'un statut, avec réservation, créneau et activité ; les plus anciens d'abord. */
+    /**
+     * Remboursements d'un statut, avec réservation, créneau et activité ; les plus anciens d'abord.
+     */
     @Query("""
             select r from ActivityRefund r join fetch r.booking b join fetch b.slot s join fetch s.option o join fetch o.activity
             left join fetch r.requestedBy left join fetch r.refundedBy

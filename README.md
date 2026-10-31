@@ -1,3 +1,9 @@
+[![backend-image](https://github.com/seydousoow/bookinpass/actions/workflows/backend-image.yml/badge.svg)](https://github.com/seydousoow/bookinpass/actions/workflows/backend-image.yml)
+[![Qodana](https://github.com/seydousoow/bookinpass/actions/workflows/qodana_code_quality.yml/badge.svg)](https://github.com/seydousoow/bookinpass/actions/workflows/qodana_code_quality.yml)
+[![CodeQL](https://github.com/seydousoow/bookinpass/actions/workflows/github-code-scanning/codeql/badge.svg)](https://github.com/seydousoow/bookinpass/actions/workflows/github-code-scanning/codeql)
+[![Quality gate status](https://sonarcloud.io/api/project_badges/measure?project=bookinpass_book-in-pass&metric=alert_status&token=a9011a2be83f278d077740311b03c7a98b52848a)](https://sonarcloud.io/summary/new_code?id=bookinpass_book-in-pass)
+[![SonarQube Cloud](https://sonarcloud.io/images/project_badges/sonarcloud-highlight.svg)](https://sonarcloud.io/summary/new_code?id=bookinpass_book-in-pass)
+
 # Book In Pass — backend Spring Boot
 
 API consommée par le site et le back-office Angular du dépôt [bookinpass-nx](https://github.com/seydousoow/bookinpass-nx). Java 25, Spring Boot 4.1, Spring Data JPA (Hibernate 7),
@@ -44,23 +50,23 @@ La coloration syntaxique de Swagger UI est coupée : une réponse Duffel de 17 M
 
 ## API
 
-| Méthode et chemin | Rôle | Source | Cache Redis |
-|---|---|---|---|
-| `GET /api/flights/search?t&o&d&from&to&adt&chd&inf&cabin` | Recherche de vols | Duffel `POST /air/offer_requests` | 10 min |
-| `GET /api/flights/offers/{id}` | Détail d'une offre | Duffel `GET /air/offers/{id}` | aucun |
-| `PATCH /api/flights/offers/{id}/passengers/{pid}` | Nom et fidélité d'un voyageur — rend l'offre relue | Duffel `PATCH /air/offers/{id}/passengers/{pid}` puis `GET /air/offers/{id}` | aucun |
-| `GET /api/flights/offers/{id}/upsells` | Montées en gamme (vide si la compagnie n'en propose pas) | Duffel `POST /air/offers/{id}/upsell_offers` | jusqu'à `expires_at` (15 min max) |
-| `GET /api/flights/offers/{id}/seat-maps` | Plans de cabine (sièges et prix par voyageur) | Duffel `GET /air/seat_maps?offer_id=` | 10 min |
-| `POST /api/flights/offers/{id}/price` | Prix avec les services choisis | Duffel `POST /air/offers/{id}/actions/price` | aucun |
-| `GET /api/stays/search?l&in&out&adt&chd&rooms` | Hébergements autour d'une ville (tarif le moins cher) | Duffel `POST /stays/search` | 10 min |
-| `GET /api/stays/results/{id}/rates` | Chambres et tarifs d'un résultat | Duffel `POST /stays/search_results/{id}/actions/fetch_all_rates` | jusqu'à `expires_at` (5 min max) |
-| `POST /api/stays/quotes` | Vérification finale d'un tarif (prix, acompte) | Duffel `POST /stays/quotes` | aucun |
-| `GET /api/stays/quotes/{id}` | Relire un devis | Duffel `GET /stays/quotes/{id}` | aucun |
-| `GET /api/stays/accommodations/{id}/reviews?after&limit` | Avis clients, paginés | Duffel `GET /stays/accommodation/{id}/reviews` | 24 h |
-| `GET /api/airports` | Aéroports pour la saisie | Postgres | 24 h |
-| `GET /api/airlines` | Compagnies (nom et logos d'un code IATA) | Postgres | 24 h |
-| `GET /api/rates` | Taux de change depuis XOF | Postgres | 1 h |
-| `GET /actuator/health/readiness` | Sonde | — | — |
+| Méthode et chemin                                         | Rôle                                                     | Source                                                                       | Cache Redis                       |
+|-----------------------------------------------------------|----------------------------------------------------------|------------------------------------------------------------------------------|-----------------------------------|
+| `GET /api/flights/search?t&o&d&from&to&adt&chd&inf&cabin` | Recherche de vols                                        | Duffel `POST /air/offer_requests`                                            | 10 min                            |
+| `GET /api/flights/offers/{id}`                            | Détail d'une offre                                       | Duffel `GET /air/offers/{id}`                                                | aucun                             |
+| `PATCH /api/flights/offers/{id}/passengers/{pid}`         | Nom et fidélité d'un voyageur — rend l'offre relue       | Duffel `PATCH /air/offers/{id}/passengers/{pid}` puis `GET /air/offers/{id}` | aucun                             |
+| `GET /api/flights/offers/{id}/upsells`                    | Montées en gamme (vide si la compagnie n'en propose pas) | Duffel `POST /air/offers/{id}/upsell_offers`                                 | jusqu'à `expires_at` (15 min max) |
+| `GET /api/flights/offers/{id}/seat-maps`                  | Plans de cabine (sièges et prix par voyageur)            | Duffel `GET /air/seat_maps?offer_id=`                                        | 10 min                            |
+| `POST /api/flights/offers/{id}/price`                     | Prix avec les services choisis                           | Duffel `POST /air/offers/{id}/actions/price`                                 | aucun                             |
+| `GET /api/stays/search?l&in&out&adt&chd&rooms`            | Hébergements autour d'une ville (tarif le moins cher)    | Duffel `POST /stays/search`                                                  | 10 min                            |
+| `GET /api/stays/results/{id}/rates`                       | Chambres et tarifs d'un résultat                         | Duffel `POST /stays/search_results/{id}/actions/fetch_all_rates`             | jusqu'à `expires_at` (5 min max)  |
+| `POST /api/stays/quotes`                                  | Vérification finale d'un tarif (prix, acompte)           | Duffel `POST /stays/quotes`                                                  | aucun                             |
+| `GET /api/stays/quotes/{id}`                              | Relire un devis                                          | Duffel `GET /stays/quotes/{id}`                                              | aucun                             |
+| `GET /api/stays/accommodations/{id}/reviews?after&limit`  | Avis clients, paginés                                    | Duffel `GET /stays/accommodation/{id}/reviews`                               | 24 h                              |
+| `GET /api/airports`                                       | Aéroports pour la saisie                                 | Postgres                                                                     | 24 h                              |
+| `GET /api/airlines`                                       | Compagnies (nom et logos d'un code IATA)                 | Postgres                                                                     | 24 h                              |
+| `GET /api/rates`                                          | Taux de change depuis XOF                                | Postgres                                                                     | 1 h                               |
+| `GET /actuator/health/readiness`                          | Sonde                                                    | —                                                                            | —                                 |
 
 Les paramètres de recherche reprennent ceux de l'URL du front (`/search?t=round&o=DSS…`, `/stays/search?l=DKR&in=…`).
 
@@ -149,15 +155,15 @@ Toutes les erreurs sortent en RFC 7807 (`application/problem+json`) avec un `cod
 
 Erreurs Duffel (lues dans `errors[0].type/code`, journalisées avec `request_id` à citer au support Duffel) :
 
-| Duffel | API | `code` |
-|---|---|---|
-| 404 | 404 | `offer-not-found` |
-| 422 `offer_expired`, `offer_no_longer_available`, `rate_unavailable`, `result_no_longer_available`… (ou sans code connu) | 422 | `offer-unavailable` |
-| 422 `price_changed`, `ancillary_service_not_available` | 409 | `offer-changed` |
-| 422 `validation_error`, `invalid_*`, `loyalty_programme_*` (nom refusé…) | 400 | `provider-rejected` |
-| 429, 503, 504 | 503 + `Retry-After` (`ratelimit-reset`) | `provider-unavailable` |
-| 500, 502, 400/401/403 (notre intégration, en ERROR) | 502 | `provider-error` |
-| 422 `unsupported_action` (montées en gamme), `seat_map_unavailable` | 200 `{"data":[]}` | — |
+| Duffel                                                                                                                   | API                                     | `code`                 |
+|--------------------------------------------------------------------------------------------------------------------------|-----------------------------------------|------------------------|
+| 404                                                                                                                      | 404                                     | `offer-not-found`      |
+| 422 `offer_expired`, `offer_no_longer_available`, `rate_unavailable`, `result_no_longer_available`… (ou sans code connu) | 422                                     | `offer-unavailable`    |
+| 422 `price_changed`, `ancillary_service_not_available`                                                                   | 409                                     | `offer-changed`        |
+| 422 `validation_error`, `invalid_*`, `loyalty_programme_*` (nom refusé…)                                                 | 400                                     | `provider-rejected`    |
+| 429, 503, 504                                                                                                            | 503 + `Retry-After` (`ratelimit-reset`) | `provider-unavailable` |
+| 500, 502, 400/401/403 (notre intégration, en ERROR)                                                                      | 502                                     | `provider-error`       |
+| 422 `unsupported_action` (montées en gamme), `seat_map_unavailable`                                                      | 200 `{"data":[]}`                       | —                      |
 
 Le corps de chaque erreur porte aussi `providerRequestId` (le `x-request-id` Duffel).
 

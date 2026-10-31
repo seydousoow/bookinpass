@@ -30,19 +30,9 @@ public class PayDunyaClient {
         this.json = json;
     }
 
-    /** Facture créée : {@code token} (pour la relire) et page de paiement où envoyer le client. */
-    public record Invoice(String token, String url) {
-    }
-
-    /** Client prérempli sur la page PayDunya. */
-    public record Customer(String name, String email, String phone) {
-    }
-
-    /**
-     * Réponse SOFTPAY acceptée : {@code url} à ouvrir (Wave, QR code Orange Money), liens vers les applications Orange
-     * Money et Max it ; tout nul quand le code OTP a suffi ou que le client valide sur son téléphone.
-     */
-    public record Softpay(String url, String omUrl, String maxitUrl) {
+    private static PaymentException failure(String what, int status, String code) {
+        log.warn("PayDunya {} failed with HTTP {} (response_code {})", what, status, code);
+        return new PaymentException(HttpStatus.BAD_GATEWAY, "payment-provider-error", "The payment provider refused the request.");
     }
 
     /**
@@ -146,8 +136,22 @@ public class PayDunyaClient {
                 .body(String.class));
     }
 
-    private static PaymentException failure(String what, int status, String code) {
-        log.warn("PayDunya {} failed with HTTP {} (response_code {})", what, status, code);
-        return new PaymentException(HttpStatus.BAD_GATEWAY, "payment-provider-error", "The payment provider refused the request.");
+    /**
+     * Facture créée : {@code token} (pour la relire) et page de paiement où envoyer le client.
+     */
+    public record Invoice(String token, String url) {
+    }
+
+    /**
+     * Client prérempli sur la page PayDunya.
+     */
+    public record Customer(String name, String email, String phone) {
+    }
+
+    /**
+     * Réponse SOFTPAY acceptée : {@code url} à ouvrir (Wave, QR code Orange Money), liens vers les applications Orange
+     * Money et Max it ; tout nul quand le code OTP a suffi ou que le client valide sur son téléphone.
+     */
+    public record Softpay(String url, String omUrl, String maxitUrl) {
     }
 }

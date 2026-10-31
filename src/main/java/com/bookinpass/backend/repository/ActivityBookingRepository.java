@@ -29,7 +29,9 @@ public interface ActivityBookingRepository extends JpaRepository<ActivityBooking
 
     boolean existsByReference(String reference);
 
-    /** Réservation verrouillée jusqu'à la fin de la transaction : navigateur, webhook et back-office passent l'un après l'autre. */
+    /**
+     * Réservation verrouillée jusqu'à la fin de la transaction : navigateur, webhook et back-office passent l'un après l'autre.
+     */
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select b from ActivityBooking b where b.reference = :reference")
     Optional<ActivityBooking> lockByReference(@Param("reference") String reference);
@@ -37,7 +39,9 @@ public interface ActivityBookingRepository extends JpaRepository<ActivityBooking
     @Query("select b.reference from ActivityBooking b where b.status = :status and b.holdExpiresAt < :now")
     List<String> findReferencesByStatusAndHoldExpiresAtBefore(@Param("status") ActivityBookingStatus status, @Param("now") Instant now);
 
-    /** Réservations payées d'un créneau (annulation du créneau). */
+    /**
+     * Réservations payées d'un créneau (annulation du créneau).
+     */
     @Query("select b.reference from ActivityBooking b where b.slot.id = :slotId and b.status = :status")
     List<String> findReferencesBySlot(@Param("slotId") Integer slotId, @Param("status") ActivityBookingStatus status);
 
@@ -54,12 +58,12 @@ public interface ActivityBookingRepository extends JpaRepository<ActivityBooking
                    or lower(b.givenName) like concat(:text, '%'))
             order by s.startsAt desc, b.id desc""",
             countQuery = """
-            select count(b) from ActivityBooking b join b.slot s join s.option o join o.activity a
-            where b.status in :statuses and (:activityId is null or a.id = :activityId)
-              and s.startsAt >= :from and s.startsAt < :to
-              and (:text = '' or b.reference = upper(:text) or lower(b.email) like concat('%', :text, '%')
-                   or b.phone like concat('%', :text, '%') or lower(b.familyName) like concat(:text, '%')
-                   or lower(b.givenName) like concat(:text, '%'))""")
+                    select count(b) from ActivityBooking b join b.slot s join s.option o join o.activity a
+                    where b.status in :statuses and (:activityId is null or a.id = :activityId)
+                      and s.startsAt >= :from and s.startsAt < :to
+                      and (:text = '' or b.reference = upper(:text) or lower(b.email) like concat('%', :text, '%')
+                           or b.phone like concat('%', :text, '%') or lower(b.familyName) like concat(:text, '%')
+                           or lower(b.givenName) like concat(:text, '%'))""")
     Page<ActivityBooking> search(@Param("text") String text, @Param("statuses") Collection<ActivityBookingStatus> statuses,
                                  @Param("activityId") Integer activityId,
                                  @Param("from") Instant from, @Param("to") Instant to, Pageable page);

@@ -2,7 +2,9 @@ package com.bookinpass.backend.dto.response;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-/** Incident signalé ; {@code resolved_at} vide tant qu'il est ouvert. */
+/**
+ * Incident signalé ; {@code resolved_at} vide tant qu'il est ouvert.
+ */
 public record StaffIncidentResponse(Integer id,
                                     @JsonProperty("route_code") String routeCode,
                                     String origin,

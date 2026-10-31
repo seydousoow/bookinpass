@@ -16,7 +16,9 @@ import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
 
-/** Passager d'une commande : un voyageur ({@link User}) et son identifiant Duffel sur cette commande. */
+/**
+ * Passager d'une commande : un voyageur ({@link User}) et son identifiant Duffel sur cette commande.
+ */
 @Entity
 @Table(name = "flight_order_passenger")
 @Getter
@@ -39,7 +41,9 @@ public class FlightOrderPassenger {
     @Column(name = "duffel_passenger_id", nullable = false)
     private String duffelPassengerId;
 
-    /** {@code adult}, {@code child}, {@code infant_without_seat}. */
+    /**
+     * {@code adult}, {@code child}, {@code infant_without_seat}.
+     */
     @Column(name = "passenger_type", nullable = false, length = 30)
     private String passengerType;
 

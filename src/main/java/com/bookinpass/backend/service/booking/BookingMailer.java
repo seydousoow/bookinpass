@@ -27,26 +27,6 @@ public class BookingMailer {
 
     private final MailService mails;
 
-    /**
-     * Commande créée chez Duffel et paiement encaissé : itinéraire, voyageurs, conditions, acheteur et récapitulatif
-     * des prix (tarif et taxes de la compagnie, services, frais Book In Pass, total débité).
-     */
-    public void bookingConfirmed(String to, String travellerName, String phone, JsonNode order, FlightQuote quote,
-                                 BigDecimal paid, String currency, String lang) {
-        MailLang mailLang = MailLang.of(lang);
-        Locale locale = mailLang.toLocale();
-        mails.sendMail(confirmation(to, travellerName, order, mailLang)
-                .amount(paid.toPlainString() + " " + currency)
-                .buyer(new FlightItinerary.Buyer(travellerName, phone, to))
-                .prices(prices(order, quote, paid, currency, locale))
-                .build());
-    }
-
-    /** Sans le détail des prix ni le téléphone : seul le montant payé (« 260.42 EUR ») est affiché. */
-    public void bookingConfirmed(String to, String travellerName, JsonNode order, String paidAmount, String lang) {
-        mails.sendMail(confirmation(to, travellerName, order, MailLang.of(lang)).amount(paidAmount).build());
-    }
-
     private static BookingConfirmationMailProperties.BookingConfirmationMailPropertiesBuilder<?, ?> confirmation(
             String to, String travellerName, JsonNode order, MailLang lang) {
         Locale locale = lang.toLocale();
@@ -90,7 +70,35 @@ public class BookingMailer {
                 FlightItinerary.money(paid, currency, locale));
     }
 
-    /** Changement d'horaire ou de vol décidé par la compagnie. */
+    private static String pnr(JsonNode order) {
+        return order.path("booking_reference").asString("");
+    }
+
+    /**
+     * Commande créée chez Duffel et paiement encaissé : itinéraire, voyageurs, conditions, acheteur et récapitulatif
+     * des prix (tarif et taxes de la compagnie, services, frais Book In Pass, total débité).
+     */
+    public void bookingConfirmed(String to, String travellerName, String phone, JsonNode order, FlightQuote quote,
+                                 BigDecimal paid, String currency, String lang) {
+        MailLang mailLang = MailLang.of(lang);
+        Locale locale = mailLang.toLocale();
+        mails.sendMail(confirmation(to, travellerName, order, mailLang)
+                .amount(paid.toPlainString() + " " + currency)
+                .buyer(new FlightItinerary.Buyer(travellerName, phone, to))
+                .prices(prices(order, quote, paid, currency, locale))
+                .build());
+    }
+
+    /**
+     * Sans le détail des prix ni le téléphone : seul le montant payé (« 260.42 EUR ») est affiché.
+     */
+    public void bookingConfirmed(String to, String travellerName, JsonNode order, String paidAmount, String lang) {
+        mails.sendMail(confirmation(to, travellerName, order, MailLang.of(lang)).amount(paidAmount).build());
+    }
+
+    /**
+     * Changement d'horaire ou de vol décidé par la compagnie.
+     */
     public void bookingChanged(String to, String travellerName, JsonNode order, String lang) {
         mails.sendMail(BookingChangeMailProperties.builder()
                 .destination(to).name(travellerName).lang(MailLang.of(lang))
@@ -98,7 +106,9 @@ public class BookingMailer {
                 .build());
     }
 
-    /** Annulation confirmée, avec le remboursement annoncé par la compagnie. */
+    /**
+     * Annulation confirmée, avec le remboursement annoncé par la compagnie.
+     */
     public void bookingCancelled(String to, String travellerName, JsonNode order, JsonNode cancellation, String lang) {
         String refund = cancellation.path("refund_amount").asString("");
         mails.sendMail(BookingCancellationMailProperties.builder()
@@ -106,9 +116,5 @@ public class BookingMailer {
                 .pnr(pnr(order)).lastName(BookingMailProperties.lastNameOf(order)).segments(BookingMailProperties.segmentsOf(order)).passengers(BookingMailProperties.passengersOf(order))
                 .refund(refund.isEmpty() ? "—" : refund + " " + cancellation.path("refund_currency").asString(""))
                 .build());
-    }
-
-    private static String pnr(JsonNode order) {
-        return order.path("booking_reference").asString("");
     }
 }

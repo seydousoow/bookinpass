@@ -8,7 +8,9 @@ import jakarta.validation.constraints.Size;
 
 import java.math.BigDecimal;
 
-/** Remboursement (geste commercial, partiel) d'une réservation, sans l'annuler. */
+/**
+ * Remboursement (geste commercial, partiel) d'une réservation, sans l'annuler.
+ */
 public record StaffActivityRefundRequest(
         @Schema(example = "5000") @NotNull @DecimalMin("1") BigDecimal amount,
         @Schema(example = "Retard de 45 minutes au départ") @NotBlank @Size(max = 500) String reason) {

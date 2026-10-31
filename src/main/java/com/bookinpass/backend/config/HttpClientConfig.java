@@ -7,8 +7,8 @@ import com.bookinpass.backend.client.FixtureDuffelClient;
 import com.bookinpass.backend.client.FixtureStaysClient;
 import com.bookinpass.backend.client.HttpDuffelClient;
 import com.bookinpass.backend.client.HttpStaysClient;
-import com.bookinpass.backend.client.StaysClient;
 import com.bookinpass.backend.client.PayDunyaClient;
+import com.bookinpass.backend.client.StaysClient;
 import com.bookinpass.backend.client.StripeClient;
 import com.bookinpass.backend.dto.duffel.DuffelCustomerUser;
 import com.bookinpass.backend.dto.duffel.DuffelOfferRequest;
@@ -19,15 +19,15 @@ import com.bookinpass.backend.dto.duffel.DuffelPriceRequest;
 import com.bookinpass.backend.dto.duffel.DuffelQuoteRequest;
 import com.bookinpass.backend.dto.duffel.DuffelStaySearch;
 import lombok.extern.slf4j.Slf4j;
+import org.jspecify.annotations.NullMarked;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.aot.hint.annotation.RegisterReflectionForBinding;
 import org.springframework.boot.http.client.ClientHttpRequestFactoryBuilder;
 import org.springframework.boot.http.client.HttpClientSettings;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.ResourceLoader;
-import org.jspecify.annotations.NullMarked;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.MediaType;
@@ -54,31 +54,6 @@ import java.util.zip.GZIPInputStream;
 public class HttpClientConfig {
 
     /**
-     * Le choix démo / réel se fait ici, à l'exécution. Une condition Spring ({@code @ConditionalOnProperty})
-     * serait figée au moment de la compilation native : l'image ne pourrait plus changer de mode.
-     */
-    @Bean
-    DuffelClient duffelClient(DuffelProperties properties, RestClient.Builder builder, ResourceLoader resources, JsonMapper json) {
-        if (properties.demoMode()) {
-            log.warn("DUFFEL_ACCESS_TOKEN is not set: serving recorded demo responses from {}", properties.fixturesDir());
-            return new FixtureDuffelClient(resources, properties.fixturesDir(), json);
-        }
-        return new HttpDuffelClient(duffelRestClient(properties, builder, DuffelClient.class), properties, json);
-    }
-
-    /**
-     * Même règle pour les hébergements, avec une condition de plus : Duffel Stays doit être activé sur le compte.
-     */
-    @Bean
-    StaysClient staysClient(DuffelProperties properties, RestClient.Builder builder, ResourceLoader resources, JsonMapper json) {
-        if (properties.staysDemoMode()) {
-            log.warn("Duffel Stays is not enabled (DUFFEL_STAYS_ENABLED): serving demo accommodation from {}", properties.fixturesDir());
-            return new FixtureStaysClient(resources, properties.fixturesDir(), json);
-        }
-        return new HttpStaysClient(duffelRestClient(properties, builder, StaysClient.class), json);
-    }
-
-    /**
      * Client HTTP Duffel : jeton, version d'API, JSON, compression et journal (sous le logger {@code logAs}).
      * {@code clone()} : le constructeur injecté est partagé, chaque client garde sa configuration.
      */
@@ -98,99 +73,8 @@ public class HttpClientConfig {
                 .build();
     }
 
-    /** Stripe : clé secrète en en-tête ; sans journal des corps (ils contiennent le `client_secret`). */
-    @Bean
-    StripeClient stripeClient(StripeProperties properties, RestClient.Builder builder, JsonMapper json) {
-        if (!properties.enabled()) {
-            log.warn("STRIPE_SECRET_KEY / STRIPE_PUBLISHABLE_KEY are not set: payments are unavailable");
-        }
-        HttpClientSettings settings = HttpClientSettings.defaults()
-                .withConnectTimeout(Duration.ofSeconds(5))
-                .withReadTimeout(Duration.ofSeconds(30));
-        RestClient client = builder.clone()
-                .baseUrl(properties.baseUrl())
-                .requestFactory(ClientHttpRequestFactoryBuilder.jdk().build(settings))
-                .defaultHeader(HttpHeaders.AUTHORIZATION, "Bearer " + properties.secretKey())
-                .defaultHeader(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE)
-                .defaultHeader("Stripe-Version", properties.apiVersion())
-                .build();
-        return new StripeClient(client, json);
-    }
-
-    /** PayDunya : trois clés en en-têtes ; corps non journalisés (coordonnées des clients). */
-    @Bean
-    PayDunyaClient payDunyaClient(PayDunyaProperties properties, RestClient.Builder builder, JsonMapper json) {
-        if (!properties.enabled()) {
-            log.info("PAYDUNYA_* keys are not set: Wave / Orange Money are hidden");
-        }
-        HttpClientSettings settings = HttpClientSettings.defaults()
-                .withConnectTimeout(Duration.ofSeconds(5))
-                .withReadTimeout(Duration.ofSeconds(30));
-        RestClient client = builder.clone()
-                .baseUrl(properties.baseUrl())
-                .requestFactory(ClientHttpRequestFactoryBuilder.jdk().build(settings))
-                .defaultHeader(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE)
-                .defaultHeader("PAYDUNYA-MASTER-KEY", nullToEmpty(properties.masterKey()))
-                .defaultHeader("PAYDUNYA-PRIVATE-KEY", nullToEmpty(properties.privateKey()))
-                .defaultHeader("PAYDUNYA-TOKEN", nullToEmpty(properties.token()))
-                .build();
-        return new PayDunyaClient(client, json);
-    }
-
-    /** Claude : clé en en-tête, version d'API figée ; corps non journalisés (textes des voyageurs). */
-    @Bean
-    ClaudeClient claudeClient(AnthropicProperties properties, RestClient.Builder builder, JsonMapper json) {
-        if (!properties.enabled()) {
-            log.info("ANTHROPIC_API_KEY is not set: reviews wait for a manager, no review summaries");
-        }
-        HttpClientSettings settings = HttpClientSettings.defaults()
-                .withConnectTimeout(Duration.ofSeconds(5))
-                .withReadTimeout(properties.readTimeout());
-        RestClient client = builder.clone()
-                .baseUrl(properties.baseUrl())
-                .requestFactory(ClientHttpRequestFactoryBuilder.jdk().build(settings))
-                .defaultHeader("x-api-key", nullToEmpty(properties.apiKey()))
-                .defaultHeader("anthropic-version", properties.apiVersion())
-                .defaultHeader(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE)
-                .build();
-        return new ClaudeClient(client, json, properties.model(), properties.fallbacks(), properties.thinking());
-    }
-
     private static String nullToEmpty(String value) {
         return value == null ? "" : value;
-    }
-
-    @Bean
-    ExpediaClient expediaClient(ExpediaProperties properties, RestClient.Builder builder) {
-        HttpClientSettings settings = HttpClientSettings.defaults()
-                .withConnectTimeout(Duration.ofSeconds(5))
-                .withReadTimeout(properties.readTimeout());
-        RestClient client = builder
-                .baseUrl(properties.baseUrl())
-                .requestFactory(ClientHttpRequestFactoryBuilder.jdk().build(settings))
-                .defaultHeader(HttpHeaders.AUTHORIZATION, generateSignature(properties.apiKey(), properties.secret()))
-                .defaultHeader(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE)
-                .requestInterceptor(logging(ExpediaClient.class))
-                .build();
-        return new ExpediaClient(client);
-    }
-
-    private String generateSignature(String apiKey, String secret) {
-        var timestamp = (new Date().getTime() / 1000);
-        var toBeHashed = apiKey + secret + timestamp;
-        try {
-            var md = MessageDigest.getInstance("SHA-512");
-            var bytes = md.digest(toBeHashed.getBytes(StandardCharsets.UTF_8));
-            var sb = new StringBuilder();
-            for (var aByte : bytes) {
-                sb.append(Integer.toString((aByte & 0xff) + 0x100, 16).substring(1));
-            }
-            var signature = sb.toString();
-            return "EAN apikey=" + apiKey + ",signature=" + signature + ",timestamp=" + timestamp;
-        }  catch (NoSuchAlgorithmException e) {
-            log.error("Invalid algorithm SHA-512: {}", e.getMessage(), e);
-            throw new IllegalArgumentException(e.getMessage(), e);
-        }
     }
 
     /**
@@ -240,6 +124,128 @@ public class HttpClientConfig {
 
     private static long elapsedMillis(long start) {
         return (System.nanoTime() - start) / 1_000_000;
+    }
+
+    /**
+     * Le choix démo / réel se fait ici, à l'exécution. Une condition Spring ({@code @ConditionalOnProperty})
+     * serait figée au moment de la compilation native : l'image ne pourrait plus changer de mode.
+     */
+    @Bean
+    DuffelClient duffelClient(DuffelProperties properties, RestClient.Builder builder, ResourceLoader resources, JsonMapper json) {
+        if (properties.demoMode()) {
+            log.warn("DUFFEL_ACCESS_TOKEN is not set: serving recorded demo responses from {}", properties.fixturesDir());
+            return new FixtureDuffelClient(resources, properties.fixturesDir(), json);
+        }
+        return new HttpDuffelClient(duffelRestClient(properties, builder, DuffelClient.class), properties, json);
+    }
+
+    /**
+     * Même règle pour les hébergements, avec une condition de plus : Duffel Stays doit être activé sur le compte.
+     */
+    @Bean
+    StaysClient staysClient(DuffelProperties properties, RestClient.Builder builder, ResourceLoader resources, JsonMapper json) {
+        if (properties.staysDemoMode()) {
+            log.warn("Duffel Stays is not enabled (DUFFEL_STAYS_ENABLED): serving demo accommodation from {}", properties.fixturesDir());
+            return new FixtureStaysClient(resources, properties.fixturesDir(), json);
+        }
+        return new HttpStaysClient(duffelRestClient(properties, builder, StaysClient.class), json);
+    }
+
+    /**
+     * Stripe : clé secrète en en-tête ; sans journal des corps (ils contiennent le `client_secret`).
+     */
+    @Bean
+    StripeClient stripeClient(StripeProperties properties, RestClient.Builder builder, JsonMapper json) {
+        if (!properties.enabled()) {
+            log.warn("STRIPE_SECRET_KEY / STRIPE_PUBLISHABLE_KEY are not set: payments are unavailable");
+        }
+        HttpClientSettings settings = HttpClientSettings.defaults()
+                .withConnectTimeout(Duration.ofSeconds(5))
+                .withReadTimeout(Duration.ofSeconds(30));
+        RestClient client = builder.clone()
+                .baseUrl(properties.baseUrl())
+                .requestFactory(ClientHttpRequestFactoryBuilder.jdk().build(settings))
+                .defaultHeader(HttpHeaders.AUTHORIZATION, "Bearer " + properties.secretKey())
+                .defaultHeader(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE)
+                .defaultHeader("Stripe-Version", properties.apiVersion())
+                .build();
+        return new StripeClient(client, json);
+    }
+
+    /**
+     * PayDunya : trois clés en en-têtes ; corps non journalisés (coordonnées des clients).
+     */
+    @Bean
+    PayDunyaClient payDunyaClient(PayDunyaProperties properties, RestClient.Builder builder, JsonMapper json) {
+        if (!properties.enabled()) {
+            log.info("PAYDUNYA_* keys are not set: Wave / Orange Money are hidden");
+        }
+        HttpClientSettings settings = HttpClientSettings.defaults()
+                .withConnectTimeout(Duration.ofSeconds(5))
+                .withReadTimeout(Duration.ofSeconds(30));
+        RestClient client = builder.clone()
+                .baseUrl(properties.baseUrl())
+                .requestFactory(ClientHttpRequestFactoryBuilder.jdk().build(settings))
+                .defaultHeader(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE)
+                .defaultHeader("PAYDUNYA-MASTER-KEY", nullToEmpty(properties.masterKey()))
+                .defaultHeader("PAYDUNYA-PRIVATE-KEY", nullToEmpty(properties.privateKey()))
+                .defaultHeader("PAYDUNYA-TOKEN", nullToEmpty(properties.token()))
+                .build();
+        return new PayDunyaClient(client, json);
+    }
+
+    /**
+     * Claude : clé en en-tête, version d'API figée ; corps non journalisés (textes des voyageurs).
+     */
+    @Bean
+    ClaudeClient claudeClient(AnthropicProperties properties, RestClient.Builder builder, JsonMapper json) {
+        if (!properties.enabled()) {
+            log.info("ANTHROPIC_API_KEY is not set: reviews wait for a manager, no review summaries");
+        }
+        HttpClientSettings settings = HttpClientSettings.defaults()
+                .withConnectTimeout(Duration.ofSeconds(5))
+                .withReadTimeout(properties.readTimeout());
+        RestClient client = builder.clone()
+                .baseUrl(properties.baseUrl())
+                .requestFactory(ClientHttpRequestFactoryBuilder.jdk().build(settings))
+                .defaultHeader("x-api-key", nullToEmpty(properties.apiKey()))
+                .defaultHeader("anthropic-version", properties.apiVersion())
+                .defaultHeader(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE)
+                .build();
+        return new ClaudeClient(client, json, properties.model(), properties.fallbacks(), properties.thinking());
+    }
+
+    @Bean
+    ExpediaClient expediaClient(ExpediaProperties properties, RestClient.Builder builder) {
+        HttpClientSettings settings = HttpClientSettings.defaults()
+                .withConnectTimeout(Duration.ofSeconds(5))
+                .withReadTimeout(properties.readTimeout());
+        RestClient client = builder
+                .baseUrl(properties.baseUrl())
+                .requestFactory(ClientHttpRequestFactoryBuilder.jdk().build(settings))
+                .defaultHeader(HttpHeaders.AUTHORIZATION, generateSignature(properties.apiKey(), properties.secret()))
+                .defaultHeader(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE)
+                .requestInterceptor(logging(ExpediaClient.class))
+                .build();
+        return new ExpediaClient(client);
+    }
+
+    private String generateSignature(String apiKey, String secret) {
+        var timestamp = (new Date().getTime() / 1000);
+        var toBeHashed = apiKey + secret + timestamp;
+        try {
+            var md = MessageDigest.getInstance("SHA-512");
+            var bytes = md.digest(toBeHashed.getBytes(StandardCharsets.UTF_8));
+            var sb = new StringBuilder();
+            for (var aByte : bytes) {
+                sb.append(Integer.toString((aByte & 0xff) + 0x100, 16).substring(1));
+            }
+            var signature = sb.toString();
+            return "EAN apikey=" + apiKey + ",signature=" + signature + ",timestamp=" + timestamp;
+        } catch (NoSuchAlgorithmException e) {
+            log.error("Invalid algorithm SHA-512: {}", e.getMessage(), e);
+            throw new IllegalArgumentException(e.getMessage(), e);
+        }
     }
 
     /**

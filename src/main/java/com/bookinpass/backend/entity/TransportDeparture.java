@@ -33,15 +33,21 @@ public class TransportDeparture {
     @JoinColumn(name = "route_id")
     private TransportRoute route;
 
-    /** Instant UTC : heure de Dakar, à GMT toute l'année. */
+    /**
+     * Instant UTC : heure de Dakar, à GMT toute l'année.
+     */
     @Column(name = "departs_at", nullable = false)
     private Instant departsAt;
 
-    /** Service continu : dernier départ du jour, le billet vaut jusque-là. */
+    /**
+     * Service continu : dernier départ du jour, le billet vaut jusque-là.
+     */
     @Column(name = "last_departure_at")
     private Instant lastDepartureAt;
 
-    /** Nulle pour un service continu : places non comptées. */
+    /**
+     * Nulle pour un service continu : places non comptées.
+     */
     private Short capacity;
 
     @Column(nullable = false)
@@ -50,7 +56,9 @@ public class TransportDeparture {
     @Column(nullable = false)
     private short held;
 
-    /** Départ effectif, puis arrivée, saisis par le chef de gare. */
+    /**
+     * Départ effectif, puis arrivée, saisis par le chef de gare.
+     */
     @Column(name = "departed_at")
     private Instant departedAt;
 

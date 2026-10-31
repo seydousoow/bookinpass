@@ -50,9 +50,13 @@ import java.util.stream.Collectors;
 @Transactional(readOnly = true)
 public class ActivityCatalogService {
 
-    /** Dernier moment pour réserver un créneau : une heure avant son début. */
+    /**
+     * Dernier moment pour réserver un créneau : une heure avant son début.
+     */
     public static final Duration BOOKING_CUTOFF = Duration.ofHours(1);
-    /** Réservable au plus un an à l'avance. */
+    /**
+     * Réservable au plus un an à l'avance.
+     */
     static final Duration HORIZON = Duration.ofDays(366);
     private static final int RELATED = 8;
     private static final int MAX_PAGE_SIZE = 50;
@@ -64,7 +68,26 @@ public class ActivityCatalogService {
     private final ActivityContent content;
     private final Clock clock;
 
-    /** Villes avec des activités en vente, les plus fournies d'abord. */
+    static boolean bookable(ActivitySlot slot, int participants, Instant now) {
+        return !slot.isCancelled() && slot.remaining() >= participants && slot.getStartsAt().isAfter(now.plus(BOOKING_CUTOFF));
+    }
+
+    static ActivityReviewResponse review(ActivityReview review) {
+        return new ActivityReviewResponse(review.getId(), review.getRating(), review.getAuthorName(), review.getCountry(), review.getLang(),
+                review.getText(), review.getCreatedAt().toString(), review.getHelpfulCount());
+    }
+
+    private static Optional<ActivityOption> cheapest(Collection<ActivityOption> list) {
+        return list.stream().min(Comparator.comparing(ActivityOption::getPrice));
+    }
+
+    private static Integer toInteger(Short value) {
+        return value == null ? null : value.intValue();
+    }
+
+    /**
+     * Villes avec des activités en vente, les plus fournies d'abord.
+     */
     public List<ActivityDestinationResponse> destinations() {
         return activities.countByCity(ActivityStatus.PUBLISHED).stream()
                 .map(row -> new ActivityDestinationResponse(ActivityContent.city((City) row[0]), ((Number) row[1]).longValue()))
@@ -79,7 +102,9 @@ public class ActivityCatalogService {
         return new PageResponse<>(cards(found.getContent()), found.getNumber(), pageSize, found.getTotalElements());
     }
 
-    /** Cartes des activités, dans l'ordre donné : prix « à partir de » et notes lus en deux requêtes. */
+    /**
+     * Cartes des activités, dans l'ordre donné : prix « à partir de » et notes lus en deux requêtes.
+     */
     List<ActivityCardResponse> cards(List<Activity> list) {
         List<Integer> ids = list.stream().map(Activity::getId).toList();
         Map<Integer, List<ActivityOption>> byActivity = ids.isEmpty() ? Map.of()
@@ -138,7 +163,9 @@ public class ActivityCatalogService {
         return List.copyOf(dates);
     }
 
-    /** Créneaux d'une date (fuseau de l'activité), toutes options en vente, ceux trop tardifs ou complets marqués. */
+    /**
+     * Créneaux d'une date (fuseau de l'activité), toutes options en vente, ceux trop tardifs ou complets marqués.
+     */
     public List<ActivitySlotResponse> availability(String slug, LocalDate date, int participants) {
         Activity activity = published(slug);
         ZoneId zone = ActivityContent.zone(activity);
@@ -168,7 +195,9 @@ public class ActivityCatalogService {
         return new PageResponse<>(found.map(ActivityCatalogService::review).getContent(), found.getNumber(), pageSize, found.getTotalElements());
     }
 
-    /** Activité publiée, sinon 404 (un brouillon n'existe pas pour le site). */
+    /**
+     * Activité publiée, sinon 404 (un brouillon n'existe pas pour le site).
+     */
     Activity published(String slug) {
         return activities.findBySlug(slug).filter(Activity::isPublished)
                 .orElseThrow(() -> new ActivityException(HttpStatus.NOT_FOUND, "activity-not-found", "No activity at this address."));
@@ -179,22 +208,5 @@ public class ActivityCatalogService {
         Instant start = from.isBefore(now) ? now : from;
         Instant end = to.isAfter(now.plus(HORIZON)) ? now.plus(HORIZON) : to;
         return start.isBefore(end) ? slots.findOpen(activity.getId(), start, end) : List.of();
-    }
-
-    static boolean bookable(ActivitySlot slot, int participants, Instant now) {
-        return !slot.isCancelled() && slot.remaining() >= participants && slot.getStartsAt().isAfter(now.plus(BOOKING_CUTOFF));
-    }
-
-    static ActivityReviewResponse review(ActivityReview review) {
-        return new ActivityReviewResponse(review.getId(), review.getRating(), review.getAuthorName(), review.getCountry(), review.getLang(),
-                review.getText(), review.getCreatedAt().toString(), review.getHelpfulCount());
-    }
-
-    private static Optional<ActivityOption> cheapest(Collection<ActivityOption> list) {
-        return list.stream().min(Comparator.comparing(ActivityOption::getPrice));
-    }
-
-    private static Integer toInteger(Short value) {
-        return value == null ? null : value.intValue();
     }
 }

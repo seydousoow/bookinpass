@@ -24,7 +24,9 @@ public interface TransportBookingRepository extends JpaRepository<TransportBooki
 
     boolean existsByReference(String reference);
 
-    /** Réservation verrouillée jusqu'à la fin de la transaction : navigateur et webhook la confirment l'un après l'autre. */
+    /**
+     * Réservation verrouillée jusqu'à la fin de la transaction : navigateur et webhook la confirment l'un après l'autre.
+     */
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select b from TransportBooking b where b.reference = :reference")
     Optional<TransportBooking> lockByReference(@Param("reference") String reference);

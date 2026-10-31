@@ -29,17 +29,21 @@ import java.util.UUID;
 @Table(name = "activity_booking")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class ActivityBooking {
+public class ActivityBooking implements SeatBooking {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    /** Référence donnée au client (6 caractères, sans 0/O ni 1/I). */
+    /**
+     * Référence donnée au client (6 caractères, sans 0/O ni 1/I).
+     */
     @Column(nullable = false, length = 8)
     private String reference;
 
-    /** Choisi par le navigateur : la même demande rejouée retrouve cette réservation. */
+    /**
+     * Choisi par le navigateur : la même demande rejouée retrouve cette réservation.
+     */
     @Column(name = "request_id", nullable = false)
     private UUID requestId;
 
@@ -78,7 +82,9 @@ public class ActivityBooking {
     @Column(nullable = false)
     private String email;
 
-    /** E.164. */
+    /**
+     * E.164.
+     */
     @Column(nullable = false)
     private String phone;
 
@@ -100,7 +106,9 @@ public class ActivityBooking {
     @Column(name = "cancelled_at")
     private Instant cancelledAt;
 
-    /** Nul : annulée par le client. */
+    /**
+     * Nul : annulée par le client.
+     */
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "cancelled_by")
     private StaffUser cancelledBy;
@@ -142,11 +150,24 @@ public class ActivityBooking {
         return adults + children;
     }
 
+    @Override
+    public boolean isHeld() {
+        return status == ActivityBookingStatus.HELD;
+    }
+
+    @Override
+    public boolean isConfirmed() {
+        return status == ActivityBookingStatus.CONFIRMED;
+    }
+
+    @Override
     public void useCheckoutSession(String checkoutSessionId) {
         this.checkoutSessionId = checkoutSessionId;
     }
 
-    /** Paiement mobile en cours : les places restent bloquées jusqu'à {@code until} au moins. */
+    /**
+     * Paiement mobile en cours : les places restent bloquées jusqu'à {@code until} au moins.
+     */
     public void extendHold(Instant until) {
         if (until.isAfter(holdExpiresAt)) {
             this.holdExpiresAt = until;
@@ -163,7 +184,9 @@ public class ActivityBooking {
         this.releasedAt = at;
     }
 
-    /** @param by nul : annulée par le client */
+    /**
+     * @param by nul : annulée par le client
+     */
     public void cancel(StaffUser by, String reason, Instant at) {
         this.status = ActivityBookingStatus.CANCELLED;
         this.cancelledBy = by;

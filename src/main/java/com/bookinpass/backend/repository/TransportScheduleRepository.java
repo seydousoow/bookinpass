@@ -10,7 +10,9 @@ import java.util.List;
 @Repository
 public interface TransportScheduleRepository extends JpaRepository<TransportSchedule, Integer> {
 
-    /** Horaires d'une ligne pour un jour de la semaine, dans l'ordre de départ. */
+    /**
+     * Horaires d'une ligne pour un jour de la semaine, dans l'ordre de départ.
+     */
     List<TransportSchedule> findByRouteIdAndDayOfWeekOrderByDepartsAt(Integer routeId, DayOfWeek dayOfWeek);
 
     List<TransportSchedule> findByRouteIdOrderByDayOfWeekAscDepartsAtAsc(Integer routeId);

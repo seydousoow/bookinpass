@@ -30,6 +30,11 @@ public class DuffelCustomerService {
     private final BookingRecorder recorder;
     private final JsonMapper json;
 
+    private static DuffelCustomerUser details(User booker) {
+        return new DuffelCustomerUser(new DuffelCustomerUser.Data(booker.getEmail(), booker.getFirstName(), booker.getLastName(),
+                booker.getPhoneNumber()));
+    }
+
     public void attach(User booker, String duffelOrderId) {
         try {
             String customerId = Optional.ofNullable(booker.getDuffelUserId())
@@ -61,7 +66,9 @@ public class DuffelCustomerService {
         }
     }
 
-    /** Client existant mis à jour (nom, téléphone) ; en cas d'échec, il est rattaché tel quel. */
+    /**
+     * Client existant mis à jour (nom, téléphone) ; en cas d'échec, il est rattaché tel quel.
+     */
     private String refresh(String customerId, User booker) {
         try {
             duffel.updateCustomerUser(customerId, details(booker));
@@ -69,10 +76,5 @@ public class DuffelCustomerService {
             log.warn("Duffel customer user {} not updated: {}", customerId, e.getMessage());
         }
         return customerId;
-    }
-
-    private static DuffelCustomerUser details(User booker) {
-        return new DuffelCustomerUser(new DuffelCustomerUser.Data(booker.getEmail(), booker.getFirstName(), booker.getLastName(),
-                booker.getPhoneNumber()));
     }
 }

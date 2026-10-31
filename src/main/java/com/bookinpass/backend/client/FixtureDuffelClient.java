@@ -59,12 +59,18 @@ public class FixtureDuffelClient implements DuffelClient {
      * Identités saisies, par offre puis par passager.
      */
     private final Map<String, Map<String, PassengerUpdateRequest>> passengers = new ConcurrentHashMap<>();
-    /** Commandes passées, par offre : une offre ne se réserve qu'une fois, comme chez Duffel. */
+    /**
+     * Commandes passées, par offre : une offre ne se réserve qu'une fois, comme chez Duffel.
+     */
     private final Map<String, String> orders = new ConcurrentHashMap<>();
     private final SecureRandom random = new SecureRandom();
-    /** Clients Duffel de démo, par e-mail (en minuscules) : un seul par e-mail, comme chez Duffel. */
+    /**
+     * Clients Duffel de démo, par e-mail (en minuscules) : un seul par e-mail, comme chez Duffel.
+     */
     private final Map<String, String> customerUsers = new ConcurrentHashMap<>();
-    /** Devis d'annulation de démo, par identifiant. */
+    /**
+     * Devis d'annulation de démo, par identifiant.
+     */
     private final Map<String, String> cancellations = new ConcurrentHashMap<>();
 
     /**
@@ -262,7 +268,9 @@ public class FixtureDuffelClient implements DuffelClient {
         return json.writeValueAsString(response);
     }
 
-    /** Devis de démo : remboursement intégral sur le solde, valable 15 minutes. */
+    /**
+     * Devis de démo : remboursement intégral sur le solde, valable 15 minutes.
+     */
     @Override
     public String createOrderCancellation(String orderId) {
         JsonNode order = demoOrder(orderId);

@@ -31,7 +31,9 @@ import java.util.Optional;
 @NullMarked
 final class DuffelErrors {
 
-    /** Liste Duffel vide : pas de montée en gamme, pas de plan de cabine… */
+    /**
+     * Liste Duffel vide : pas de montée en gamme, pas de plan de cabine…
+     */
     static final String EMPTY_LIST = "{\"data\":[]}";
 
     private final JsonMapper json;
@@ -44,7 +46,9 @@ final class DuffelErrors {
         return node.isString() ? node.asString() : null;
     }
 
-    /** {@code ratelimit-reset} est une date RFC 1123 ; au moins 1 s, pour ne pas renvoyer « réessayez tout de suite ». */
+    /**
+     * {@code ratelimit-reset} est une date RFC 1123 ; au moins 1 s, pour ne pas renvoyer « réessayez tout de suite ».
+     */
     private static @Nullable Duration retryAfter(HttpHeaders headers) {
         String reset = headers.getFirst("ratelimit-reset");
         if (reset == null) {

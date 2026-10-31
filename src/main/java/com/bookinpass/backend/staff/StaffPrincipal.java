@@ -19,7 +19,9 @@ public record StaffPrincipal(Integer id, String username, String fullName, Staff
         return role.allStations();
     }
 
-    /** Gare visible : toutes pour admin et manager, sinon la sienne. */
+    /**
+     * Gare visible : toutes pour admin et manager, sinon la sienne.
+     */
     public boolean canSee(Integer station) {
         return allStations() || stationId != null && stationId.equals(station);
     }

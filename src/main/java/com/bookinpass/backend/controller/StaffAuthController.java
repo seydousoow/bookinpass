@@ -29,7 +29,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-/** Connexion du personnel : cookie de session HttpOnly, posé à la connexion et effacé à la déconnexion. */
+/**
+ * Connexion du personnel : cookie de session HttpOnly, posé à la connexion et effacé à la déconnexion.
+ */
 @RestController
 @RequiredArgsConstructor
 @Tag(name = OpenApiConfig.TAG_STAFF)

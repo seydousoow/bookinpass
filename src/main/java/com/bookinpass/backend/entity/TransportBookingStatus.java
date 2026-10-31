@@ -5,13 +5,21 @@ import jakarta.persistence.Converter;
 
 import java.util.Arrays;
 
-/** Statut d'une réservation de car (colonne {@code transport_booking.status}). */
+/**
+ * Statut d'une réservation de car (colonne {@code transport_booking.status}).
+ */
 public enum TransportBookingStatus {
-    /** Places bloquées le temps du paiement. */
+    /**
+     * Places bloquées le temps du paiement.
+     */
     HELD,
-    /** Paiement autorisé, places vendues, billets valables. */
+    /**
+     * Paiement autorisé, places vendues, billets valables.
+     */
     CONFIRMED,
-    /** Paiement abandonné ou délai dépassé : places rendues. */
+    /**
+     * Paiement abandonné ou délai dépassé : places rendues.
+     */
     RELEASED;
 
     public String dbValue() {

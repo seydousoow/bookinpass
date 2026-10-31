@@ -5,13 +5,21 @@ import jakarta.persistence.Converter;
 
 import java.util.Arrays;
 
-/** Réseau d'une ligne de car (colonne {@code transport_route.network}). */
+/**
+ * Réseau d'une ligne de car (colonne {@code transport_route.network}).
+ */
 public enum TransportNetwork {
-    /** Entre villes du Sénégal. */
+    /**
+     * Entre villes du Sénégal.
+     */
     INTERURBAN,
-    /** Vers un pays voisin (Dakar – Banjul). */
+    /**
+     * Vers un pays voisin (Dakar – Banjul).
+     */
     INTERNATIONAL,
-    /** Navette entre Dakar et l'aéroport (Express AIBD). */
+    /**
+     * Navette entre Dakar et l'aéroport (Express AIBD).
+     */
     AIRPORT;
 
     public String dbValue() {

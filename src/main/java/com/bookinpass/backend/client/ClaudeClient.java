@@ -16,7 +16,9 @@ import tools.jackson.databind.node.ObjectNode;
 @Slf4j
 public class ClaudeClient {
 
-    /** Repli côté serveur sur un autre modèle quand le modèle demandé décline la requête. */
+    /**
+     * Repli côté serveur sur un autre modèle quand le modèle demandé décline la requête.
+     */
     private static final String FALLBACK_BETA = "server-side-fallback-2026-07-01";
 
     private final RestClient client;
@@ -33,13 +35,6 @@ public class ClaudeClient {
         this.thinking = thinking;
     }
 
-    /** Claude a décliné la requête ({@code stop_reason: refusal}), repli compris. */
-    public static class Refusal extends RuntimeException {
-        public Refusal(String category) {
-            super("Claude declined the request (" + category + ")");
-        }
-    }
-
     public String model() {
         return model;
     }
@@ -50,7 +45,7 @@ public class ClaudeClient {
      * @param system    consignes ; les données à juger vont dans {@code user}, jamais ici
      * @param effort    {@code low} pour classer et résumer à moindre coût
      * @param maxTokens plafond de la réponse, réflexion comprise
-     * @throws Refusal  si Claude décline
+     * @throws Refusal si Claude décline
      */
     public JsonNode structured(String system, String user, ObjectNode schema, String effort, int maxTokens) {
         ObjectNode body = json.createObjectNode();
@@ -100,5 +95,14 @@ public class ClaudeClient {
             }
         }
         throw new IllegalStateException("Claude returned no text");
+    }
+
+    /**
+     * Claude a décliné la requête ({@code stop_reason: refusal}), repli compris.
+     */
+    public static class Refusal extends RuntimeException {
+        public Refusal(String category) {
+            super("Claude declined the request (" + category + ")");
+        }
     }
 }

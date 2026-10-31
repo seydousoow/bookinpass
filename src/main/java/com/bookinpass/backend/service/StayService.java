@@ -22,7 +22,7 @@ public class StayService {
     private final StayLocator locator;
     private final DuffelProperties properties;
 
-//    @Cacheable(cacheNames = CacheConfig.STAY_SEARCHES, key = "#request.cacheKey()")
+    //    @Cacheable(cacheNames = CacheConfig.STAY_SEARCHES, key = "#request.cacheKey()")
     public String search(StaySearchRequest request) {
         Coordinates point = locator.locate(request.location());
         return stays.search(request.toDuffelRequest(point.latitude(), point.longitude(), properties.staysRadiusKm()));

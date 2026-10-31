@@ -22,7 +22,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import tools.jackson.databind.JsonNode;
 
-/** « Gérer mon vol » : consultation et annulation d'une réservation, avec son PNR et le nom d'un voyageur. */
+/**
+ * « Gérer mon vol » : consultation et annulation d'une réservation, avec son PNR et le nom d'un voyageur.
+ */
 @RestController
 @RequiredArgsConstructor
 @Tag(name = OpenApiConfig.TAG_FLIGHTS)

@@ -13,7 +13,9 @@ public interface TransportIncidentRepository extends JpaRepository<TransportInci
 
     List<TransportIncident> findByDepartureIdOrderByReportedAt(Integer departureId);
 
-    /** Incidents des lignes partant de la gare ou y arrivant ({@code station} nul : toutes), ouverts seulement ou tous. */
+    /**
+     * Incidents des lignes partant de la gare ou y arrivant ({@code station} nul : toutes), ouverts seulement ou tous.
+     */
     @Query("""
             select i from TransportIncident i join fetch i.route r join fetch r.origin o join fetch r.destination t
             left join fetch i.departure join fetch i.reportedBy

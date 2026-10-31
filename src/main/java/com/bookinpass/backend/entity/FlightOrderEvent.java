@@ -40,7 +40,9 @@ public class FlightOrderEvent {
     @Column(nullable = false, length = 50)
     private String type;
 
-    /** Événement webhook Duffel ({@code wev_…}) : une livraison répétée n'est pas rejouée. */
+    /**
+     * Événement webhook Duffel ({@code wev_…}) : une livraison répétée n'est pas rejouée.
+     */
     @Column(name = "duffel_event_id", unique = true)
     private String duffelEventId;
 
@@ -50,7 +52,9 @@ public class FlightOrderEvent {
     @Column(name = "refund_currency", length = 3)
     private String refundCurrency;
 
-    /** Destination du remboursement Duffel : {@code balance}, {@code airline_credits}… */
+    /**
+     * Destination du remboursement Duffel : {@code balance}, {@code airline_credits}…
+     */
     @Column(name = "refund_to")
     private String refundTo;
 

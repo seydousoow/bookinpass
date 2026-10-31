@@ -44,11 +44,15 @@ public class City {
     @Column(nullable = false)
     private String timezone;
 
-    /** Nom principal normalisé (voir {@code DestinationService.normalize}). */
+    /**
+     * Nom principal normalisé (voir {@code DestinationService.normalize}).
+     */
     @Column(name = "name_key", nullable = false)
     private String nameKey;
 
-    /** Tous les noms normalisés : {@code " dakar | dacar | …"}. */
+    /**
+     * Tous les noms normalisés : {@code " dakar | dacar | …"}.
+     */
     @Column(name = "search_names", nullable = false)
     private String searchNames;
 }

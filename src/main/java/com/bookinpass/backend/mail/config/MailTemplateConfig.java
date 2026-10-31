@@ -17,11 +17,6 @@ import java.nio.charset.StandardCharsets;
 @Configuration(proxyBeanMethods = false)
 public class MailTemplateConfig {
 
-    @Bean
-    public SpringTemplateEngine mailTemplateEngine(MessageSource messageSource) {
-        return engine(messageSource);
-    }
-
     public static SpringTemplateEngine engine(MessageSource messageSource) {
         ClassLoaderTemplateResolver resolver = new ClassLoaderTemplateResolver(MailTemplateConfig.class.getClassLoader());
         resolver.setPrefix("templates/mail/");
@@ -34,5 +29,10 @@ public class MailTemplateConfig {
         engine.setTemplateResolver(resolver);
         engine.setTemplateEngineMessageSource(messageSource);
         return engine;
+    }
+
+    @Bean
+    public SpringTemplateEngine mailTemplateEngine(MessageSource messageSource) {
+        return engine(messageSource);
     }
 }

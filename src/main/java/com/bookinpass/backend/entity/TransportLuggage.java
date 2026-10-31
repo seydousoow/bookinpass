@@ -19,7 +19,9 @@ import org.hibernate.type.SqlTypes;
 import java.math.BigDecimal;
 import java.time.Instant;
 
-/** Bagage (colis) enregistré au guichet pour un départ, payé sur place ; remis au destinataire à l'arrivée. */
+/**
+ * Bagage (colis) enregistré au guichet pour un départ, payé sur place ; remis au destinataire à l'arrivée.
+ */
 @Entity
 @Table(name = "transport_luggage")
 @Getter
@@ -33,7 +35,9 @@ public class TransportLuggage {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    /** Écrit sur l'étiquette, demandé au retrait. */
+    /**
+     * Écrit sur l'étiquette, demandé au retrait.
+     */
     @Column(nullable = false, length = 10)
     private String code;
 

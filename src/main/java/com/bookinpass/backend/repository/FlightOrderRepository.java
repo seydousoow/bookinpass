@@ -15,11 +15,15 @@ public interface FlightOrderRepository extends JpaRepository<FlightOrder, Intege
 
     Optional<FlightOrder> findByDuffelOrderId(String duffelOrderId);
 
-    /** La commande et ses voyageurs (e-mail du titulaire pour les notifications). */
+    /**
+     * La commande et ses voyageurs (e-mail du titulaire pour les notifications).
+     */
     @EntityGraph(attributePaths = {"passengers", "passengers.user"})
     Optional<FlightOrder> findWithTravellersByDuffelOrderId(String duffelOrderId);
 
-    /** Commandes d'un PNR (rarement plus d'une : compagnies différentes), avec leurs voyageurs pour vérifier le nom. */
+    /**
+     * Commandes d'un PNR (rarement plus d'une : compagnies différentes), avec leurs voyageurs pour vérifier le nom.
+     */
     @EntityGraph(attributePaths = {"passengers", "passengers.user"})
     @Query("select o from FlightOrder o where upper(o.bookingReference) = upper(:reference)")
     List<FlightOrder> findWithTravellersByBookingReference(@Param("reference") String reference);

@@ -9,7 +9,9 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.Immutable;
 
-/** Exploitant de cars, ex. {@code DDD} (Dakar Dem Dikk). Référentiel posé par Flyway, lecture seule. */
+/**
+ * Exploitant de cars, ex. {@code DDD} (Dakar Dem Dikk). Référentiel posé par Flyway, lecture seule.
+ */
 @Entity
 @Table(name = "transport_operator")
 @Immutable
@@ -24,6 +26,8 @@ public class TransportOperator {
     @Column(nullable = false)
     private String name;
 
-    /** Centre d'appel, E.164. */
+    /**
+     * Centre d'appel, E.164.
+     */
     private String phone;
 }

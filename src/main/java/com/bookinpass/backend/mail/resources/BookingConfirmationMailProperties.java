@@ -22,9 +22,13 @@ import java.util.List;
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 public final class BookingConfirmationMailProperties extends BookingMailProperties {
 
-    /** Montant payé, frais compris : « 260.42 EUR » (à défaut du récapitulatif des prix). */
+    /**
+     * Montant payé, frais compris : « 260.42 EUR » (à défaut du récapitulatif des prix).
+     */
     private String amount;
-    /** Date de la réservation : « 21 octobre 2026 ». */
+    /**
+     * Date de la réservation : « 21 octobre 2026 ».
+     */
     private String bookedOn;
     private List<Trip> trips;
     private List<Traveller> travellers;

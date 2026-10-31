@@ -79,7 +79,9 @@ public class ActivityReview {
     @Column(name = "ai_reason")
     private String aiReason;
 
-    /** JSON : tableau de catégories relevées par Claude ({@code spam}, {@code abuse}, {@code personal_data}…). */
+    /**
+     * JSON : tableau de catégories relevées par Claude ({@code spam}, {@code abuse}, {@code personal_data}…).
+     */
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "ai_categories")
     private String aiCategories;
@@ -90,7 +92,9 @@ public class ActivityReview {
     @Column(name = "ai_attempts", nullable = false)
     private short aiAttempts;
 
-    /** Nul : décision automatique. */
+    /**
+     * Nul : décision automatique.
+     */
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "moderated_by")
     private StaffUser moderatedBy;
@@ -135,7 +139,9 @@ public class ActivityReview {
         return PENDING.equals(status);
     }
 
-    /** Avis de Claude, gardé pour le responsable qui décide. */
+    /**
+     * Avis de Claude, gardé pour le responsable qui décide.
+     */
     public void aiChecked(String verdict, String reason, String categories, Instant at) {
         this.aiVerdict = verdict;
         this.aiReason = reason;
@@ -148,7 +154,9 @@ public class ActivityReview {
         this.aiAttempts++;
     }
 
-    /** Remis dans la file de Claude (nouvel essai demandé par un responsable). */
+    /**
+     * Remis dans la file de Claude (nouvel essai demandé par un responsable).
+     */
     public void resetAi() {
         this.aiVerdict = null;
         this.aiReason = null;
@@ -157,7 +165,9 @@ public class ActivityReview {
         this.aiAttempts = 0;
     }
 
-    /** @param by nul : décision automatique */
+    /**
+     * @param by nul : décision automatique
+     */
     public void approve(StaffUser by, Instant at) {
         this.status = APPROVED;
         this.moderatedBy = by;
@@ -165,7 +175,9 @@ public class ActivityReview {
         this.rejectionReason = null;
     }
 
-    /** @param by nul : décision automatique */
+    /**
+     * @param by nul : décision automatique
+     */
     public void reject(StaffUser by, String reason, Instant at) {
         this.status = REJECTED;
         this.moderatedBy = by;

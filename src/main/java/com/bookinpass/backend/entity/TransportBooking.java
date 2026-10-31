@@ -34,72 +34,66 @@ import java.util.UUID;
 @Table(name = "transport_booking")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class TransportBooking {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer id;
-
-    /** Référence donnée au client (6 caractères, sans 0/O ni 1/I). */
-    @Column(nullable = false, length = 8)
-    private String reference;
-
-    /** Choisi par le navigateur : la même demande rejouée retrouve cette réservation. */
-    @Column(name = "request_id", nullable = false)
-    private UUID requestId;
-
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "departure_id")
-    private TransportDeparture departure;
-
-    @Column(nullable = false, length = 20)
-    private TransportBookingStatus status;
-
-    @Column(nullable = false)
-    private short passengers;
-
-    /** Prix de l'exploitant par passager. */
-    @Column(name = "unit_price", nullable = false, precision = 12, scale = 2)
-    private BigDecimal unitPrice;
-
-    /** Frais de service Book In Pass par passager. */
-    @Column(name = "unit_fee", nullable = false, precision = 12, scale = 2)
-    private BigDecimal unitFee;
-
-    /** Débité : (prix + frais) × passagers. */
-    @Column(nullable = false, precision = 12, scale = 2)
-    private BigDecimal total;
-
-    @JdbcTypeCode(SqlTypes.CHAR)
-    @Column(nullable = false, length = 3)
-    private String currency;
-
-    @Column(nullable = false)
-    private String email;
-
-    /** E.164. */
-    @Column(nullable = false)
-    private String phone;
-
-    @Column(nullable = false, length = 2)
-    private String lang;
-
-    @Column(name = "checkout_session_id")
-    private String checkoutSessionId;
-
-    @Column(name = "hold_expires_at", nullable = false)
-    private Instant holdExpiresAt;
-
-    @Column(name = "confirmed_at")
-    private Instant confirmedAt;
-
-    @Column(name = "released_at")
-    private Instant releasedAt;
+public class TransportBooking implements SeatBooking {
 
     @OneToMany(mappedBy = "booking", cascade = CascadeType.ALL, orphanRemoval = true)
     @OrderBy("id")
-    private List<TransportTicket> tickets = new ArrayList<>();
-
+    private final List<TransportTicket> tickets = new ArrayList<>();
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Integer id;
+    /**
+     * Référence donnée au client (6 caractères, sans 0/O ni 1/I).
+     */
+    @Column(nullable = false, length = 8)
+    private String reference;
+    /**
+     * Choisi par le navigateur : la même demande rejouée retrouve cette réservation.
+     */
+    @Column(name = "request_id", nullable = false)
+    private UUID requestId;
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "departure_id")
+    private TransportDeparture departure;
+    @Column(nullable = false, length = 20)
+    private TransportBookingStatus status;
+    @Column(nullable = false)
+    private short passengers;
+    /**
+     * Prix de l'exploitant par passager.
+     */
+    @Column(name = "unit_price", nullable = false, precision = 12, scale = 2)
+    private BigDecimal unitPrice;
+    /**
+     * Frais de service Book In Pass par passager.
+     */
+    @Column(name = "unit_fee", nullable = false, precision = 12, scale = 2)
+    private BigDecimal unitFee;
+    /**
+     * Débité : (prix + frais) × passagers.
+     */
+    @Column(nullable = false, precision = 12, scale = 2)
+    private BigDecimal total;
+    @JdbcTypeCode(SqlTypes.CHAR)
+    @Column(nullable = false, length = 3)
+    private String currency;
+    @Column(nullable = false)
+    private String email;
+    /**
+     * E.164.
+     */
+    @Column(nullable = false)
+    private String phone;
+    @Column(nullable = false, length = 2)
+    private String lang;
+    @Column(name = "checkout_session_id")
+    private String checkoutSessionId;
+    @Column(name = "hold_expires_at", nullable = false)
+    private Instant holdExpiresAt;
+    @Column(name = "confirmed_at")
+    private Instant confirmedAt;
+    @Column(name = "released_at")
+    private Instant releasedAt;
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
@@ -129,11 +123,24 @@ public class TransportBooking {
         tickets.add(new TransportTicket(this, code, givenName, familyName));
     }
 
+    @Override
+    public boolean isHeld() {
+        return status == TransportBookingStatus.HELD;
+    }
+
+    @Override
+    public boolean isConfirmed() {
+        return status == TransportBookingStatus.CONFIRMED;
+    }
+
+    @Override
     public void useCheckoutSession(String checkoutSessionId) {
         this.checkoutSessionId = checkoutSessionId;
     }
 
-    /** Paiement mobile en cours : les places restent bloquées jusqu'à {@code until} au moins. */
+    /**
+     * Paiement mobile en cours : les places restent bloquées jusqu'à {@code until} au moins.
+     */
     public void extendHold(Instant until) {
         if (until.isAfter(holdExpiresAt)) {
             this.holdExpiresAt = until;

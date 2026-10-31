@@ -31,7 +31,9 @@ public class TransportRoute {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    /** Codes des gares de départ et d'arrivée, ex. {@code DKR-LIB5_TOUBA}. */
+    /**
+     * Codes des gares de départ et d'arrivée, ex. {@code DKR-LIB5_TOUBA}.
+     */
     @Column(nullable = false, length = 70)
     private String code;
 
@@ -50,7 +52,9 @@ public class TransportRoute {
     @JoinColumn(name = "destination_station_id")
     private TransportStation destination;
 
-    /** Prix d'un aller simple par passager. */
+    /**
+     * Prix d'un aller simple par passager.
+     */
     @Column(nullable = false, precision = 12, scale = 2)
     private BigDecimal price;
 
@@ -61,7 +65,9 @@ public class TransportRoute {
     @Column(nullable = false)
     private boolean active;
 
-    /** Places d'un car ; sans effet sur un service continu (horaire avec {@code last_departure}). */
+    /**
+     * Places d'un car ; sans effet sur un service continu (horaire avec {@code last_departure}).
+     */
     @Column(nullable = false)
     private short capacity;
 

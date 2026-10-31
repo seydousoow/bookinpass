@@ -5,24 +5,34 @@ import jakarta.persistence.Converter;
 
 import java.util.Arrays;
 
-/** Statut d'une réservation d'activité (colonne {@code activity_booking.status}). */
+/**
+ * Statut d'une réservation d'activité (colonne {@code activity_booking.status}).
+ */
 public enum ActivityBookingStatus {
-    /** Places bloquées le temps du paiement. */
+    /**
+     * Places bloquées le temps du paiement.
+     */
     HELD,
-    /** Payée : places vendues, bon d'échange valable. */
+    /**
+     * Payée : places vendues, bon d'échange valable.
+     */
     CONFIRMED,
-    /** Paiement abandonné ou délai dépassé : places rendues. */
+    /**
+     * Paiement abandonné ou délai dépassé : places rendues.
+     */
     RELEASED,
-    /** Annulée après paiement (client ou responsable) ; remboursée selon le cas. */
+    /**
+     * Annulée après paiement (client ou responsable) ; remboursée selon le cas.
+     */
     CANCELLED;
-
-    public String dbValue() {
-        return name().toLowerCase();
-    }
 
     public static ActivityBookingStatus of(String value) {
         return Arrays.stream(values()).filter(s -> s.dbValue().equals(value)).findFirst()
                 .orElseThrow(() -> new IllegalArgumentException("Unknown status " + value));
+    }
+
+    public String dbValue() {
+        return name().toLowerCase();
     }
 
     @Converter(autoApply = true)

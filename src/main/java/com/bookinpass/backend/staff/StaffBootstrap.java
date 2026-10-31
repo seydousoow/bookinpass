@@ -5,6 +5,7 @@ import com.bookinpass.backend.entity.StaffUser;
 import com.bookinpass.backend.repository.StaffUserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.jspecify.annotations.NonNull;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.stereotype.Component;
@@ -25,7 +26,7 @@ class StaffBootstrap implements ApplicationRunner {
 
     @Override
     @Transactional
-    public void run(ApplicationArguments args) {
+    public void run(@NonNull ApplicationArguments args) {
         String username = StaffAuthService.normalize(properties.bootstrapAdminUsername());
         String password = properties.bootstrapAdminPassword();
         if (username.isEmpty() || password == null || password.isEmpty() || users.existsByRole(StaffRole.ADMIN)) {

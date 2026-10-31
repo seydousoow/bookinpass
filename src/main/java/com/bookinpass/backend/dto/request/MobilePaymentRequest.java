@@ -21,7 +21,9 @@ public record MobilePaymentRequest(
         @Schema(example = "1234") @Pattern(regexp = "\\d{4,8}") String otp,
         @JsonProperty("return_path") @Schema(example = "/bus/book") @NotNull @Size(max = 300) @Pattern(regexp = "/[A-Za-z0-9._~%+=/-]*") String returnPath) {
 
-    /** Ni le numéro ni le code dans les journaux ou les traces d'exception. */
+    /**
+     * Ni le numéro ni le code dans les journaux ou les traces d'exception.
+     */
     @Override
     public String toString() {
         return "MobilePaymentRequest[method=" + method + ", returnPath=" + returnPath + "]";

@@ -5,15 +5,25 @@ import jakarta.persistence.Converter;
 
 import java.util.Arrays;
 
-/** Statut d'un paiement Stripe (colonne {@code stripe_payment.status}). */
+/**
+ * Statut d'un paiement Stripe (colonne {@code stripe_payment.status}).
+ */
 public enum StripePaymentStatus {
-    /** Montant bloqué sur la carte (capture manuelle), pas encore débité. */
+    /**
+     * Montant bloqué sur la carte (capture manuelle), pas encore débité.
+     */
     AUTHORISED,
-    /** Encaissé : la commande existe. */
+    /**
+     * Encaissé : la commande existe.
+     */
     CAPTURED,
-    /** Commande créée mais encaissement refusé : à reprendre à la main. */
+    /**
+     * Commande créée mais encaissement refusé : à reprendre à la main.
+     */
     CAPTURE_FAILED,
-    /** Autorisation libérée (prix changé, commande refusée) : rien n'a été débité. */
+    /**
+     * Autorisation libérée (prix changé, commande refusée) : rien n'a été débité.
+     */
     RELEASED,
     FAILED,
     PARTIALLY_REFUNDED,

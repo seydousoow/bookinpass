@@ -6,8 +6,8 @@ import java.math.BigDecimal;
 import java.text.NumberFormat;
 import java.time.Duration;
 import java.time.Instant;
-import java.time.ZoneId;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
@@ -26,50 +26,6 @@ public final class FlightItinerary {
     private static final ZoneId DAKAR = ZoneId.of("Africa/Dakar");
 
     private FlightItinerary() {
-    }
-
-    /** Un trajet : « mardi 2 septembre », villes de départ et d'arrivée, durée totale (« 13h 40m »). */
-    public record Trip(String date, String from, String to, String duration, List<Leg> legs) {
-    }
-
-    /**
-     * Un vol. {@code cabin} est le code Duffel ({@code economy}…, traduit par le gabarit), {@code cabinName} le nom
-     * commercial de la compagnie ; {@code layover} est l'attente avant le vol suivant du trajet.
-     */
-    public record Leg(Stop departure, Stop arrival, String carrier, String flight, String operatedBy, String duration,
-                      String cabin, String cabinName, String layover) {
-    }
-
-    /** {@code date} n'est renseignée que si elle diffère de celle du trajet (arrivée le lendemain). */
-    public record Stop(String time, String date, String city, String country, String code, String airport, String terminal) {
-    }
-
-    /**
-     * {@code type} : {@code adult}, {@code child}, {@code infant_without_seat} (traduit par le gabarit) ; {@code ticket} :
-     * numéro du billet électronique, absent tant que la compagnie ne l'a pas émis.
-     */
-    public record Traveller(String name, String type, String ticket, List<TravellerTrip> trips) {
-    }
-
-    public record TravellerTrip(String from, String to, List<LegExtras> legs) {
-    }
-
-    /** Bagages (compris et achetés) et siège d'un voyageur sur un vol : « DSS - ALG ». */
-    public record LegExtras(String route, int checked, int carryOn, String seat) {
-    }
-
-    /** {@code allowed} absent : la compagnie ne l'a pas précisé. */
-    public record Condition(Boolean allowed, String penalty) {
-    }
-
-    public record Conditions(Condition change, Condition refund) {
-    }
-
-    /** Montants mis en forme ; {@code taxes}, {@code services} et {@code fees} absents quand ils n'ont pas lieu d'être. */
-    public record Prices(String fare, String taxes, String services, String fees, String total) {
-    }
-
-    public record Buyer(String name, String phone, String email) {
     }
 
     public static List<Trip> trips(JsonNode order, Locale locale) {
@@ -160,7 +116,9 @@ public final class FlightItinerary {
         return travellers;
     }
 
-    /** Date de la réservation (« 21 octobre 2026 »), à l'heure de Dakar ; {@code null} si Duffel ne la donne pas. */
+    /**
+     * Date de la réservation (« 21 octobre 2026 »), à l'heure de Dakar ; {@code null} si Duffel ne la donne pas.
+     */
     public static String bookedOn(JsonNode order, Locale locale) {
         String createdAt = order.path("created_at").asString("");
         try {
@@ -171,7 +129,9 @@ public final class FlightItinerary {
         }
     }
 
-    /** Modification et remboursement avant le départ ; {@code null} si Duffel ne donne aucune condition. */
+    /**
+     * Modification et remboursement avant le départ ; {@code null} si Duffel ne donne aucune condition.
+     */
     public static Conditions conditions(JsonNode order, Locale locale) {
         JsonNode conditions = order.path("conditions");
         if (!conditions.isObject()) {
@@ -182,7 +142,9 @@ public final class FlightItinerary {
         return change == null && refund == null ? null : new Conditions(change, refund);
     }
 
-    /** « 674,97 € » en français, « €674.97 » en anglais ; décimales de la devise (aucune pour le franc CFA). */
+    /**
+     * « 674,97 € » en français, « €674.97 » en anglais ; décimales de la devise (aucune pour le franc CFA).
+     */
     public static String money(BigDecimal amount, String currency, Locale locale) {
         NumberFormat format = NumberFormat.getCurrencyInstance(Locale.ENGLISH.getLanguage().equals(locale.getLanguage()) ? Locale.UK : Locale.FRANCE);
         Currency unit = Currency.getInstance(currency.toUpperCase(Locale.ROOT));
@@ -214,7 +176,9 @@ public final class FlightItinerary {
                 text(place.path("name")), text(terminal));
     }
 
-    /** Ville d'un aéroport (« Dakar ») ; à défaut, la ville rattachée ou le nom de l'aéroport. */
+    /**
+     * Ville d'un aéroport (« Dakar ») ; à défaut, la ville rattachée ou le nom de l'aéroport.
+     */
     private static String city(JsonNode place) {
         String city = text(place.path("city_name"));
         if (city == null) {
@@ -223,7 +187,9 @@ public final class FlightItinerary {
         return city != null ? city : place.path("name").asString(place.path("iata_code").asString(""));
     }
 
-    /** Durée ISO de Duffel ({@code PT4H20M}, {@code P1DT2H}) en « 4h 20m » ; {@code null} si absente. */
+    /**
+     * Durée ISO de Duffel ({@code PT4H20M}, {@code P1DT2H}) en « 4h 20m » ; {@code null} si absente.
+     */
     static String duration(String iso) {
         if (iso.isEmpty()) {
             return null;
@@ -275,5 +241,59 @@ public final class FlightItinerary {
     private static String text(JsonNode node) {
         String value = node.isValueNode() ? node.asString("") : "";
         return value.isBlank() ? null : value;
+    }
+
+    /**
+     * Un trajet : « mardi 2 septembre », villes de départ et d'arrivée, durée totale (« 13h 40m »).
+     */
+    public record Trip(String date, String from, String to, String duration, List<Leg> legs) {
+    }
+
+    /**
+     * Un vol. {@code cabin} est le code Duffel ({@code economy}…, traduit par le gabarit), {@code cabinName} le nom
+     * commercial de la compagnie ; {@code layover} est l'attente avant le vol suivant du trajet.
+     */
+    public record Leg(Stop departure, Stop arrival, String carrier, String flight, String operatedBy, String duration,
+                      String cabin, String cabinName, String layover) {
+    }
+
+    /**
+     * {@code date} n'est renseignée que si elle diffère de celle du trajet (arrivée le lendemain).
+     */
+    public record Stop(String time, String date, String city, String country, String code, String airport, String terminal) {
+    }
+
+    /**
+     * {@code type} : {@code adult}, {@code child}, {@code infant_without_seat} (traduit par le gabarit) ; {@code ticket} :
+     * numéro du billet électronique, absent tant que la compagnie ne l'a pas émis.
+     */
+    public record Traveller(String name, String type, String ticket, List<TravellerTrip> trips) {
+    }
+
+    public record TravellerTrip(String from, String to, List<LegExtras> legs) {
+    }
+
+    /**
+     * Bagages (compris et achetés) et siège d'un voyageur sur un vol : « DSS - ALG ».
+     */
+    public record LegExtras(String route, int checked, int carryOn, String seat) {
+    }
+
+    /**
+     * {@code allowed} absent : la compagnie ne l'a pas précisé.
+     */
+    public record Condition(Boolean allowed, String penalty) {
+    }
+
+    public record Conditions(Condition change, Condition refund) {
+    }
+
+    /**
+     * Montants mis en forme ; {@code taxes}, {@code services} et {@code fees} absents quand ils n'ont pas lieu d'être.
+     */
+    public record Prices(String fare, String taxes, String services, String fees, String total) {
+    }
+
+    public record Buyer(String name, String phone, String email) {
     }
 }

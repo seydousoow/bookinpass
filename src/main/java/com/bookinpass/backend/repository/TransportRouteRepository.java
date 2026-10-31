@@ -13,7 +13,9 @@ public interface TransportRouteRepository extends JpaRepository<TransportRoute, 
 
     Optional<TransportRoute> findByCode(String code);
 
-    /** Lignes en vente, avec leurs gares et villes (une requête). */
+    /**
+     * Lignes en vente, avec leurs gares et villes (une requête).
+     */
     @Query("""
             select r from TransportRoute r
             join fetch r.origin o left join fetch o.city

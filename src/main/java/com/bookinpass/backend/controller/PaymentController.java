@@ -2,8 +2,8 @@ package com.bookinpass.backend.controller;
 
 import com.bookinpass.backend.config.OpenApiConfig;
 import com.bookinpass.backend.dto.request.FlightPaymentRequest;
-import com.bookinpass.backend.dto.request.StayPaymentRequest;
 import com.bookinpass.backend.dto.request.PriceOfferRequest.IntendedService;
+import com.bookinpass.backend.dto.request.StayPaymentRequest;
 import com.bookinpass.backend.dto.response.CheckoutSessionResponse;
 import com.bookinpass.backend.service.PaymentService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -45,7 +45,7 @@ public class PaymentController {
     @ApiResponse(responseCode = "409", description = "Service choisi plus disponible (`service-unavailable`)", content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE, schema = @Schema(implementation = ProblemDetail.class)))
     @ApiResponse(responseCode = "503", description = "Paiement non configuré (`payments-unavailable`)", content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE, schema = @Schema(implementation = ProblemDetail.class)))
     public CheckoutSessionResponse flightCheckout(@Parameter(description = "Identifiant d'offre Duffel", example = "off_0000AJyeTHWAvwAT9JcAqH") @PathVariable @Pattern(regexp = "off_[A-Za-z0-9]+") String offerId,
-                                              @Valid @RequestBody FlightPaymentRequest request) {
+                                                  @Valid @RequestBody FlightPaymentRequest request) {
         return payments.createFlightCheckout(offerId, request.services(), request.returnPath(), request.attempt(), request.locale());
     }
 

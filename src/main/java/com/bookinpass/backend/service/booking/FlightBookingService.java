@@ -44,7 +44,9 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class FlightBookingService {
 
-    /** La réservation reste consultable jusqu'à deux mois après le départ du dernier vol. */
+    /**
+     * La réservation reste consultable jusqu'à deux mois après le départ du dernier vol.
+     */
     public static final Period MANAGEABLE_AFTER_TRAVEL = Period.ofMonths(2);
 
     private final FlightOrderRepository orders;
@@ -55,7 +57,39 @@ public class FlightBookingService {
     private final JsonMapper json;
     private final Clock clock;
 
-    /** La commande à afficher : Duffel (sans métadonnées internes) + le montant payé chez nous. */
+    private static PaymentException notFound() {
+        return new PaymentException(HttpStatus.NOT_FOUND, "booking-not-found", "No booking matches this reference and name.");
+    }
+
+    private static boolean canCancel(FlightOrder order, JsonNode duffelOrder) {
+        if (order.getStatus() == FlightOrderStatus.CANCELLED || !duffelOrder.path("cancelled_at").isNull() && !duffelOrder.path("cancelled_at").isMissingNode()) {
+            return false;
+        }
+        for (JsonNode action : duffelOrder.path("available_actions")) {
+            if ("cancel".equals(action.asString())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static String normalize(String text) {
+        String stripped = Normalizer.normalize(text == null ? "" : text.trim(), Normalizer.Form.NFD).replaceAll("\\p{M}", "");
+        return stripped.replaceAll("[\\s'’-]+", " ").toLowerCase(Locale.ROOT);
+    }
+
+    private static boolean safely(String what, java.util.function.BooleanSupplier write) {
+        try {
+            return write.getAsBoolean();
+        } catch (RuntimeException e) {
+            log.error("Booking record failed for {}: the cancellation itself is done", what, e);
+            return true;
+        }
+    }
+
+    /**
+     * La commande à afficher : Duffel (sans métadonnées internes) + le montant payé chez nous.
+     */
     public ObjectNode lookup(String bookingReference, String lastName) {
         FlightOrder order = authorise(bookingReference, lastName);
         return view(order, data(cache.get(order.getDuffelOrderId())));
@@ -113,12 +147,16 @@ public class FlightBookingService {
         return view;
     }
 
-    /** E-mail d'annulation au titulaire de la réservation (annulation depuis le site ou signalée par webhook). */
+    /**
+     * E-mail d'annulation au titulaire de la réservation (annulation depuis le site ou signalée par webhook).
+     */
     public void notifyCancelled(String orderId, JsonNode duffelOrder, JsonNode cancellation) {
         contact(orderId).ifPresent(c -> mailer.bookingCancelled(c.email(), c.name(), duffelOrder, cancellation, c.lang()));
     }
 
-    /** E-mail de modification au titulaire (changement décidé par la compagnie). */
+    /**
+     * E-mail de modification au titulaire (changement décidé par la compagnie).
+     */
     public void notifyChanged(String orderId) {
         Optional<Contact> contact = contact(orderId);
         if (contact.isEmpty()) {
@@ -145,23 +183,9 @@ public class FlightBookingService {
         return order;
     }
 
-    private static PaymentException notFound() {
-        return new PaymentException(HttpStatus.NOT_FOUND, "booking-not-found", "No booking matches this reference and name.");
-    }
-
-    private static boolean canCancel(FlightOrder order, JsonNode duffelOrder) {
-        if (order.getStatus() == FlightOrderStatus.CANCELLED || !duffelOrder.path("cancelled_at").isNull() && !duffelOrder.path("cancelled_at").isMissingNode()) {
-            return false;
-        }
-        for (JsonNode action : duffelOrder.path("available_actions")) {
-            if ("cancel".equals(action.asString())) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    /** Commande Duffel sans ce que le voyageur n'a pas à voir (métadonnées de paiement, clients Duffel). */
+    /**
+     * Commande Duffel sans ce que le voyageur n'a pas à voir (métadonnées de paiement, clients Duffel).
+     */
     private ObjectNode view(FlightOrder order, JsonNode duffelOrder) {
         ObjectNode shown = ((ObjectNode) duffelOrder.deepCopy());
         shown.remove("metadata");
@@ -183,20 +207,6 @@ public class FlightBookingService {
                 .map(FlightOrderPassenger::getUser)
                 .findFirst()
                 .map(user -> new Contact(user.getEmail(), user.getFirstName() + " " + user.getLastName(), order.getLang())));
-    }
-
-    private static String normalize(String text) {
-        String stripped = Normalizer.normalize(text == null ? "" : text.trim(), Normalizer.Form.NFD).replaceAll("\\p{M}", "");
-        return stripped.replaceAll("[\\s'’-]+", " ").toLowerCase(Locale.ROOT);
-    }
-
-    private static boolean safely(String what, java.util.function.BooleanSupplier write) {
-        try {
-            return write.getAsBoolean();
-        } catch (RuntimeException e) {
-            log.error("Booking record failed for {}: the cancellation itself is done", what, e);
-            return true;
-        }
     }
 
     private record Contact(String email, String name, String lang) {

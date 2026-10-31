@@ -14,14 +14,14 @@ import java.util.List;
  * @param callbackUrl adresse publique de l'IPN ({@code https://bip.dicortex.com/api/webhooks/paydunya})
  */
 @ConfigurationProperties("bookinpass.paydunya")
-public record PayDunyaProperties(String baseUrl, String masterKey, String privateKey, String token, List<String> methods,
-                                 String callbackUrl, String storeName) {
-
-    public boolean enabled() {
-        return notBlank(masterKey) && notBlank(privateKey) && notBlank(token) && notBlank(callbackUrl);
-    }
+public record PayDunyaProperties(String baseUrl, String masterKey, String privateKey, String token, List<String> methods, String callbackUrl,
+                                 String storeName) {
 
     private static boolean notBlank(String value) {
         return value != null && !value.isBlank();
+    }
+
+    public boolean enabled() {
+        return notBlank(masterKey) && notBlank(privateKey) && notBlank(token) && notBlank(callbackUrl);
     }
 }

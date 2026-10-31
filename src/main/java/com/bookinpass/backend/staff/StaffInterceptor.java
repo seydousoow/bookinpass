@@ -4,6 +4,7 @@ import com.bookinpass.backend.exception.StaffException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import org.jspecify.annotations.NullMarked;
 import org.springframework.core.annotation.AnnotatedElementUtils;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.method.HandlerMethod;
@@ -31,7 +32,12 @@ class StaffInterceptor implements HandlerInterceptor {
     private final StaffAuthService auth;
     private final StaffProperties properties;
 
+    private static StaffException forbidden() {
+        return new StaffException(HttpStatus.FORBIDDEN, "forbidden", "Your role does not allow this.");
+    }
+
     @Override
+    @NullMarked
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) {
         if (!(handler instanceof HandlerMethod method)) {
             return true;
@@ -61,9 +67,5 @@ class StaffInterceptor implements HandlerInterceptor {
         request.setAttribute(PRINCIPAL, staff);
         request.setAttribute(TOKEN, token);
         return true;
-    }
-
-    private static StaffException forbidden() {
-        return new StaffException(HttpStatus.FORBIDDEN, "forbidden", "Your role does not allow this.");
     }
 }

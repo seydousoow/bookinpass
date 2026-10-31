@@ -46,11 +46,17 @@ import java.util.TreeSet;
 @Transactional(readOnly = true)
 public class TransportSearchService {
 
-    /** Fuseau des horaires : GMT, celui de Dakar et de Banjul. */
+    /**
+     * Fuseau des horaires : GMT, celui de Dakar et de Banjul.
+     */
     public static final ZoneId ZONE = ZoneOffset.UTC;
-    /** Un départ à heure fixe n'est plus vendu dans la demi-heure qui le précède. */
+    /**
+     * Un départ à heure fixe n'est plus vendu dans la demi-heure qui le précède.
+     */
     static final Duration CUTOFF = Duration.ofMinutes(30);
-    /** Vente ouverte jusqu'à 60 jours à l'avance. */
+    /**
+     * Vente ouverte jusqu'à 60 jours à l'avance.
+     */
     static final int DAYS_AHEAD = 60;
 
     private final TransportRouteRepository routes;
@@ -58,22 +64,67 @@ public class TransportSearchService {
     private final TransportDepartureRepository departures;
     private final Clock clock;
 
-    /** Départ vérifié : ligne en vente, horaire du jour, encore ouvert à la vente. */
-    public record ScheduledDeparture(TransportRoute route, Instant departsAt, Instant lastDepartureAt) {
-
-        public boolean continuous() {
-            return lastDepartureAt != null;
-        }
+    /**
+     * Frais de service Book In Pass par passager sur une ligne : 3 % dans un même pays, 5 % sinon.
+     */
+    public static BigDecimal serviceFee(TransportRoute route) {
+        return TransportPricing.serviceFee(route.getPrice(), route.getCurrency(),
+                TransportPricing.serviceFeeRate(route.getOrigin().countryCode(), route.getDestination().countryCode()));
     }
 
-    /** Lieux de départ, triés par nom, chacun avec les lieux qu'il dessert. */
+    /**
+     * Gare telle que l'affichent la recherche et la réservation ; téléphone de l'exploitant à défaut du sien.
+     */
+    public static TransportStationResponse station(TransportStation station) {
+        String phone = station.getPhone() != null ? station.getPhone() : station.getOperator().getPhone();
+        return new TransportStationResponse(station.placeName(), station.getName(), station.getAddress(), phone);
+    }
+
+    private static ScheduledDeparture scheduled(TransportRoute route, LocalDate date, TransportSchedule schedule) {
+        Instant last = schedule.getLastDeparture() == null ? null : date.atTime(schedule.getLastDeparture()).atZone(ZONE).toInstant();
+        return new ScheduledDeparture(route, date.atTime(schedule.getDepartsAt()).atZone(ZONE).toInstant(), last);
+    }
+
+    /**
+     * Heure fixe : vendu jusqu'à 30 minutes avant ; service continu : jusqu'au dernier départ.
+     */
+    private static boolean isOpen(ScheduledDeparture departure, Instant now) {
+        return departure.continuous() ? now.isBefore(departure.lastDepartureAt()) : now.plus(CUTOFF).isBefore(departure.departsAt());
+    }
+
+    private static int seatsLeft(TransportDeparture departure) {
+        return departure.getCapacity() == null ? Integer.MAX_VALUE
+                : Math.max(0, departure.getCapacity() - departure.getSold() - departure.getHeld());
+    }
+
+    private static TransportDepartureResponse response(ScheduledDeparture departure, int passengers, Integer seatsLeft, boolean available) {
+        TransportRoute route = departure.route();
+        BigDecimal price = route.getPrice();
+        BigDecimal fee = serviceFee(route);
+        return new TransportDepartureResponse(route.getCode(), route.getNetwork().dbValue(), route.getOperator().getName(),
+                station(route.getOrigin()), station(route.getDestination()), departure.departsAt().toString(),
+                departure.continuous() ? departure.lastDepartureAt().toString() : null,
+                plain(price), plain(fee), plain(price.add(fee).multiply(BigDecimal.valueOf(passengers))),
+                route.getCurrency(), seatsLeft, available);
+    }
+
+    /**
+     * Montant sans zéros de remplissage ni notation scientifique : « 4120 ».
+     */
+    public static String plain(BigDecimal amount) {
+        return amount.stripTrailingZeros().toPlainString();
+    }
+
+    /**
+     * Lieux de départ, triés par nom, chacun avec les lieux qu'il dessert.
+     */
     public List<TransportPlaceResponse> places() {
         Map<String, TransportStation> stations = new LinkedHashMap<>();
         Map<String, TreeSet<String>> destinations = new LinkedHashMap<>();
         for (TransportRoute route : routes.findActive()) {
             stations.putIfAbsent(route.getOrigin().placeId(), route.getOrigin());
             stations.putIfAbsent(route.getDestination().placeId(), route.getDestination());
-            destinations.computeIfAbsent(route.getOrigin().placeId(), id -> new TreeSet<>()).add(route.getDestination().placeId());
+            destinations.computeIfAbsent(route.getOrigin().placeId(), _ -> new TreeSet<>()).add(route.getDestination().placeId());
         }
         Collator collator = Collator.getInstance(Locale.FRENCH);
         collator.setStrength(Collator.PRIMARY);
@@ -134,52 +185,19 @@ public class TransportSearchService {
         return departure;
     }
 
-    /** Frais de service Book In Pass par passager sur une ligne : 3 % dans un même pays, 5 % sinon. */
-    public static BigDecimal serviceFee(TransportRoute route) {
-        return TransportPricing.serviceFee(route.getPrice(), route.getCurrency(),
-                TransportPricing.serviceFeeRate(route.getOrigin().countryCode(), route.getDestination().countryCode()));
-    }
-
-    /** Gare telle que l'affichent la recherche et la réservation ; téléphone de l'exploitant à défaut du sien. */
-    static TransportStationResponse station(TransportStation station) {
-        String phone = station.getPhone() != null ? station.getPhone() : station.getOperator().getPhone();
-        return new TransportStationResponse(station.placeName(), station.getName(), station.getAddress(), phone);
-    }
-
-    private static ScheduledDeparture scheduled(TransportRoute route, LocalDate date, TransportSchedule schedule) {
-        Instant last = schedule.getLastDeparture() == null ? null : date.atTime(schedule.getLastDeparture()).atZone(ZONE).toInstant();
-        return new ScheduledDeparture(route, date.atTime(schedule.getDepartsAt()).atZone(ZONE).toInstant(), last);
-    }
-
-    /** Heure fixe : vendu jusqu'à 30 minutes avant ; service continu : jusqu'au dernier départ. */
-    private static boolean isOpen(ScheduledDeparture departure, Instant now) {
-        return departure.continuous() ? now.isBefore(departure.lastDepartureAt()) : now.plus(CUTOFF).isBefore(departure.departsAt());
-    }
-
     private int seatsLeft(ScheduledDeparture departure) {
         return departures.findByRouteIdAndDepartsAt(departure.route().getId(), departure.departsAt())
                 .map(TransportSearchService::seatsLeft)
                 .orElse((int) departure.route().getCapacity());
     }
 
-    private static int seatsLeft(TransportDeparture departure) {
-        return departure.getCapacity() == null ? Integer.MAX_VALUE
-                : Math.max(0, departure.getCapacity() - departure.getSold() - departure.getHeld());
-    }
+    /**
+     * Départ vérifié : ligne en vente, horaire du jour, encore ouvert à la vente.
+     */
+    public record ScheduledDeparture(TransportRoute route, Instant departsAt, Instant lastDepartureAt) {
 
-    private static TransportDepartureResponse response(ScheduledDeparture departure, int passengers, Integer seatsLeft, boolean available) {
-        TransportRoute route = departure.route();
-        BigDecimal price = route.getPrice();
-        BigDecimal fee = serviceFee(route);
-        return new TransportDepartureResponse(route.getCode(), route.getNetwork().dbValue(), route.getOperator().getName(),
-                station(route.getOrigin()), station(route.getDestination()), departure.departsAt().toString(),
-                departure.continuous() ? departure.lastDepartureAt().toString() : null,
-                plain(price), plain(fee), plain(price.add(fee).multiply(BigDecimal.valueOf(passengers))),
-                route.getCurrency(), seatsLeft, available);
-    }
-
-    /** Montant sans zéros de remplissage ni notation scientifique : « 4120 ». */
-    static String plain(BigDecimal amount) {
-        return amount.stripTrailingZeros().toPlainString();
+        public boolean continuous() {
+            return lastDepartureAt != null;
+        }
     }
 }

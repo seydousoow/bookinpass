@@ -37,7 +37,9 @@ public class TransportIncident {
     @JoinColumn(name = "departure_id")
     private TransportDeparture departure;
 
-    /** {@code delay}, {@code breakdown}, {@code accident}, {@code passenger}, {@code luggage}, {@code other}. */
+    /**
+     * {@code delay}, {@code breakdown}, {@code accident}, {@code passenger}, {@code luggage}, {@code other}.
+     */
     @Column(nullable = false, length = 20)
     private String type;
 

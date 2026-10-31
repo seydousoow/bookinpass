@@ -1,6 +1,8 @@
 package com.bookinpass.backend.staff;
 
 import lombok.RequiredArgsConstructor;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.MethodParameter;
@@ -20,6 +22,7 @@ import java.util.List;
  */
 @Configuration(proxyBeanMethods = false)
 @RequiredArgsConstructor
+@NullMarked
 class StaffWebConfig implements WebMvcConfigurer {
 
     private final ObjectProvider<StaffAuthService> auth;
@@ -43,8 +46,11 @@ class StaffWebConfig implements WebMvcConfigurer {
             }
 
             @Override
-            public Object resolveArgument(MethodParameter parameter, ModelAndViewContainer mav, NativeWebRequest request,
-                                          WebDataBinderFactory binderFactory) {
+            public @Nullable Object resolveArgument(MethodParameter parameter, @Nullable ModelAndViewContainer mav, @Nullable NativeWebRequest request,
+                                                    @Nullable WebDataBinderFactory binderFactory) {
+                if (request == null) {
+                    return null;
+                }
                 return request.getAttribute(StaffInterceptor.PRINCIPAL, RequestAttributes.SCOPE_REQUEST);
             }
         });

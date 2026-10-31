@@ -1,0 +1,34 @@
+# Analyse SonarCloud avec la couverture de JaCoCo. Secret du dépôt : SONAR_TOKEN (sonarcloud.io → My Account → Security).
+# Désactiver « Automatic Analysis » dans le projet SonarCloud : elle est incompatible avec une analyse depuis la CI.
+name: SonarCloud analysis
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+permissions:
+  pull-requests: read # allows SonarCloud to decorate PRs with analysis results
+
+jobs:
+  sonar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0 # blame et nouveau code
+
+      - uses: actions/setup-java@v6
+        with:
+          architecture: x64
+          distribution: temurin
+          java-version: '25'
+          cache: maven
+
+      - name: Tests, couverture et analyse
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: ./mvnw -B clean verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.qualitygate.wait=true

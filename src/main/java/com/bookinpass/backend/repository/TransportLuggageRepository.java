@@ -19,7 +19,9 @@ public interface TransportLuggageRepository extends JpaRepository<TransportLugga
 
     List<TransportLuggage> findByDepartureIdOrderByCreatedAt(Integer departureId);
 
-    /** Bagages des départs d'une période, partant de la gare ou y arrivant ({@code station} nul : toutes). */
+    /**
+     * Bagages des départs d'une période, partant de la gare ou y arrivant ({@code station} nul : toutes).
+     */
     @Query("""
             select l from TransportLuggage l join fetch l.departure d join fetch d.route r join fetch r.origin o join fetch r.destination t
             where d.departsAt >= :from and d.departsAt < :to and (:station is null or o.id = :station or t.id = :station)

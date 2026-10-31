@@ -12,15 +12,21 @@ public interface ActivityMobilePaymentRepository extends JpaRepository<ActivityM
 
     Optional<ActivityMobilePayment> findByInvoiceToken(String invoiceToken);
 
-    /** Tentatives de paiement récentes d'une réservation (limite de fréquence). */
+    /**
+     * Tentatives de paiement récentes d'une réservation (limite de fréquence).
+     */
     long countByBookingIdAndCreatedAtAfter(Integer bookingId, Instant after);
 
     boolean existsByInvoiceToken(String invoiceToken);
 
-    /** Dernière facture de la réservation (celle que le client vient de payer ou d'abandonner). */
+    /**
+     * Dernière facture de la réservation (celle que le client vient de payer ou d'abandonner).
+     */
     Optional<ActivityMobilePayment> findFirstByBookingReferenceOrderByIdDesc(String reference);
 
-    /** Facture payée d'une réservation : celle à rembourser. */
+    /**
+     * Facture payée d'une réservation : celle à rembourser.
+     */
     Optional<ActivityMobilePayment> findFirstByBookingIdAndStatusOrderByIdDesc(Integer bookingId, String status);
 
     Optional<ActivityMobilePayment> findFirstByBookingIdOrderByIdDesc(Integer bookingId);

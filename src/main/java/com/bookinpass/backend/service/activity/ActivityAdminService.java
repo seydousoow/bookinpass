@@ -65,10 +65,14 @@ import java.util.Set;
 @Transactional
 public class ActivityAdminService {
 
-    /** Créneaux ouverts en une fois au plus (garde-fou contre une saisie erronée). */
+    /**
+     * Créneaux ouverts en une fois au plus (garde-fou contre une saisie erronée).
+     */
     private static final int MAX_NEW_SLOTS = 2000;
     private static final int MAX_PAGE_SIZE = 100;
-    /** Adresses prises par l'API ({@code /activities/bookings}…). */
+    /**
+     * Adresses prises par l'API ({@code /activities/bookings}…).
+     */
     private static final Set<String> RESERVED_SLUGS = Set.of("bookings", "destinations", "payment-methods", "reviews");
     private static final Instant EARLIEST = Instant.parse("2000-01-01T00:00:00Z");
     private static final Instant LATEST = Instant.parse("2100-01-01T00:00:00Z");
@@ -85,6 +89,25 @@ public class ActivityAdminService {
     private final ActivityContent content;
     private final ActivityRefundService refundService;
     private final Clock clock;
+
+    private static void checkPrices(StaffActivityOptionRequest request) {
+        if (request.originalPrice() != null && request.originalPrice().compareTo(request.price()) <= 0) {
+            throw new ActivityException(HttpStatus.BAD_REQUEST, "invalid-original-price", "The crossed-out price must be higher than the price.");
+        }
+    }
+
+    private static StaffActivitySlotResponse slot(ActivitySlot slot) {
+        return new StaffActivitySlotResponse(slot.getId(), slot.getOption().getId(), slot.getStartsAt().toString(), slot.getCapacity(),
+                slot.getSold(), slot.getHeld(), ActivityContent.text(slot.getCancelledAt()), slot.getCancelReason());
+    }
+
+    private static List<String> trimmed(List<String> values) {
+        return values.stream().map(String::trim).filter(v -> !v.isEmpty()).toList();
+    }
+
+    private static String blankToNull(String value) {
+        return value == null || value.isBlank() ? null : value.trim();
+    }
 
     @Transactional(readOnly = true)
     public List<StaffCityResponse> cities(String query) {
@@ -128,7 +151,9 @@ public class ActivityAdminService {
         return detail(activity);
     }
 
-    /** Mise en vente : il faut au moins une photo et une option en vente. */
+    /**
+     * Mise en vente : il faut au moins une photo et une option en vente.
+     */
     public StaffActivityDetailResponse status(Integer id, String status, StaffPrincipal by) {
         Activity activity = find(id);
         ActivityStatus next = ActivityStatus.of(status);
@@ -169,7 +194,9 @@ public class ActivityAdminService {
                 .map(ActivityAdminService::slot).toList();
     }
 
-    /** Ouvre les créneaux de la période (heure locale de la ville) ; rend le nombre de créneaux créés. */
+    /**
+     * Ouvre les créneaux de la période (heure locale de la ville) ; rend le nombre de créneaux créés.
+     */
     public int openSlots(Integer optionId, StaffActivitySlotsRequest request, StaffPrincipal by) {
         ActivityOption option = option(optionId);
         ZoneId zone = ActivityContent.zone(option.getActivity());
@@ -207,7 +234,9 @@ public class ActivityAdminService {
         return slot(slots.findById(slotId).orElseThrow());
     }
 
-    /** Créneau sans aucune réservation : supprimé ; sinon il faut l'annuler. */
+    /**
+     * Créneau sans aucune réservation : supprimé ; sinon il faut l'annuler.
+     */
     public void deleteSlot(Integer slotId) {
         if (slots.deleteUnused(slotId) == 0) {
             throw new ActivityException(HttpStatus.CONFLICT, "slot-in-use", "This time slot has bookings: cancel it instead.");
@@ -311,7 +340,9 @@ public class ActivityAdminService {
                 request.freeCancellationHours() == null ? null : request.freeCancellationHours().shortValue(), request.currency());
     }
 
-    /** Adresse de la page : celle demandée, sinon tirée du titre ; suffixe « -2 », « -3 »… si elle est prise. */
+    /**
+     * Adresse de la page : celle demandée, sinon tirée du titre ; suffixe « -2 », « -3 »… si elle est prise.
+     */
     private String uniqueSlug(String wanted, String title, Integer self) {
         String base = wanted != null && !wanted.isBlank() ? wanted : DestinationService.normalize(title).replace(' ', '-');
         base = base.length() > 100 ? base.substring(0, 100).replaceAll("-+$", "") : base;
@@ -325,30 +356,11 @@ public class ActivityAdminService {
         return slug;
     }
 
-    private static void checkPrices(StaffActivityOptionRequest request) {
-        if (request.originalPrice() != null && request.originalPrice().compareTo(request.price()) <= 0) {
-            throw new ActivityException(HttpStatus.BAD_REQUEST, "invalid-original-price", "The crossed-out price must be higher than the price.");
-        }
-    }
-
     private Activity find(Integer id) {
         return activities.findWithCity(id).orElseThrow(() -> new ActivityException(HttpStatus.NOT_FOUND, "activity-not-found", "Unknown activity."));
     }
 
     private ActivityOption option(Integer id) {
         return options.findWithActivity(id).orElseThrow(() -> new ActivityException(HttpStatus.NOT_FOUND, "option-not-found", "Unknown option."));
-    }
-
-    private static StaffActivitySlotResponse slot(ActivitySlot slot) {
-        return new StaffActivitySlotResponse(slot.getId(), slot.getOption().getId(), slot.getStartsAt().toString(), slot.getCapacity(),
-                slot.getSold(), slot.getHeld(), ActivityContent.text(slot.getCancelledAt()), slot.getCancelReason());
-    }
-
-    private static List<String> trimmed(List<String> values) {
-        return values.stream().map(String::trim).filter(v -> !v.isEmpty()).toList();
-    }
-
-    private static String blankToNull(String value) {
-        return value == null || value.isBlank() ? null : value.trim();
     }
 }

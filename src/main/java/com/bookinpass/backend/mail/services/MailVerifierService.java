@@ -25,6 +25,20 @@ public class MailVerifierService {
 
     private final EmailValidator validator = EmailValidator.getInstance(true, true);
 
+    /**
+     * Domaine ou MX inexistant : non ; MX trouvé : oui ; résolution impossible ({@code TRY_AGAIN}, {@code UNRECOVERABLE}) : oui.
+     */
+    static boolean deliverable(String domain, int result, Record[] records, String error) {
+        return switch (result) {
+            case Lookup.SUCCESSFUL -> records != null && records.length > 0;
+            case Lookup.HOST_NOT_FOUND, Lookup.TYPE_NOT_FOUND -> false;
+            default -> {
+                log.warn("MX lookup of {} inconclusive ({}): sending anyway", domain, error);
+                yield true;
+            }
+        };
+    }
+
     public boolean isValid(String email) {
         if (email == null || email.isBlank() || !validator.isValid(email)) {
             return false;
@@ -42,17 +56,5 @@ public class MailVerifierService {
             log.warn("MX lookup of {} failed ({}): sending anyway", domain, e.toString());
             return true;
         }
-    }
-
-    /** Domaine ou MX inexistant : non ; MX trouvé : oui ; résolution impossible ({@code TRY_AGAIN}, {@code UNRECOVERABLE}) : oui. */
-    static boolean deliverable(String domain, int result, Record[] records, String error) {
-        return switch (result) {
-            case Lookup.SUCCESSFUL -> records != null && records.length > 0;
-            case Lookup.HOST_NOT_FOUND, Lookup.TYPE_NOT_FOUND -> false;
-            default -> {
-                log.warn("MX lookup of {} inconclusive ({}): sending anyway", domain, error);
-                yield true;
-            }
-        };
     }
 }

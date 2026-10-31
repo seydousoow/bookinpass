@@ -17,9 +17,13 @@ public @interface StaffAccess {
 
     StaffRole[] value() default {StaffRole.ADMIN, StaffRole.MANAGER, StaffRole.STATION_CHIEF, StaffRole.INSPECTOR};
 
-    /** Ouvert sans session (connexion). */
+    /**
+     * Ouvert sans session (connexion).
+     */
     boolean anonymous() default false;
 
-    /** Ouvert avec un mot de passe provisoire (profil, déconnexion, changement de mot de passe). */
+    /**
+     * Ouvert avec un mot de passe provisoire (profil, déconnexion, changement de mot de passe).
+     */
     boolean beforePasswordChange() default false;
 }

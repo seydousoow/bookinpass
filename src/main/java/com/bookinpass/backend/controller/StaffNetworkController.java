@@ -1,14 +1,14 @@
 package com.bookinpass.backend.controller;
 
+import com.bookinpass.backend.config.OpenApiConfig;
 import com.bookinpass.backend.dto.request.StaffRouteRequest;
 import com.bookinpass.backend.dto.request.StaffScheduleRequest;
 import com.bookinpass.backend.dto.request.StaffStationRequest;
 import com.bookinpass.backend.dto.response.StaffRouteResponse;
 import com.bookinpass.backend.dto.response.StaffStationResponse;
-import com.bookinpass.backend.staff.StaffNetworkService;
-import com.bookinpass.backend.config.OpenApiConfig;
 import com.bookinpass.backend.entity.StaffRole;
 import com.bookinpass.backend.staff.StaffAccess;
+import com.bookinpass.backend.staff.StaffNetworkService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -27,7 +27,9 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
-/** Réseau : gares (liste pour tous, création et modification par les responsables), lignes et horaires. */
+/**
+ * Réseau : gares (liste pour tous, création et modification par les responsables), lignes et horaires.
+ */
 @RestController
 @RequiredArgsConstructor
 @Tag(name = OpenApiConfig.TAG_STAFF)

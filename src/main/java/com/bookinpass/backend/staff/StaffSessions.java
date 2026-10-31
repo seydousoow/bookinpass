@@ -5,7 +5,9 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
-/** Cookie de session du back-office, pour les contrôleurs : ouverture, lecture du jeton, fermeture. */
+/**
+ * Cookie de session du back-office, pour les contrôleurs : ouverture, lecture du jeton, fermeture.
+ */
 @Component
 @RequiredArgsConstructor
 public class StaffSessions {

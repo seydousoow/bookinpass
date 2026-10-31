@@ -11,7 +11,9 @@ import jakarta.validation.constraints.Size;
 
 import java.math.BigDecimal;
 
-/** Bagage enregistré au guichet : expéditeur, destinataire, poids et prix encaissé sur place (XOF). */
+/**
+ * Bagage enregistré au guichet : expéditeur, destinataire, poids et prix encaissé sur place (XOF).
+ */
 public record StaffLuggageRequest(
         @JsonProperty("sender_name") @NotBlank @Size(max = 100) String senderName,
         @JsonProperty("sender_phone") @Schema(example = "+221771234567") @NotNull @Pattern(regexp = "\\+[1-9][0-9]{6,14}") String senderPhone,
