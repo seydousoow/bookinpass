@@ -1,29 +1,30 @@
 package com.bookinpass.backend.controller;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.argThat;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.verifyNoInteractions;
-import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.verify;
-
 import com.bookinpass.backend.dto.request.FlightSearchRequest;
 import com.bookinpass.backend.dto.request.FlightSearchRequest.TripType;
 import com.bookinpass.backend.exception.DuffelException;
 import com.bookinpass.backend.service.FlightService;
-import java.time.LocalDate;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.assertj.MockMvcTester;
+
+import java.time.LocalDate;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 
 @WebMvcTest(FlightController.class)
 class FlightControllerTest {
@@ -175,5 +176,32 @@ class FlightControllerTest {
                 .hasStatus(HttpStatus.BAD_REQUEST);
 
         verifyNoInteractions(flights);
+    }
+
+    @Test
+    void offerActionsBindTheirIdentifiers() {
+        String offer = "off_1";
+        assertThat(mvc.get().uri("/flights/offers/" + offer + "/upsells")).hasStatusOk();
+        assertThat(mvc.get().uri("/flights/offers/" + offer + "/seat-maps")).hasStatusOk();
+
+        verify(flights).upsellOffers(offer);
+        verify(flights).seatMaps(offer);
+    }
+
+    @Test
+    void offerIsReadById() {
+        assertThat(mvc.get().uri("/flights/offers/off_1")).hasStatusOk();
+
+        verify(flights).offer("off_1");
+    }
+
+    @Test
+    void passengerUpdateAndPricingBindTheirBodies() {
+        assertThat(mvc.patch().uri("/flights/offers/off_1/passengers/pas_1").contentType(MediaType.APPLICATION_JSON)
+                .content("{\"given_name\":\"Aminata\",\"family_name\":\"Sow\"}")).hasStatusOk();
+        assertThat(mvc.post().uri("/flights/offers/off_1/price").contentType(MediaType.APPLICATION_JSON).content("{\"intended_services\":[]}")).hasStatusOk();
+
+        verify(flights).updatePassenger(eq("off_1"), eq("pas_1"), argThat(u -> u.givenName().equals("Aminata")));
+        verify(flights).price(eq("off_1"), any());
     }
 }

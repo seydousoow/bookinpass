@@ -13,7 +13,9 @@ import java.util.zip.InflaterOutputStream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-/** Le QR code se relit : le PNG de l'e-mail est un vrai PNG, et un lecteur en tire le code du billet. */
+/**
+ * Le QR code se relit : le PNG de l'e-mail est un vrai PNG, et un lecteur en tire le code du billet.
+ */
 class TicketQrTest {
 
     @Test

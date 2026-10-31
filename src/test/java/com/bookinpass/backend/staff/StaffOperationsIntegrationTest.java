@@ -26,8 +26,8 @@ import java.time.LocalDate;
 import java.time.ZoneOffset;
 import java.util.List;
 
-import static org.hamcrest.Matchers.hasSize;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.hamcrest.Matchers.hasSize;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
@@ -52,13 +52,11 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 class StaffOperationsIntegrationTest {
 
+    static final String ORIGIN = "https://bip-admin.example.com";
+    static final LocalDate TODAY = LocalDate.now(ZoneOffset.UTC);
     @Container
     @ServiceConnection
     static PostgreSQLContainer postgres = new PostgreSQLContainer("postgres:18.6");
-
-    static final String ORIGIN = "https://bip-admin.example.com";
-    static final LocalDate TODAY = LocalDate.now(ZoneOffset.UTC);
-
     @Autowired
     MockMvc mvc;
 
@@ -79,7 +77,9 @@ class StaffOperationsIntegrationTest {
         return request.header("Origin", ORIGIN);
     }
 
-    /** Connexion avec un mot de passe provisoire, aussitôt remplacé. */
+    /**
+     * Connexion avec un mot de passe provisoire, aussitôt remplacé.
+     */
     private Cookie signIn(String username, String temporary) throws Exception {
         Cookie cookie = mvc.perform(write(post("/staff/auth/login"), "{\"username\":\"%s\",\"password\":\"%s\"}".formatted(username, temporary)))
                 .andExpect(status().isOk()).andReturn().getResponse().getCookie("bip_staff");
@@ -141,8 +141,8 @@ class StaffOperationsIntegrationTest {
         // Touba voit les cars qui y arrivent, pas un Dakar → Thiès.
         mvc.perform(get("/staff/departures/" + departureId).cookie(toubaInspector)).andExpect(status().isOk());
         int toThies = jdbc.queryForObject("""
-                INSERT INTO transport_departure (route_id, departs_at, last_departure_at)
-                SELECT id, ?, ? FROM transport_route WHERE code = 'DKR-COLOBANE_THIES' RETURNING id""", Integer.class,
+                        INSERT INTO transport_departure (route_id, departs_at, last_departure_at)
+                        SELECT id, ?, ? FROM transport_route WHERE code = 'DKR-COLOBANE_THIES' RETURNING id""", Integer.class,
                 Timestamp.from(TODAY.atTime(7, 0).toInstant(ZoneOffset.UTC)), Timestamp.from(TODAY.atTime(19, 0).toInstant(ZoneOffset.UTC)));
         mvc.perform(get("/staff/departures/" + toThies).cookie(toubaInspector))
                 .andExpect(status().isNotFound()).andExpect(jsonPath("$.code").value("departure-not-found"));
@@ -254,6 +254,54 @@ class StaffOperationsIntegrationTest {
                         {"origin_station_id":%d,"destination_station_id":%d,"network":"interurban","price":3000,"capacity":40}"""
                         .formatted(station("TOUBA"), station("KAOLACK"))))
                 .andExpect(status().isConflict()).andExpect(jsonPath("$.code").value("route-exists"));
+    }
+
+    @Test
+    @Order(6)
+    @DisplayName("Réseau : gares et lignes contrôlées, introuvables signalées")
+    void networkRequestsAreValidated() throws Exception {
+        mvc.perform(write(post("/staff/stations").cookie(admin), "{\"name\":\"Sans code\",\"city_id\":2253354}"))
+                .andExpect(status().isBadRequest()).andExpect(jsonPath("$.code").value("code-required"));
+        mvc.perform(write(post("/staff/stations").cookie(admin), "{\"code\":\"NEUVE\",\"name\":\"Sans lieu\"}"))
+                .andExpect(status().isBadRequest()).andExpect(jsonPath("$.code").value("place-required"));
+        mvc.perform(write(post("/staff/stations").cookie(admin), "{\"code\":\"NEUVE\",\"name\":\"Deux lieux\",\"city_id\":2253354,\"airport_iata\":\"DSS\"}"))
+                .andExpect(status().isBadRequest()).andExpect(jsonPath("$.code").value("place-required"));
+        mvc.perform(write(post("/staff/stations").cookie(admin), "{\"code\":\"NEUVE\",\"name\":\"Ville inconnue\",\"city_id\":1}"))
+                .andExpect(status().isBadRequest()).andExpect(jsonPath("$.code").value("city-not-found"));
+        mvc.perform(write(post("/staff/stations").cookie(admin), "{\"code\":\"NEUVE\",\"name\":\"Aéroport inconnu\",\"airport_iata\":\"ZZZ\"}"))
+                .andExpect(status().isBadRequest()).andExpect(jsonPath("$.code").value("airport-not-found"));
+        mvc.perform(write(post("/staff/stations").cookie(admin), "{\"code\":\"TOUBA\",\"name\":\"Doublon\",\"city_id\":2253354}"))
+                .andExpect(status().isConflict()).andExpect(jsonPath("$.code").value("station-exists"));
+
+        String created = mvc.perform(write(post("/staff/stations").cookie(admin), "{\"code\":\"NEUVE-2\",\"name\":\" Gare neuve \",\"airport_iata\":\"DSS\",\"address\":\"  \"}"))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.name").value("Gare neuve")).andReturn().getResponse().getContentAsString();
+        Integer id = JsonPath.read(created, "$.id");
+        mvc.perform(write(patch("/staff/stations/" + id).cookie(admin), "{\"name\":\"Gare renommée\",\"address\":\" Route de Mbour \",\"phone\":\"+221771234567\"}"))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.name").value("Gare renommée")).andExpect(jsonPath("$.address").value("Route de Mbour"));
+        mvc.perform(write(patch("/staff/stations/999999").cookie(admin), "{\"name\":\"Absente\"}"))
+                .andExpect(status().isNotFound()).andExpect(jsonPath("$.code").value("station-not-found"));
+
+        mvc.perform(write(post("/staff/routes").cookie(admin), "{\"price\":3000,\"capacity\":40}"))
+                .andExpect(status().isBadRequest()).andExpect(jsonPath("$.code").value("route-incomplete"));
+        mvc.perform(write(post("/staff/routes").cookie(admin), "{\"origin_station_id\":%d,\"destination_station_id\":%d,\"network\":\"interurban\",\"price\":3000,\"capacity\":40}".formatted(id, id)))
+                .andExpect(status().isBadRequest()).andExpect(jsonPath("$.code").value("same-station"));
+        mvc.perform(write(post("/staff/routes").cookie(admin), "{\"origin_station_id\":%d,\"destination_station_id\":999999,\"network\":\"interurban\",\"price\":3000,\"capacity\":40}".formatted(id)))
+                .andExpect(status().isNotFound()).andExpect(jsonPath("$.code").value("station-not-found"));
+        mvc.perform(write(post("/staff/routes").cookie(admin), "{\"origin_station_id\":%d,\"destination_station_id\":%d,\"network\":\"airport\",\"price\":3000.50,\"capacity\":40}".formatted(id, station("TOUBA"))))
+                .andExpect(status().isBadRequest()).andExpect(jsonPath("$.code").value("invalid-price"));
+
+        mvc.perform(write(patch("/staff/routes/999999").cookie(admin), "{\"price\":3000,\"capacity\":40}"))
+                .andExpect(status().isNotFound()).andExpect(jsonPath("$.code").value("route-not-found"));
+        mvc.perform(get("/staff/routes").cookie(admin)).andExpect(status().isOk()).andExpect(jsonPath("$[0].code").isNotEmpty());
+        mvc.perform(write(post("/staff/routes/999999/schedules").cookie(admin), "{\"days\":[1],\"departs_at\":\"08:00\"}"))
+                .andExpect(status().isNotFound()).andExpect(jsonPath("$.code").value("route-not-found"));
+        int route = jdbc.queryForObject("SELECT id FROM transport_route WHERE code = 'DKR-LIB5_TOUBA'", Integer.class);
+        mvc.perform(write(post("/staff/routes/" + route + "/schedules").cookie(admin), "{\"days\":[1],\"departs_at\":\"08:00\",\"last_departure\":\"07:00\"}"))
+                .andExpect(status().isBadRequest()).andExpect(jsonPath("$.code").value("invalid-window"));
+        mvc.perform(write(post("/staff/routes/" + route + "/schedules").cookie(admin), "{\"days\":[6],\"departs_at\":\"06:00\",\"last_departure\":\"09:00\"}"))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.schedules[?(@.departs_at == '06:00')].last_departure").value(org.hamcrest.Matchers.hasItem("09:00")));
+        mvc.perform(delete("/staff/schedules/999999").header("Origin", ORIGIN).cookie(admin))
+                .andExpect(status().isNotFound()).andExpect(jsonPath("$.code").value("schedule-not-found"));
     }
 
     @Test

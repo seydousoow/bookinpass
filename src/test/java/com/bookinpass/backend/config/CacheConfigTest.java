@@ -1,11 +1,12 @@
 package com.bookinpass.backend.config;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import org.junit.jupiter.api.Test;
+import org.springframework.data.redis.cache.RedisCacheWriter.TtlFunction;
 
 import java.time.Duration;
 import java.time.Instant;
-import org.junit.jupiter.api.Test;
-import org.springframework.data.redis.cache.RedisCacheWriter.TtlFunction;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 class CacheConfigTest {
 

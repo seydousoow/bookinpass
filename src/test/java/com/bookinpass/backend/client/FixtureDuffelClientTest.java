@@ -1,9 +1,7 @@
 package com.bookinpass.backend.client;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-
 import com.bookinpass.backend.dto.duffel.DuffelCustomerUser;
+import com.bookinpass.backend.dto.duffel.DuffelOfferRequest;
 import com.bookinpass.backend.dto.duffel.DuffelOrderRequest;
 import com.bookinpass.backend.dto.duffel.DuffelOrderUpdate;
 import com.bookinpass.backend.dto.duffel.DuffelPassengerUpdate;
@@ -13,13 +11,18 @@ import com.bookinpass.backend.dto.request.PassengerUpdateRequest.LoyaltyProgramm
 import com.bookinpass.backend.dto.request.PriceOfferRequest;
 import com.bookinpass.backend.dto.request.PriceOfferRequest.IntendedService;
 import com.bookinpass.backend.exception.DuffelException;
-import java.math.BigDecimal;
-import java.util.Map;
-import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.springframework.core.io.DefaultResourceLoader;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.json.JsonMapper;
+
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.util.List;
+import java.util.Map;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 /**
  * Lit les vraies fixtures de {@code backend/fixtures/duffel} : Maven lance les tests depuis {@code backend/}.
@@ -28,11 +31,18 @@ class FixtureDuffelClientTest {
 
     private static final String OFFER = "off_0000BAwS95zAqzA6y2LyB2";
     private static final String ADULT = "pas_0000BAwS95mPcQxCKSNmHa";
-    /** Duffel Airways : la seule fixture avec des services à vendre. */
+    /**
+     * Duffel Airways : la seule fixture avec des services à vendre.
+     */
     private static final String OFFER_WITH_SERVICES = "off_0000BBJ8xDvUdp3eincM7N";
 
     private final JsonMapper json = JsonMapper.builder().build();
     private final FixtureDuffelClient duffel = new FixtureDuffelClient(new DefaultResourceLoader(), "file:fixtures/duffel", json);
+
+    private static DuffelOrderRequest order(DuffelOrderRequest.Payment payment) {
+        return new DuffelOrderRequest(new DuffelOrderRequest.Data(List.of(OFFER), "instant", List.of(), List.of(), List.of(payment),
+                Map.of("checkout_session_id", "cs_1")));
+    }
 
     @Test
     void passengerUpdateIsKeptAndReappliedOnEveryOfferRead() {
@@ -108,8 +118,81 @@ class FixtureDuffelClientTest {
         assertThat(updated.path("users").get(0).asString()).isEqualTo(userId);
     }
 
-    private static DuffelOrderRequest order(DuffelOrderRequest.Payment payment) {
-        return new DuffelOrderRequest(new DuffelOrderRequest.Data(List.of(OFFER), "instant", List.of(), List.of(), List.of(payment),
-                Map.of("checkout_session_id", "cs_1")));
+    private String demoOrderId() {
+        JsonNode offer = json.readTree(duffel.getOffer(OFFER)).path("data");
+        return json.readTree(duffel.createOrder(order(new DuffelOrderRequest.Payment("balance",
+                offer.path("total_currency").asString(), offer.path("total_amount").asString())))).path("data").path("id").asString();
+    }
+
+    @Test
+    void searchServesTheOneWayOrRoundTripFixture() {
+        var slice = new DuffelOfferRequest.Slice("DSS", "CDG", LocalDate.of(2026, 10, 21));
+        String oneWay = duffel.searchOffers(new DuffelOfferRequest(new DuffelOfferRequest.Data(List.of(slice), List.of(), null)));
+        String roundTrip = duffel.searchOffers(new DuffelOfferRequest(new DuffelOfferRequest.Data(List.of(slice, slice), List.of(), null)));
+
+        assertThat(json.readTree(oneWay).path("data").path("offers").isArray()).isTrue();
+        assertThat(roundTrip).isNotEqualTo(oneWay);
+    }
+
+    @Test
+    void unknownOrMalformedOffersAreNotFound() {
+        assertThatThrownBy(() -> duffel.getOffer("off_doesnotexist")).isInstanceOf(DuffelException.class);
+        assertThatThrownBy(() -> duffel.getOffer("../secret")).isInstanceOf(DuffelException.class);
+        assertThatThrownBy(() -> duffel.getSeatMaps("off_doesnotexist")).isInstanceOf(DuffelException.class);
+    }
+
+    @Test
+    void offerWithoutSeatMapFixtureHasNoSeatMaps() {
+        assertThat(duffel.getSeatMaps("off_0000BAwS95zAqzA6y2LyU1")).isEqualTo(HttpDuffelClient.EMPTY_LIST);
+    }
+
+    @Test
+    void anOfferWithoutOrderHasNoOrders() {
+        assertThat(duffel.findOrders(OFFER)).isEqualTo(HttpDuffelClient.EMPTY_LIST);
+    }
+
+    @Test
+    void customerUserIsUpdatedAndAnUnknownOneIsNotFound() {
+        var created = new DuffelCustomerUser(new DuffelCustomerUser.Data("a@example.com", "Aminata", "Sow", null));
+        String id = json.readTree(duffel.createCustomerUser(created)).path("data").path("id").asString();
+
+        var changed = new DuffelCustomerUser(new DuffelCustomerUser.Data("a@example.com", "Awa", "Sène", null));
+        assertThat(json.readTree(duffel.updateCustomerUser(id, changed)).path("data").path("given_name").asString()).isEqualTo("Awa");
+        assertThat(duffel.findCustomerUsers("nobody@example.com")).isEqualTo(HttpDuffelClient.EMPTY_LIST);
+        assertThatThrownBy(() -> duffel.updateCustomerUser("icu_unknown", changed))
+                .isInstanceOf(DuffelException.class).hasFieldOrPropertyWithValue("code", "not_found");
+    }
+
+    @Test
+    void unknownOrdersAreNotFound() {
+        assertThatThrownBy(() -> duffel.getOrder("ord_unknown")).isInstanceOf(DuffelException.class);
+        assertThatThrownBy(() -> duffel.createOrderCancellation("ord_unknown")).isInstanceOf(DuffelException.class);
+        assertThatThrownBy(() -> duffel.updateOrder("ord_unknown", new DuffelOrderUpdate(new DuffelOrderUpdate.Data(List.of()))))
+                .isInstanceOf(DuffelException.class);
+    }
+
+    @Test
+    void cancellationIsQuotedThenConfirmedAndCannotBeRepeated() {
+        String orderId = demoOrderId();
+        assertThat(json.readTree(duffel.getOrder(orderId)).path("data").path("available_actions").get(0).asString()).isEqualTo("cancel");
+
+        JsonNode quote = json.readTree(duffel.createOrderCancellation(orderId)).path("data");
+        String id = quote.path("id").asString();
+        assertThat(quote.path("order_id").asString()).isEqualTo(orderId);
+        assertThat(quote.path("confirmed_at").isNull()).isTrue();
+        assertThat(json.readTree(duffel.getOrderCancellation(id)).path("data").path("refund_to").asString()).isEqualTo("balance");
+
+        assertThat(json.readTree(duffel.confirmOrderCancellation(id)).path("data").path("confirmed_at").asString()).isNotEmpty();
+        JsonNode cancelled = json.readTree(duffel.getOrder(orderId)).path("data");
+        assertThat(cancelled.path("cancelled_at").asString()).isNotEmpty();
+        assertThat(cancelled.path("available_actions")).isEmpty();
+        assertThatThrownBy(() -> duffel.createOrderCancellation(orderId))
+                .isInstanceOf(DuffelException.class).hasFieldOrPropertyWithValue("code", "already_cancelled");
+    }
+
+    @Test
+    void unknownCancellationsAreNotFound() {
+        assertThatThrownBy(() -> duffel.getOrderCancellation("ore_unknown")).isInstanceOf(DuffelException.class);
+        assertThatThrownBy(() -> duffel.confirmOrderCancellation("ore_unknown")).isInstanceOf(DuffelException.class);
     }
 }

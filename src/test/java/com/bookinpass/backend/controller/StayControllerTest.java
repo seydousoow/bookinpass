@@ -1,19 +1,8 @@
 package com.bookinpass.backend.controller;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.argThat;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.ArgumentMatchers.isNull;
-import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoInteractions;
-
 import com.bookinpass.backend.exception.DuffelException;
 import com.bookinpass.backend.exception.UnknownLocationException;
 import com.bookinpass.backend.service.StayService;
-import java.time.LocalDate;
-import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -23,6 +12,18 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.assertj.MockMvcTester;
+
+import java.time.LocalDate;
+import java.util.List;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 
 @WebMvcTest(StayController.class)
 class StayControllerTest {
@@ -140,5 +141,12 @@ class StayControllerTest {
                 .bodyJson().extractingPath("$.meta.after").isEqualTo("o10");
         assertThat(mvc.get().uri("/stays/accommodations/acc_1/reviews?after=o10&limit=5")).hasStatusOk();
         assertThat(mvc.get().uri("/stays/accommodations/acc_1/reviews?limit=500")).hasStatus(HttpStatus.BAD_REQUEST);
+    }
+
+    @Test
+    void quoteIsReadById() {
+        assertThat(mvc.get().uri("/stays/quotes/quo_1")).hasStatusOk();
+
+        org.mockito.Mockito.verify(stays).getQuote("quo_1");
     }
 }

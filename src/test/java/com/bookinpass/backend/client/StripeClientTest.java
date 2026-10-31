@@ -9,6 +9,7 @@ import org.springframework.test.web.client.MockRestServiceServer;
 import org.springframework.web.client.RestClient;
 import tools.jackson.databind.json.JsonMapper;
 
+import java.time.Instant;
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -17,6 +18,7 @@ import static org.springframework.test.web.client.match.MockRestRequestMatchers.
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.header;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.method;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.requestTo;
+import static org.springframework.test.web.client.match.MockRestRequestMatchers.requestToUriTemplate;
 import static org.springframework.test.web.client.response.MockRestResponseCreators.withStatus;
 import static org.springframework.test.web.client.response.MockRestResponseCreators.withSuccess;
 
@@ -62,5 +64,64 @@ class StripeClientTest {
 
         assertThatThrownBy(() -> stripe.createCheckoutSession(1, "EUR", "DSS → CDG", "http://localhost:4200/", "auto", Map.of(), "key-2"))
                 .isInstanceOf(PaymentException.class).hasFieldOrPropertyWithValue("code", "payment-provider-error");
+    }
+
+    private void formPost(String path, String key) {
+        server.expect(requestTo("https://api.stripe.com" + path)).andExpect(method(HttpMethod.POST)).andExpect(header("Idempotency-Key", key))
+                .andRespond(withSuccess("{\"id\":\"ok\"}", MediaType.APPLICATION_JSON));
+    }
+
+    @Test
+    void checkoutSessionCanExpireAtAGivenInstant() {
+        server.expect(requestTo("https://api.stripe.com/v1/checkout/sessions"))
+                .andExpect(content().formDataContains(Map.of("expires_at", "1800000000")))
+                .andRespond(withSuccess("{\"id\":\"cs_1\"}", MediaType.APPLICATION_JSON));
+
+        stripe.createCheckoutSession(100, "EUR", "Car", "http://localhost/", "fr", Map.of(), "key", Instant.ofEpochSecond(1800000000));
+        server.verify();
+    }
+
+    @Test
+    void sessionIsReadWithItsPaymentIntentExpanded() {
+        server.expect(requestToUriTemplate("https://api.stripe.com/v1/checkout/sessions/cs_1?expand[]=payment_intent&expand[]=payment_intent.payment_method"))
+                .andExpect(method(HttpMethod.GET))
+                .andRespond(withSuccess("{\"id\":\"cs_1\"}", MediaType.APPLICATION_JSON));
+
+        assertThat(stripe.retrieveCheckoutSession("cs_1").path("id").asString()).isEqualTo("cs_1");
+        server.verify();
+    }
+
+    @Test
+    void sessionReadFailureIsAGenericPaymentError() {
+        server.expect(requestToUriTemplate("https://api.stripe.com/v1/checkout/sessions/cs_1?expand[]=payment_intent&expand[]=payment_intent.payment_method"))
+                .andRespond(withStatus(HttpStatus.NOT_FOUND).contentType(MediaType.APPLICATION_JSON).body("{\"error\":{\"type\":\"invalid_request_error\"}}"));
+
+        assertThatThrownBy(() -> stripe.retrieveCheckoutSession("cs_1"))
+                .isInstanceOf(PaymentException.class).hasFieldOrPropertyWithValue("code", "payment-provider-error");
+    }
+
+    @Test
+    void expiryCaptureAndCancellationTargetTheirResourceWithTheirKey() {
+        formPost("/v1/checkout/sessions/cs_1/expire", "k-expire");
+        formPost("/v1/payment_intents/pi_1/capture", "k-capture");
+        server.expect(requestTo("https://api.stripe.com/v1/payment_intents/pi_1/cancel")).andExpect(header("Idempotency-Key", "k-cancel"))
+                .andExpect(content().formDataContains(Map.of("cancellation_reason", "abandoned")))
+                .andRespond(withSuccess("{\"id\":\"ok\"}", MediaType.APPLICATION_JSON));
+
+        assertThat(stripe.expireCheckoutSession("cs_1", "k-expire").path("id").asString()).isEqualTo("ok");
+        assertThat(stripe.capturePaymentIntent("pi_1", "k-capture").path("id").asString()).isEqualTo("ok");
+        assertThat(stripe.cancelPaymentIntent("pi_1", "abandoned", "k-cancel").path("id").asString()).isEqualTo("ok");
+        server.verify();
+    }
+
+    @Test
+    void refundCarriesAmountReasonAndMetadata() {
+        server.expect(requestTo("https://api.stripe.com/v1/refunds")).andExpect(header("Idempotency-Key", "k-refund"))
+                .andExpect(content().formDataContains(Map.of("payment_intent", "pi_1", "amount", "5000", "reason", "requested_by_customer",
+                        "metadata[booking]", "ABC123")))
+                .andRespond(withSuccess("{\"id\":\"re_1\"}", MediaType.APPLICATION_JSON));
+
+        assertThat(stripe.createRefund("pi_1", 5000, Map.of("booking", "ABC123"), "k-refund").path("id").asString()).isEqualTo("re_1");
+        server.verify();
     }
 }

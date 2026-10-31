@@ -1,17 +1,17 @@
 package com.bookinpass.backend.repository;
 
+import com.bookinpass.backend.dto.duffel.DuffelStaySearch.Coordinates;
 import com.bookinpass.backend.dto.response.AirlineResponse;
 import com.bookinpass.backend.dto.response.AirportResponse;
+import com.bookinpass.backend.dto.response.DestinationResponse;
 import com.bookinpass.backend.dto.response.ExchangeRatesResponse;
 import com.bookinpass.backend.entity.ExchangeRate;
+import com.bookinpass.backend.exception.UnknownLocationException;
 import com.bookinpass.backend.service.AirlineService;
 import com.bookinpass.backend.service.AirportService;
+import com.bookinpass.backend.service.DestinationService;
 import com.bookinpass.backend.service.ExchangeRateService;
 import com.bookinpass.backend.service.StayLocator;
-import com.bookinpass.backend.service.DestinationService;
-import com.bookinpass.backend.dto.response.DestinationResponse;
-import com.bookinpass.backend.dto.duffel.DuffelStaySearch.Coordinates;
-import com.bookinpass.backend.exception.UnknownLocationException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

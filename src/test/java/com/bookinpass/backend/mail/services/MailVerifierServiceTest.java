@@ -7,7 +7,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 class MailVerifierServiceTest {
 
-    /** Sans requête DNS : seuls les domaines listés ont un MX. */
+    /**
+     * Sans requête DNS : seuls les domaines listés ont un MX.
+     */
     private final MailVerifierService verifier = new MailVerifierService() {
         @Override
         boolean hasMXRecords(String domain) {

@@ -15,7 +15,9 @@ public class WebhookSignatureTest {
     private static final byte[] PAYLOAD = "{\"id\":\"evt_1\"}".getBytes(StandardCharsets.UTF_8);
     private static final long NOW = 1_800_000_000;
 
-    /** En-tête tel que Stripe l'envoie. */
+    /**
+     * En-tête tel que Stripe l'envoie.
+     */
     public static String sign(byte[] payload, String secret, long timestamp) {
         return "t=" + timestamp + ",v1=" + HexFormat.of().formatHex(WebhookSignature.hmac(secret, timestamp, payload));
     }
