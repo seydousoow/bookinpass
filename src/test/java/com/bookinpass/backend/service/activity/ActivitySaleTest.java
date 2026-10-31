@@ -1,5 +1,8 @@
 package com.bookinpass.backend.service.activity;
 
+import com.bookinpass.backend.dto.response.ActivityCardResponse;
+import com.bookinpass.backend.dto.response.ActivityReviewResponse;
+import com.bookinpass.backend.dto.response.StaffActivityRefundResponse;
 import com.bookinpass.backend.service.booking.ActivityMobilePaymentService;
 import com.bookinpass.backend.service.booking.ActivityBookingService;
 import com.bookinpass.backend.client.ClaudeClient;
@@ -76,6 +79,7 @@ import static org.mockito.Mockito.verify;
  * disponibilités, vente payée par carte, annulations et remboursements, avis modérés par Claude. Stripe, PayDunya,
  * les e-mails et Claude sont simulés. Pas de transaction de test : chaque étape valide la sienne, comme en production.
  */
+@SuppressWarnings("DataFlowIssue")
 @DataJpaTest(properties = "spring.jpa.hibernate.ddl-auto=validate")
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 @Transactional(propagation = Propagation.NOT_SUPPORTED)
@@ -173,9 +177,9 @@ class ActivitySaleTest {
 
     private final JsonMapper json = JsonMapper.builder().build();
     private StaffPrincipal manager;
-    private Integer optionId;
     private String slug;
 
+    @SuppressWarnings("SqlWithoutWhere")
     @BeforeEach
     void publishedActivityWithSlots() {
         clock.set(NOW);
@@ -208,7 +212,7 @@ class ActivitySaleTest {
         StaffActivityDetailResponse withOption = admin.addOption(draft.id(),
                 new StaffActivityOptionRequest("Visite guidée en français", null, new BigDecimal("15000"), new BigDecimal("20000"),
                         new BigDecimal("7500"), 10, true));
-        optionId = withOption.options().getFirst().id();
+        Integer optionId = withOption.options().getFirst().id();
         // Lundis et mercredis à 9 h 30, heure de Dakar, pendant deux semaines.
         int created = admin.openSlots(optionId, new StaffActivitySlotsRequest(LocalDate.of(2026, 10, 25), LocalDate.of(2026, 11, 7),
                 List.of(1, 3), List.of("09:30"), null), manager);
@@ -221,7 +225,11 @@ class ActivitySaleTest {
     }
 
     private static StaffActivityRequest content(List<ActivityImage> images) {
-        return new StaffActivityRequest("Île de Gorée : visite guidée", "", DAKAR, "tour", "Gorée Tours", "Traversée et visite de l'île.",
+        return content("Île de Gorée : visite guidée", images);
+    }
+
+    private static StaffActivityRequest content(String title, List<ActivityImage> images) {
+        return new StaffActivityRequest(title, "", DAKAR, "tour", "Gorée Tours", "Traversée et visite de l'île.",
                 "La Maison des Esclaves, le Castel, les ruelles colorées.", List.of("Maison des Esclaves"), List.of("Traversée en chaloupe"),
                 List.of(), List.of("Animaux"), List.of("Prévoir de l'eau"),
                 List.of(new ActivityItineraryStop("Maison des Esclaves", "visit", 45, false, null)), images, "Embarcadère de Dakar",
@@ -262,7 +270,7 @@ class ActivitySaleTest {
     @Test
     @DisplayName("Site : recherche, page de l'activité, dates et créneaux d'un jour dans le fuseau de la ville")
     void publishedActivityIsSearchableWithAvailability() {
-        assertThat(catalog.search(DAKAR, null, "gorée", 0, 20).items()).extracting(c -> c.slug()).containsExactly(slug);
+        assertThat(catalog.search(DAKAR, null, "gorée", 0, 20).items()).extracting(ActivityCardResponse::slug).containsExactly(slug);
         assertThat(catalog.search(null, "cruise", null, 0, 20).items()).isEmpty();
 
         ActivityDetailResponse detail = catalog.detail(slug);
@@ -324,6 +332,26 @@ class ActivitySaleTest {
     }
 
     @Test
+    @DisplayName("Remboursement refusé par Stripe : marqué en échec avec sa raison, à relancer depuis le back-office")
+    void cardRefundRefusedByStripeIsMarkedFailed() {
+        ActivityBookingResponse booking = booked(2, 0);
+        given(stripe.createRefund(anyString(), anyLong(), anyMap(), anyString())).willThrow(new IllegalStateException("charge_already_refunded"));
+
+        refunds.cancel(booking.reference(), manager, "Prestataire indisponible", null);
+
+        assertThat(jdbc.queryForObject("SELECT status FROM activity_refund", String.class)).isEqualTo("failed");
+        assertThat(jdbc.queryForObject("SELECT failure_reason FROM activity_refund", String.class)).isEqualTo("charge_already_refunded");
+    }
+
+    @Test
+    @DisplayName("Titre très long : adresse coupée à 100 caractères, sans tiret final")
+    void longTitleGivesASlugWithoutTrailingHyphen() {
+        String title = "a".repeat(99) + " " + "b".repeat(20);
+
+        assertThat(admin.create(content(title, List.of()), manager).slug()).isEqualTo("a".repeat(99));
+    }
+
+    @Test
     @DisplayName("Back-office : remboursement partiel plafonné, puis annulation avec le reste remboursé")
     void staffRefundsPartlyThenCancels() {
         ActivityBookingResponse booking = booked(2, 0);
@@ -337,7 +365,7 @@ class ActivitySaleTest {
         var detail = admin.booking(booking.reference());
         assertThat(detail.booking().status()).isEqualTo("cancelled");
         assertThat(detail.cancelledBy()).isEqualTo("Mariama Ba");
-        assertThat(detail.refunds()).extracting(r -> r.amount()).containsExactly("5000", "25000");
+        assertThat(detail.refunds()).extracting(StaffActivityRefundResponse::amount).containsExactly("5000", "25000");
         assertThat(detail.refundable()).isEqualTo("0");
         assertThat(admin.bookings("sène", "cancelled", null, null, null, 0, 25).total()).isEqualTo(1);
     }
@@ -359,8 +387,8 @@ class ActivitySaleTest {
     }
 
     /** Wave Sénégal depuis notre page, numéro national. */
-    private static MobilePaymentRequest wave(String returnPath) {
-        return new MobilePaymentRequest("wave-senegal", "77 123 45 67", null, returnPath);
+    private static MobilePaymentRequest wave() {
+        return new MobilePaymentRequest("wave-senegal", "77 123 45 67", null, "/activities/book");
     }
 
     @Test
@@ -371,7 +399,7 @@ class ActivitySaleTest {
         given(paydunya.createInvoice(anyLong(), anyString(), anyString(), any(), anyMap(), anyString(), anyString(), anyString(), any()))
                 .willReturn(new PayDunyaClient.Invoice("tok_late", "https://paydunya.example/pay"));
         given(stripe.retrieveCheckoutSession("cs_" + late.reference())).willReturn(json.readTree("{\"status\":\"open\"}"));
-        mobile.start(late.reference(), wave("/activities/book"));
+        mobile.start(late.reference(), wave());
         clock.set(NOW.plus(Duration.ofMinutes(40)));
         sale.releaseExpired();
         booked(1, 0);
@@ -415,7 +443,7 @@ class ActivitySaleTest {
             assertThat(r.aiVerdict()).isEqualTo("approve");
             assertThat(r.moderatedBy()).isNull();
         });
-        assertThat(catalog.reviews(slug, 0, 10, "recent", 0, null).items()).extracting(r -> r.authorName()).containsExactly("Awa");
+        assertThat(catalog.reviews(slug, 0, 10, "recent", 0, null).items()).extracting(ActivityReviewResponse::authorName).containsExactly("Awa");
         assertThat(catalog.detail(slug).rating().average()).isEqualTo(5.0);
         assertThat(catalog.detail(slug).rating().value()).isEqualTo(4.0);
     }

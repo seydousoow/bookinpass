@@ -1,5 +1,7 @@
 package com.bookinpass.backend.repository;
 
+import com.bookinpass.backend.config.web.RequestLang;
+import com.bookinpass.backend.dto.request.FlightOrderRequest;
 import com.bookinpass.backend.entity.FlightOrder;
 import com.bookinpass.backend.entity.FlightOrderEvent;
 import com.bookinpass.backend.entity.FlightOrderStatus;
@@ -7,64 +9,47 @@ import com.bookinpass.backend.entity.StripePayment;
 import com.bookinpass.backend.entity.StripePaymentEvent;
 import com.bookinpass.backend.entity.StripePaymentStatus;
 import com.bookinpass.backend.entity.User;
+import com.bookinpass.backend.service.BookingRecorder;
+import com.bookinpass.backend.service.PaymentService.FlightQuote;
+import com.bookinpass.backend.service.PaymentService.ServiceLine;
+import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
 import org.springframework.boot.jdbc.test.autoconfigure.AutoConfigureTestDatabase;
-import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
-import com.bookinpass.backend.config.web.RequestLang;
-import com.bookinpass.backend.dto.request.FlightOrderRequest;
-import com.bookinpass.backend.dto.request.PriceOfferRequest.IntendedService;
-import com.bookinpass.backend.service.BookingRecorder;
-import com.bookinpass.backend.service.PaymentService.FlightQuote;
-import com.bookinpass.backend.service.PaymentService.ServiceLine;
-import tools.jackson.databind.json.JsonMapper;
-import java.time.Clock;
-import java.time.ZoneOffset;
-import java.util.List;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.postgresql.PostgreSQLContainer;
-
-import jakarta.persistence.EntityManager;
+import tools.jackson.databind.json.JsonMapper;
 
 import java.math.BigDecimal;
+import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.time.ZoneOffset;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-/** Réservations contre un vrai PostgreSQL : mapping validé sur la migration V7, JSONB, statuts, clé de rapprochement. */
+/**
+ * Réservations contre un vrai PostgreSQL : mapping validé sur la migration V7, JSONB, statuts, clé de rapprochement.
+ */
 @DataJpaTest(properties = "spring.jpa.hibernate.ddl-auto=validate")
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 @Testcontainers
 @Import({BookingRecorder.class, BookingJpaTest.Beans.class})
 class BookingJpaTest {
 
-    @TestConfiguration
-    static class Beans {
-        @Bean
-        JsonMapper jsonMapper() {
-            return JsonMapper.builder().build();
-        }
-
-        @Bean
-        Clock clock() {
-            return Clock.fixed(Instant.parse("2026-10-17T10:00:00Z"), ZoneOffset.UTC);
-        }
-    }
-
-    @Autowired
-    BookingRecorder recorder;
-
     @Container
     @ServiceConnection
     static PostgreSQLContainer postgres = new PostgreSQLContainer("postgres:18.6");
-
+    @Autowired
+    BookingRecorder recorder;
     @Autowired
     UserRepository users;
     @Autowired
@@ -103,7 +88,7 @@ class BookingJpaTest {
         order.cancel(now.plusSeconds(3600));
         orderEvents.save(new FlightOrderEvent(order, "order_cancellation.confirmed", "wev_1", "{\"refund_to\":\"balance\"}", now)
                 .withRefund(new BigDecimal("150.00"), "EUR", "balance"));
-        payment.refunded(10000, now);
+        payment.markRefunded(10000, now);
         entityManager.flush();
         entityManager.clear();
 
@@ -235,6 +220,22 @@ class BookingJpaTest {
     }
 
     @Test
+    void failedPaymentWebhookKeepsTheReason() {
+        JsonMapper json = JsonMapper.builder().build();
+        payments.save(new StripePayment("cs_f", "pi_f", "EUR", 1000, false, Instant.parse("2026-10-19T08:00:00Z")));
+
+        assertThat(recorder.recordStripeEvent(json.readTree("""
+                {"id":"evt_f","type":"payment_intent.payment_failed","created":1800000000,
+                 "data":{"object":{"id":"pi_f","last_payment_error":{"code":"card_declined"}}}}"""))).isTrue();
+        entityManager.flush();
+        entityManager.clear();
+
+        StripePayment stored = payments.findByCheckoutSessionId("cs_f").orElseThrow();
+        assertThat(stored.getStatus()).isEqualTo(StripePaymentStatus.FAILED);
+        assertThat(stored.getFailureReason()).isEqualTo("card_declined");
+    }
+
+    @Test
     void sessionCompletedWebhookTracesAnAuthorisationWithoutBooking() {
         JsonMapper json = JsonMapper.builder().build();
 
@@ -247,5 +248,18 @@ class BookingJpaTest {
         assertThat(orphan.getPaymentIntentId()).isEqualTo("pi_orphan");
         assertThat(orphan.getStatus()).isEqualTo(StripePaymentStatus.AUTHORISED);
         assertThat(orphan.getOrder()).isNull();
+    }
+
+    @TestConfiguration
+    static class Beans {
+        @Bean
+        JsonMapper jsonMapper() {
+            return JsonMapper.builder().build();
+        }
+
+        @Bean
+        Clock clock() {
+            return Clock.fixed(Instant.parse("2026-10-17T10:00:00Z"), ZoneOffset.UTC);
+        }
     }
 }

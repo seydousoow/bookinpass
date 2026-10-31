@@ -6,7 +6,7 @@ name: bookinpass
 
 services:
   postgres:
-    image: postgres:18-alpine
+    image: postgres:18
     ports:
       - "5432:5432"
     networks:

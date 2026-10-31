@@ -14,6 +14,7 @@ import com.bookinpass.backend.service.payment.PaymentMethod;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.transaction.support.TransactionTemplate;
+import org.springframework.util.StringUtils;
 import tools.jackson.databind.JsonNode;
 
 import java.math.BigDecimal;
@@ -133,7 +134,7 @@ public abstract sealed class SeatMobilePaymentService<B extends SeatBooking, P e
         long francs = PayDunyaCheckout.francs(order.total(), order.currency());
         closeCardSession(order);
 
-        String site = stripeProperties.frontendUrl().replaceAll("/+$", "") + request.returnPath() + "?mobile=" + reference;
+        String site = StringUtils.trimTrailingCharacter(stripeProperties.frontendUrl(), '/') + request.returnPath() + "?mobile=" + reference;
         PayDunyaClient.Invoice invoice = checkout.invoice(attempt, francs, order.description(), order.customer(),
                 invoiceData(reference), site, site + "&cancelled=1");
         tx.executeWithoutResult(_ -> {

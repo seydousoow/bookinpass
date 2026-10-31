@@ -62,7 +62,7 @@ public class StaffAuthService {
     }
 
     static void requireStrong(String password) {
-        if (password == null || password.length() < MIN_PASSWORD_LENGTH || !password.matches(".*\\p{L}.*") || !password.matches(".*\\d.*")) {
+        if (password == null || password.length() < MIN_PASSWORD_LENGTH || password.codePoints().noneMatch(Character::isLetter) || password.chars().noneMatch(c -> c >= '0' && c <= '9')) {
             throw new StaffException(HttpStatus.BAD_REQUEST, "weak-password",
                     "The password needs at least " + MIN_PASSWORD_LENGTH + " characters, with a letter and a digit.");
         }

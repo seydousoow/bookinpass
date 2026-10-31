@@ -11,8 +11,12 @@ import lombok.experimental.SuperBuilder;
 import tools.jackson.databind.json.JsonMapper;
 
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
+
+import static java.util.Optional.ofNullable;
 
 /**
  * Données communes à tous les e-mails : destinataire, langue, nom affiché. Chaque type d'e-mail en hérite et ajoute
@@ -69,8 +73,15 @@ public abstract class BaseMailProperties {
         map.remove("bccRecipients");
         map.remove("attachments");
         map.remove("inlineImages");
-        map.put("baseUrl", siteUrl == null ? "" : siteUrl.replaceAll("/+$", ""));
-        map.put("lang", (lang == null ? MailLang.FR : lang).name().toLowerCase(java.util.Locale.ROOT));
+        String url = ofNullable(siteUrl).map(s -> {
+            var end = s.length();
+            while (end > 0 && s.charAt(end - 1) == '/') {
+                end--;
+            }
+            return s.substring(0, end);
+        }).orElse("");
+        map.put("baseUrl", url);
+        map.put("lang", Objects.requireNonNullElse(lang, MailLang.FR).name().toLowerCase(Locale.ROOT));
         return map;
     }
 

@@ -123,7 +123,7 @@ public class StaffDeskService {
         if (!TransportMobilePayment.REFUND_NEEDED.equals(payment.getStatus())) {
             throw new StaffException(HttpStatus.CONFLICT, "not-refundable", "This payment is not waiting for a refund.");
         }
-        payment.refunded(users.getReferenceById(by.id()), note.trim(), clock.instant());
+        payment.markRefunded(users.getReferenceById(by.id()), note.trim(), clock.instant());
         log.info("Staff {} refunded mobile payment {} of bus booking {}", by.username(), payment.getInvoiceToken(), payment.getBooking().getReference());
         return refund(payment);
     }
