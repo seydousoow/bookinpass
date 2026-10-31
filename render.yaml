@@ -2,13 +2,17 @@
 #
 # L'image (jvm ou native) est construite par GitHub Actions (.github/workflows/backend-image.yml) et publiée sur GHCR :
 # Render ne fait que la tirer (pas de build Docker sur ses machines gratuites, trop petites pour GraalVM).
-# Toutes les variables sont gérées depuis le tableau de bord (sync: false : le Blueprint ne les écrase jamais) ;
+# Toutes les variables sont gérées depuis le tableau de bord (sync : false : le Blueprint ne les écrase jamais) ;
 # seules la base et le cache sont reliés automatiquement. Valeurs conseillées en commentaire, au-dessus de chacune.
-# Attention : Render ne crée une variable sync: false qu'à la création du Blueprint. Une variable ajoutée ici
-# ensuite est ignorée : l'ajouter à la main (Environment → Add → « Add from .env »).
-
+# Attention : Render ne crée une variable sync : false qu'à la création du Blueprint. Une variable ajoutée ici
+# ensuite est ignorée : l'ajouter à la main (Environment → Add → « Add from '.env' »).
+version: "1"
 services:
   - type: web
+    domains:
+      - bip-back.dicortex.com
+    autoDeployTrigger: commit
+    renderSubdomainPolicy: disabled
     name: bookinpass-api
     runtime: image
     image:
@@ -21,6 +25,7 @@ services:
       # Sans effet sur l'image native.
       # Valeur conseillée : -XX:MaxRAMPercentage=45 -XX:+UseSerialGC -XX:TieredStopAtLevel=1 -Xss512k -XX:ReservedCodeCacheSize=48m -XX:MaxMetaspaceSize=180m
       - key: JAVA_TOOL_OPTIONS
+        value: "-XX:+UseSerialGC -XX:TieredStopAtLevel=1 -Xss512k -XX:ReservedCodeCacheSize=48m -XX:MaxMetaspaceSize=180m"
         sync: false
       - key: DATABASE_HOST
         fromDatabase: { name: bookinpass-db, property: host }
@@ -40,19 +45,24 @@ services:
       # Journaux : niveau général, puis appels sortants (debug = URL et statut, trace = en-têtes et corps).
       # Valeur conseillée : info
       - key: LOG_LEVEL
+        value: "INFO"
         sync: false
       # Valeur conseillée : info
       - key: DUFFEL_LOG_LEVEL
+        value: "INFO"
         sync: false
       # Valeur conseillée : info
       - key: STAYS_LOG_LEVEL
+        value: "INFO"
         sync: false
       # Valeur conseillée : info
       - key: EXPEDIA_LOG_LEVEL
+        value: "INFO"
         sync: false
       # Swagger UI (/api/swagger-ui.html) et OpenAPI : false pour ne pas exposer la documentation de l'API.
       # Valeur conseillée : false
       - key: API_DOCS_ENABLED
+        value: "true"
         sync: false
 
       # Site (Vercel) : retour Stripe, liens des e-mails, CORS (autres origines : CORS_ALLOWED_ORIGINS).
@@ -67,15 +77,19 @@ services:
       # Premier administrateur, créé au démarrage s'il n'en existe aucun ; mot de passe provisoire (10 caractères, une
       # lettre et un chiffre) à changer à la première connexion. À retirer ensuite.
       - key: BOOTSTRAP_ADMIN_USERNAME
+        value: "admin"
         sync: false
       - key: BOOTSTRAP_ADMIN_PASSWORD
+        generateValue: true
         sync: false
-      # Cookie de session du back-office : Lax si le back-office est sur le même site que l'API, sinon None.
+      # Cookie de session du back-office : Lax si le back-office est sur le même site que l"API, sinon None.
       # Valeur conseillée : Lax
       - key: STAFF_COOKIE_SAME_SITE
+        value: "Lax"
         sync: false
       # Valeur conseillée : true (HTTPS)
       - key: STAFF_COOKIE_SECURE
+        value: "true"
         sync: false
 
       # Valeur conseillée : https://api.duffel.com
@@ -124,6 +138,7 @@ services:
       # Chiffrement des numéros de mobile money (AES-256-GCM) : k1:<openssl rand -base64 32>. Rotation : k2:…,k1:…
       # (ne jamais retirer une clé tant que des paiements en dépendent). Vide = mobile money masqué.
       - key: PAYMENT_DATA_KEYS
+        generateValue: true
         sync: false
 
       # Claude : modération des avis d'activités et résumé des avis. Clé vide = avis modérés à la main seulement.
@@ -132,24 +147,30 @@ services:
         sync: false
       # Valeur conseillée : claude-haiku-5-5 (le moins cher)
       - key: ANTHROPIC_MODEL
+        value: "claude-haiku-5-5"
         sync: false
       # Réflexion du modèle (plus de jetons). Valeur conseillée : false
       - key: ANTHROPIC_THINKING
+        value: "false"
         sync: false
       # Repli côté serveur quand le modèle décline (pas pour Haiku). Valeur conseillée : false
       - key: ANTHROPIC_FALLBACKS
+        value: "false"
         sync: false
       # Intervalle de la modération des avis (durée ISO-8601). Valeur conseillée : PT5H
       - key: REVIEW_MODERATION_INTERVAL
+        value: "PT5H"
         sync: false
 
       # E-mails aux voyageurs par AWS SES : true pour les envoyer (identifiants AWS et expéditeur vérifié dans SES
       # requis) ; false = rendus et journalisés, jamais envoyés.
       # Valeur conseillée : true
       - key: MAIL_ENABLED
+        value: "true"
         sync: false
       # Valeur conseillée : us-east-2 (région du compte SES)
       - key: AWS_REGION
+        value: "us-east-2"
         sync: false
       - key: AWS_ACCESS_KEY_ID
         sync: false
@@ -157,9 +178,11 @@ services:
         sync: false
       # Valeur conseillée : reservations@bookinpass.com
       - key: AWS_SES_SENDER
+        value: "no-reply@bip.dicortex.com"
         sync: false
       # Valeur conseillée : Book In Pass
       - key: AWS_SES_ALIAS
+        value: "Book In Pass"
         sync: false
 
   # Cache (compatible Redis), joignable seulement depuis les services Render.
