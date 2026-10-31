@@ -29,7 +29,7 @@ COPY src src
 #   docker compose build --build-arg NATIVE_IMAGE_OPTIONS="-J-Xmx10g"
 # ---------------------------------------------------------------------------
 FROM deps AS native-build
-ARG NATIVE_IMAGE_OPTIONS="-J-Xmx8g -Ob"
+ARG NATIVE_IMAGE_OPTIONS="-J-Xmx6g -Ob"
 ENV NATIVE_IMAGE_OPTIONS=${NATIVE_IMAGE_OPTIONS}
 RUN --mount=type=cache,target=/root/.m2 ./mvnw -B -Pnative -DskipTests native:compile
 
@@ -66,7 +66,7 @@ EXPOSE 8080
 HEALTHCHECK --interval=10s --timeout=3s --start-period=20s --retries=5 \
   CMD curl -fsS http://localhost:8080/api/actuator/health/readiness || exit 1
 # Options JVM remplaçables par l'hébergeur (ex. profil petite mémoire sur Render, voir render.yaml).
-ENV JAVA_TOOL_OPTIONS="-XX:MaxRAMPercentage=75"
+ENV JAVA_TOOL_OPTIONS="-XX:MaxRAMPercentage=75 -H:+UnlockExperimentalVMOptions -H:+UnlockExperimentalVMOptions"
 ENTRYPOINT ["java", "org.springframework.boot.loader.launch.JarLauncher"]
 
 # ---------------------------------------------------------------------------
