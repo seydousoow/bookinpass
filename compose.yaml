@@ -1,0 +1,135 @@
+# Tout l'environnement : `docker compose up --build`  →  API sur http://localhost:8080
+# Image native GraalVM par défaut (Docker doit disposer de 10 Go) ; BACKEND_TARGET=jvm pour un build rapide.
+# Sans DUFFEL_ACCESS_TOKEN (fichier .env, voir .env.example), l'API sert les réponses de démo.
+
+name: bookinpass
+
+services:
+  postgres:
+    image: postgres:18.6
+    ports:
+      - "5432:5432"
+    networks:
+      - bip-egress
+      - bip-internal
+    environment:
+      POSTGRES_DB: bookinpass
+      POSTGRES_USER: bookinpass
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD}
+    volumes:
+      - postgres-data:/var/lib/postgresql
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U bookinpass -d bookinpass" ]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  redis:
+    image: redis:8-alpine3.23
+    networks:
+      - bip-internal
+    command:
+      - redis-server
+      - --save
+      - ""
+      - --appendonly
+      - "no"
+      - --maxmemory
+      - 256mb
+      - --maxmemory-policy
+      - allkeys-lru
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  backend:
+    build:
+      context: .
+      target: ${BACKEND_TARGET:-jvm}
+    image: bookinpass/backend:${BACKEND_TARGET:-jvm}
+    networks:
+      - bip-internal
+      - bip-egress
+    environment:
+      DATABASE_URL: jdbc:postgresql://postgres:5432/bookinpass
+      DATABASE_USER: bookinpass
+      DATABASE_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD}
+
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+
+      DUFFEL_BASE_URL: ${DUFFEL_BASE_URL:?Set DUFFEL_BASE_URL}
+      DUFFEL_ACCESS_TOKEN: ${DUFFEL_ACCESS_TOKEN:?Set DUFFEL_ACCESS_TOKEN}
+      DUFFEL_FIXTURES_DIR: file:/fixtures/duffel/
+      DUFFEL_LOG_LEVEL: ${DUFFEL_LOG_LEVEL:-info}
+      DUFFEL_STAYS_ENABLED: ${DUFFEL_STAYS_ENABLED:-true}
+      DUFFEL_WEBHOOK_SECRET: ${DUFFEL_WEBHOOK_SECRET:-}
+      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY:-}
+      STRIPE_PUBLISHABLE_KEY: ${STRIPE_PUBLISHABLE_KEY:-}
+      STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET:-}
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:4200}
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-}
+
+      # E-mails aux voyageurs par AWS SES. MAIL_ENABLED=false : rendus et journalisés, jamais envoyés.
+      MAIL_ENABLED: ${MAIL_ENABLED:-false}
+      AWS_REGION: ${AWS_REGION:-us-east-2}
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID:-}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY:-}
+      AWS_SES_SENDER: ${AWS_SES_SENDER:-reservations@bookinpass.com}
+      AWS_SES_ALIAS: ${AWS_SES_ALIAS:-Book In Pass}
+      STAYS_LOG_LEVEL: ${STAYS_LOG_LEVEL:-info}
+
+      EXPEDIA_BASE_URL: ${EXPEDIA_BASE_URL:-https://test.ean.com/v3}
+      EXPEDIA_API_KEY: ${EXPEDIA_API_KEY:-}
+      EXPEDIA_SECRET: ${EXPEDIA_SECRET:-}
+      EXPEDIA_LOG_LEVEL: ${EXPEDIA_LOG_LEVEL:-info}
+
+      # PayDunya : mobile money (SOFTPAY) et carte PayDunya (car et activités). Clés vides = moyens masqués.
+      PAYDUNYA_BASE_URL: ${PAYDUNYA_BASE_URL:-https://app.paydunya.com/sandbox-api/v1}
+      PAYDUNYA_MASTER_KEY: ${PAYDUNYA_MASTER_KEY:-}
+      PAYDUNYA_PRIVATE_KEY: ${PAYDUNYA_PRIVATE_KEY:-}
+      PAYDUNYA_TOKEN: ${PAYDUNYA_TOKEN:-}
+      PAYDUNYA_METHODS: ${PAYDUNYA_METHODS:-}
+      PAYDUNYA_CALLBACK_URL: ${PAYDUNYA_CALLBACK_URL:-}
+      PAYMENT_DATA_KEYS: ${PAYMENT_DATA_KEYS:-}
+
+      # Back-office du personnel : origine, cookie de session, premier administrateur.
+      BACKOFFICE_URL: ${BACKOFFICE_URL:-http://localhost:4300}
+      STAFF_COOKIE_SAME_SITE: ${STAFF_COOKIE_SAME_SITE:-Lax}
+      STAFF_COOKIE_SECURE: ${STAFF_COOKIE_SECURE:-true}
+      BOOTSTRAP_ADMIN_USERNAME: ${BOOTSTRAP_ADMIN_USERNAME:-}
+      BOOTSTRAP_ADMIN_PASSWORD: ${BOOTSTRAP_ADMIN_PASSWORD:-}
+
+      # Claude : modération et résumé des avis d'activités. Clé vide = avis modérés à la main seulement.
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      ANTHROPIC_MODEL: ${ANTHROPIC_MODEL:-claude-haiku-5-5}
+      ANTHROPIC_THINKING: ${ANTHROPIC_THINKING:-false}
+      ANTHROPIC_FALLBACKS: ${ANTHROPIC_FALLBACKS:-false}
+      REVIEW_MODERATION_INTERVAL: ${REVIEW_MODERATION_INTERVAL:-PT5H}
+
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      API_DOCS_ENABLED: ${API_DOCS_ENABLED:-true}
+
+    volumes:
+      # Réponses de démo, hors de l'image : elles ne servent qu'en l'absence de jeton.
+      - ./fixtures/duffel:/fixtures/duffel:ro
+    ports:
+      - "${BACKEND_HOST_PORT:-8080}:8080"
+
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+volumes:
+  postgres-data:
+
+networks:
+  bip-internal:
+    internal: true
+
+  bip-egress:
+    driver: bridge
