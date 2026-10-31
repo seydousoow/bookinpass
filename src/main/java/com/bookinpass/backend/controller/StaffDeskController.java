@@ -27,7 +27,9 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
-/** Guichet : réservations des voyageurs (recherche, billets renvoyés) et paiements mobiles à rembourser. */
+/**
+ * Guichet : réservations des voyageurs (recherche, billets renvoyés) et paiements mobiles à rembourser.
+ */
 @RestController
 @RequiredArgsConstructor
 @Tag(name = OpenApiConfig.TAG_STAFF)

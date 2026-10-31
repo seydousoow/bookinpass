@@ -40,7 +40,9 @@ public class User {
     @Column(name = "birth_date", nullable = false)
     private LocalDate birthDate;
 
-    /** {@code m} ou {@code f}, comme Duffel. */
+    /**
+     * {@code m} ou {@code f}, comme Duffel.
+     */
     @Column(nullable = false, length = 1)
     private String gender;
 
@@ -50,7 +52,9 @@ public class User {
     @Column(name = "phone_number", nullable = false)
     private String phoneNumber;
 
-    /** Client Duffel ({@code icu_…}) : seulement pour le titulaire de l'e-mail, Duffel l'exigeant unique. */
+    /**
+     * Client Duffel ({@code icu_…}) : seulement pour le titulaire de l'e-mail, Duffel l'exigeant unique.
+     */
     @Column(name = "duffel_user_id")
     private String duffelUserId;
 
@@ -87,7 +91,9 @@ public class User {
         this.matchKey = matchKey(email, firstName, lastName, birthDate, gender);
     }
 
-    /** Clé de rapprochement : e-mail, prénom, nom, date de naissance et sexe, sans casse, accents ni espaces superflus. */
+    /**
+     * Clé de rapprochement : e-mail, prénom, nom, date de naissance et sexe, sans casse, accents ni espaces superflus.
+     */
     public static String matchKey(String email, String firstName, String lastName, LocalDate birthDate, String gender) {
         return String.join("|", normalize(email), normalize(firstName), normalize(lastName), birthDate.toString(), normalize(gender));
     }
@@ -97,7 +103,9 @@ public class User {
         return stripped.replaceAll("\\s+", " ").toLowerCase(Locale.ROOT);
     }
 
-    /** Coordonnées de la dernière réservation : elles remplacent les précédentes. */
+    /**
+     * Coordonnées de la dernière réservation : elles remplacent les précédentes.
+     */
     public void updateContact(String email, String phoneNumber) {
         this.email = email;
         this.phoneNumber = phoneNumber;

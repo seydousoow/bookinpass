@@ -2,18 +2,18 @@ package com.bookinpass.backend.controller;
 
 import com.bookinpass.backend.config.OpenApiConfig;
 import com.bookinpass.backend.config.StripeProperties;
+import com.bookinpass.backend.dto.request.MobilePaymentRequest;
 import com.bookinpass.backend.dto.request.TransportBookingRequest;
 import com.bookinpass.backend.dto.request.TransportConfirmationRequest;
-import com.bookinpass.backend.dto.request.MobilePaymentRequest;
+import com.bookinpass.backend.dto.response.MobilePaymentResponse;
+import com.bookinpass.backend.dto.response.PaymentMethodsResponse;
 import com.bookinpass.backend.dto.response.TransportBookingResponse;
 import com.bookinpass.backend.dto.response.TransportDepartureResponse;
 import com.bookinpass.backend.dto.response.TransportHoldResponse;
-import com.bookinpass.backend.dto.response.MobilePaymentResponse;
-import com.bookinpass.backend.dto.response.PaymentMethodsResponse;
 import com.bookinpass.backend.dto.response.TransportPlaceResponse;
+import com.bookinpass.backend.service.booking.TransportBookingService;
+import com.bookinpass.backend.service.booking.TransportMobilePaymentService;
 import com.bookinpass.backend.service.payment.PayDunyaCheckout;
-import com.bookinpass.backend.service.transport.TransportBookingService;
-import com.bookinpass.backend.service.transport.TransportMobilePaymentService;
 import com.bookinpass.backend.service.transport.TransportSearchService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -58,7 +58,9 @@ import java.util.List;
 @RequestMapping(path = "transport", produces = MediaType.APPLICATION_JSON_VALUE)
 public class TransportController {
 
-    /** Ville (identifiant GeoNames) ou aéroport (code IATA). */
+    /**
+     * Ville (identifiant GeoNames) ou aéroport (code IATA).
+     */
     private static final String PLACE = "[0-9]{1,10}|[A-Z]{3}";
     private static final String REFERENCE = "[A-Za-z0-9]{6}";
 
@@ -83,7 +85,7 @@ public class TransportController {
     @ApiResponse(responseCode = "429", description = "Trop de tentatives pour cette réservation (`too-many-attempts`)", content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE, schema = @Schema(implementation = ProblemDetail.class)))
     @ApiResponse(responseCode = "503", description = "PayDunya non configuré (`payments-unavailable`)", content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE, schema = @Schema(implementation = ProblemDetail.class)))
     public MobilePaymentResponse mobilePayment(@Parameter(example = "K7MPQ2") @PathVariable @Pattern(regexp = REFERENCE) String reference,
-                                                       @Valid @RequestBody MobilePaymentRequest request) {
+                                               @Valid @RequestBody MobilePaymentRequest request) {
         return mobile.start(reference.toUpperCase(), request);
     }
 
@@ -128,7 +130,7 @@ public class TransportController {
     @ApiResponse(responseCode = "404", description = "Réservation inconnue (`booking-not-found`)", content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE, schema = @Schema(implementation = ProblemDetail.class)))
     @ApiResponse(responseCode = "409", description = "Paiement non autorisé (`payment-not-authorised`) ou départ devenu complet (`sold-out`, rien n'est débité)", content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE, schema = @Schema(implementation = ProblemDetail.class)))
     public TransportBookingResponse confirm(@Parameter(example = "K7MPQ2") @PathVariable @Pattern(regexp = REFERENCE) String reference,
-                                           @Valid @RequestBody TransportConfirmationRequest request) {
+                                            @Valid @RequestBody TransportConfirmationRequest request) {
         return bookings.confirm(reference.toUpperCase(), request.checkoutSessionId());
     }
 

@@ -5,11 +5,11 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 /**
  * Réservation d'activité vue par le client (bon d'échange, annulation, avis).
  *
- * @param status            {@code held}, {@code confirmed}, {@code released}, {@code cancelled}
- * @param cancellableUntil  fin de l'annulation gratuite ; nulle si l'activité n'est pas remboursable
- * @param cancellable       annulable maintenant par le client, avec remboursement total
- * @param refunded          montant déjà remboursé (ou en cours) ; « 0 » sinon
- * @param canReview         le créneau est passé, la réservation payée et pas encore notée
+ * @param status           {@code held}, {@code confirmed}, {@code released}, {@code cancelled}
+ * @param cancellableUntil fin de l'annulation gratuite ; nulle si l'activité n'est pas remboursable
+ * @param cancellable      annulable maintenant par le client, avec remboursement total
+ * @param refunded         montant déjà remboursé (ou en cours) ; « 0 » sinon
+ * @param canReview        le créneau est passé, la réservation payée et pas encore notée
  */
 public record ActivityBookingResponse(String reference, String status, Activity activity,
                                       @JsonProperty("option_title") String optionTitle, @JsonProperty("starts_at") String startsAt,

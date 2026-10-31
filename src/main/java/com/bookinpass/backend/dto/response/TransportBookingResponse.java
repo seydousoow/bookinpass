@@ -24,7 +24,9 @@ public record TransportBookingResponse(String reference,
                                        String total,
                                        String currency) {
 
-    /** @param qr QR code du billet (même contenu que {@code code}) ; absent tant que la réservation n'est pas confirmée */
+    /**
+     * @param qr QR code du billet (même contenu que {@code code}) ; absent tant que la réservation n'est pas confirmée
+     */
     public record Ticket(@JsonProperty("given_name") String givenName, @JsonProperty("family_name") String familyName, String code,
                          TicketQr.Svg qr) {
     }

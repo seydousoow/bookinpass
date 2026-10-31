@@ -41,7 +41,9 @@ public record FlightOrderRequest(
         }
     }
 
-    /** Passeport, seul type demandé aujourd'hui (offres à {@code passenger_identity_documents_required}). */
+    /**
+     * Passeport, seul type demandé aujourd'hui (offres à {@code passenger_identity_documents_required}).
+     */
     public record IdentityDocument(
             @Schema(example = "passport") @NotNull @Pattern(regexp = "passport") String type,
             @JsonProperty("unique_identifier") @Schema(example = "19KL56147") @NotNull @Pattern(regexp = "[A-Za-z0-9]{5,20}") String uniqueIdentifier,

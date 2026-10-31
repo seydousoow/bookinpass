@@ -21,10 +21,13 @@ public interface StripePaymentRepository extends JpaRepository<StripePayment, In
     @Query(value = "SELECT 1 FROM (SELECT pg_advisory_xact_lock(hashtext(:checkoutSessionId))) AS locked", nativeQuery = true)
     int lockCheckoutSession(String checkoutSessionId);
 
-
-    /** Paiement par carte d'une réservation de car. */
+    /**
+     * Paiement par carte d'une réservation de car.
+     */
     Optional<StripePayment> findFirstByTransportBookingIdOrderByIdDesc(Integer transportBookingId);
 
-    /** Paiement par carte d'une réservation d'activité. */
+    /**
+     * Paiement par carte d'une réservation d'activité.
+     */
     Optional<StripePayment> findFirstByActivityBookingIdOrderByIdDesc(Integer activityBookingId);
 }

@@ -16,19 +16,27 @@ public interface TransportMobilePaymentRepository extends JpaRepository<Transpor
 
     Optional<TransportMobilePayment> findByInvoiceToken(String invoiceToken);
 
-    /** Tentatives de paiement récentes d'une réservation (limite de fréquence). */
+    /**
+     * Tentatives de paiement récentes d'une réservation (limite de fréquence).
+     */
     long countByBookingIdAndCreatedAtAfter(Integer bookingId, Instant after);
 
-    /** Dernière facture de la réservation (celle que le client vient de payer ou d'abandonner). */
+    /**
+     * Dernière facture de la réservation (celle que le client vient de payer ou d'abandonner).
+     */
     Optional<TransportMobilePayment> findFirstByBookingReferenceOrderByIdDesc(String reference);
 
-    /** Paiements à rembourser ou remboursés, avec réservation, départ et ligne. */
+    /**
+     * Paiements à rembourser ou remboursés, avec réservation, départ et ligne.
+     */
     @Query("""
             select p from TransportMobilePayment p join fetch p.booking b join fetch b.departure d join fetch d.route r
             join fetch r.origin join fetch r.destination left join fetch p.refundedBy
             where p.status in :statuses order by p.completedAt desc""")
     List<TransportMobilePayment> findByStatuses(@Param("statuses") Collection<String> statuses);
 
-    /** Dernier paiement mobile d'une réservation (affiché au guichet). */
+    /**
+     * Dernier paiement mobile d'une réservation (affiché au guichet).
+     */
     Optional<TransportMobilePayment> findFirstByBookingIdOrderByIdDesc(Integer bookingId);
 }

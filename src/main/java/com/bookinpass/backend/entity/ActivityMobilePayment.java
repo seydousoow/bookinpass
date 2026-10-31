@@ -28,7 +28,7 @@ import java.time.Instant;
 @Table(name = "activity_mobile_payment")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class ActivityMobilePayment {
+public class ActivityMobilePayment implements SeatMobilePayment {
 
     public static final String PENDING = "pending";
     public static final String COMPLETED = "completed";
@@ -58,11 +58,15 @@ public class ActivityMobilePayment {
     @Column(nullable = false, length = 3)
     private String currency;
 
-    /** Moyen PayDunya ({@code wave-senegal}…) ; nul avant le paiement sur notre page. */
+    /**
+     * Moyen PayDunya ({@code wave-senegal}…) ; nul avant le paiement sur notre page.
+     */
     @Column(length = 30)
     private String method;
 
-    /** Numéro qui paie, chiffré ({@code PaymentDataCipher}). */
+    /**
+     * Numéro qui paie, chiffré ({@code PaymentDataCipher}).
+     */
     @Column(name = "phone_encrypted")
     private String phoneEncrypted;
 
@@ -80,7 +84,7 @@ public class ActivityMobilePayment {
     private Instant completedAt;
 
     public ActivityMobilePayment(ActivityBooking booking, String invoiceToken, BigDecimal amount, String currency, String method,
-                                     String phoneEncrypted, String phoneMasked) {
+                                 String phoneEncrypted, String phoneMasked) {
         this.booking = booking;
         this.provider = "paydunya";
         this.invoiceToken = invoiceToken;
@@ -108,7 +112,9 @@ public class ActivityMobilePayment {
         this.completedAt = at;
     }
 
-    /** {@code cancelled} ou {@code failed}, tel que PayDunya le dit. */
+    /**
+     * {@code cancelled} ou {@code failed}, tel que PayDunya le dit.
+     */
     public void close(String status) {
         this.status = status;
     }

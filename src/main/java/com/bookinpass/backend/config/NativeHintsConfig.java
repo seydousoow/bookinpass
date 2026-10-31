@@ -4,10 +4,10 @@ import com.bookinpass.backend.mail.resources.ActivityCancellationMailProperties;
 import com.bookinpass.backend.mail.resources.ActivityVoucherMailProperties;
 import com.bookinpass.backend.mail.resources.BaseMailProperties;
 import com.bookinpass.backend.mail.resources.BookingCancellationMailProperties;
-import com.bookinpass.backend.mail.resources.BusTicketMailProperties;
 import com.bookinpass.backend.mail.resources.BookingChangeMailProperties;
 import com.bookinpass.backend.mail.resources.BookingConfirmationMailProperties;
 import com.bookinpass.backend.mail.resources.BookingMailProperties;
+import com.bookinpass.backend.mail.resources.BusTicketMailProperties;
 import com.bookinpass.backend.mail.resources.FlightItinerary;
 import org.hibernate.type.descriptor.jdbc.LocalTimeJdbcType;
 import org.springframework.aot.hint.BindingReflectionHintsRegistrar;
@@ -17,6 +17,8 @@ import org.springframework.aot.hint.RuntimeHintsRegistrar;
 import org.springframework.aot.hint.TypeReference;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.ImportRuntimeHints;
+
+import java.lang.reflect.Type;
 
 /**
  * Réflexion invisible à l'analyse de l'image native. Flyway exécute les {@code COPY … FROM STDIN} (migration V6 des
@@ -34,26 +36,25 @@ import org.springframework.context.annotation.ImportRuntimeHints;
 @ImportRuntimeHints(NativeHintsConfig.Hints.class)
 class NativeHintsConfig {
 
+    private static final Type[] types = new Type[]{BaseMailProperties.class, BookingMailProperties.class, BookingMailProperties.Segment.class,
+            BookingConfirmationMailProperties.class, BookingChangeMailProperties.class, BookingCancellationMailProperties.class,
+            FlightItinerary.Trip.class, FlightItinerary.Leg.class, FlightItinerary.Stop.class, FlightItinerary.Traveller.class,
+            FlightItinerary.TravellerTrip.class, FlightItinerary.LegExtras.class, FlightItinerary.Conditions.class,
+            FlightItinerary.Condition.class, FlightItinerary.Prices.class, FlightItinerary.Buyer.class,
+            BusTicketMailProperties.class, BusTicketMailProperties.Ticket.class,
+            ActivityVoucherMailProperties.class, ActivityCancellationMailProperties.class};
+
     static class Hints implements RuntimeHintsRegistrar {
 
         @Override
         public void registerHints(RuntimeHints hints, ClassLoader classLoader) {
-            hints.reflection().registerType(TypeReference.of("org.postgresql.copy.CopyManager"), MemberCategory.INVOKE_PUBLIC_CONSTRUCTORS,
-                    MemberCategory.INVOKE_PUBLIC_METHODS);
+            hints.reflection().registerType(TypeReference.of("org.postgresql.copy.CopyManager"), MemberCategory.INVOKE_PUBLIC_CONSTRUCTORS, MemberCategory.INVOKE_PUBLIC_METHODS);
             hints.reflection().registerType(TypeReference.of("org.postgresql.core.BaseConnection"), MemberCategory.INVOKE_PUBLIC_METHODS);
             hints.reflection().registerType(LocalTimeJdbcType.class, MemberCategory.INVOKE_DECLARED_CONSTRUCTORS);
 
-            new BindingReflectionHintsRegistrar().registerReflectionHints(hints.reflection(),
-                    BaseMailProperties.class, BookingMailProperties.class, BookingMailProperties.Segment.class,
-                    BookingConfirmationMailProperties.class, BookingChangeMailProperties.class, BookingCancellationMailProperties.class,
-                    FlightItinerary.Trip.class, FlightItinerary.Leg.class, FlightItinerary.Stop.class, FlightItinerary.Traveller.class,
-                    FlightItinerary.TravellerTrip.class, FlightItinerary.LegExtras.class, FlightItinerary.Conditions.class,
-                    FlightItinerary.Condition.class, FlightItinerary.Prices.class, FlightItinerary.Buyer.class,
-                    BusTicketMailProperties.class, BusTicketMailProperties.Ticket.class,
-                    ActivityVoucherMailProperties.class, ActivityCancellationMailProperties.class);
+            new BindingReflectionHintsRegistrar().registerReflectionHints(hints.reflection(), types);
             hints.resources().registerPattern("templates/mail/*.html");
-            for (String helper : new String[]{"org.thymeleaf.expression.Lists", "org.thymeleaf.expression.Strings",
-                    "org.thymeleaf.expression.Messages"}) {
+            for (String helper : new String[]{"org.thymeleaf.expression.Lists", "org.thymeleaf.expression.Strings", "org.thymeleaf.expression.Messages"}) {
                 hints.reflection().registerType(TypeReference.of(helper), MemberCategory.INVOKE_PUBLIC_METHODS);
             }
             hints.resources().registerPattern("i18n/mail*.properties");

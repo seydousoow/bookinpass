@@ -39,7 +39,9 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class StaffNetworkService {
 
-    /** Seul exploitant aujourd'hui (Dakar Dem Dikk). */
+    /**
+     * Seul exploitant aujourd'hui (Dakar Dem Dikk).
+     */
     static final String OPERATOR = "DDD";
 
     private final TransportStationRepository stations;
@@ -48,6 +50,39 @@ public class StaffNetworkService {
     private final TransportOperatorRepository operators;
     private final CityRepository cities;
     private final AirportRepository airports;
+
+    private static StaffRouteResponse response(TransportRoute route, List<TransportSchedule> routeSchedules) {
+        return new StaffRouteResponse(route.getId(), route.getCode(), route.getNetwork().dbValue(), StaffUserService.station(route.getOrigin()),
+                StaffUserService.station(route.getDestination()), route.getPrice().stripTrailingZeros().toPlainString(),
+                TransportSearchService.serviceFee(route).stripTrailingZeros().toPlainString(), route.getCurrency(), route.getCapacity(),
+                route.isActive(), routeSchedules.stream()
+                .sorted(Comparator.comparing(TransportSchedule::getDayOfWeek).thenComparing(TransportSchedule::getDepartsAt))
+                .map(s -> new StaffRouteResponse.Schedule(s.getId(), s.getDayOfWeek().getValue(), s.getDepartsAt().toString(),
+                        s.getLastDeparture() == null ? null : s.getLastDeparture().toString()))
+                .toList());
+    }
+
+    /**
+     * Prix en francs entiers (XOF, sans décimales).
+     */
+    private static BigDecimal wholeFrancs(BigDecimal price) {
+        if (price.stripTrailingZeros().scale() > 0) {
+            throw invalid("invalid-price", "Prices are in whole CFA francs.");
+        }
+        return price;
+    }
+
+    private static String blankToNull(String value) {
+        return value == null || value.isBlank() ? null : value.trim();
+    }
+
+    private static StaffException notFound(String code) {
+        return new StaffException(HttpStatus.NOT_FOUND, code, "Not found.");
+    }
+
+    private static StaffException invalid(String code, String message) {
+        return new StaffException(HttpStatus.BAD_REQUEST, code, message);
+    }
 
     @Transactional(readOnly = true)
     public List<StaffStationResponse> stations() {
@@ -82,7 +117,9 @@ public class StaffNetworkService {
         return StaffUserService.station(station);
     }
 
-    /** Toutes les lignes, en vente ou non, avec leurs horaires (par jour puis heure). */
+    /**
+     * Toutes les lignes, en vente ou non, avec leurs horaires (par jour puis heure).
+     */
     @Transactional(readOnly = true)
     public List<StaffRouteResponse> routes() {
         Map<Integer, List<TransportSchedule>> byRoute = schedules.findAll().stream()
@@ -118,7 +155,9 @@ public class StaffNetworkService {
         return response(route, schedules.findByRouteIdOrderByDayOfWeekAscDepartsAtAsc(id));
     }
 
-    /** Un horaire par jour demandé ; un jour qui l'a déjà est laissé tel quel. */
+    /**
+     * Un horaire par jour demandé ; un jour qui l'a déjà est laissé tel quel.
+     */
     @Transactional
     public StaffRouteResponse addSchedule(Integer routeId, StaffScheduleRequest request) {
         TransportRoute route = routes.findById(routeId).orElseThrow(() -> notFound("route-not-found"));
@@ -135,7 +174,9 @@ public class StaffNetworkService {
         return response(route, schedules.findByRouteIdOrderByDayOfWeekAscDepartsAtAsc(routeId));
     }
 
-    /** Horaire retiré : plus de nouveaux départs ; ceux déjà vendus restent (billets valables). */
+    /**
+     * Horaire retiré : plus de nouveaux départs ; ceux déjà vendus restent (billets valables).
+     */
     @Transactional
     public StaffRouteResponse deleteSchedule(Integer id) {
         TransportSchedule schedule = schedules.findById(id).orElseThrow(() -> notFound("schedule-not-found"));
@@ -143,36 +184,5 @@ public class StaffNetworkService {
         schedules.delete(schedule);
         schedules.flush();
         return response(route, schedules.findByRouteIdOrderByDayOfWeekAscDepartsAtAsc(route.getId()));
-    }
-
-    private static StaffRouteResponse response(TransportRoute route, List<TransportSchedule> routeSchedules) {
-        return new StaffRouteResponse(route.getId(), route.getCode(), route.getNetwork().dbValue(), StaffUserService.station(route.getOrigin()),
-                StaffUserService.station(route.getDestination()), route.getPrice().stripTrailingZeros().toPlainString(),
-                TransportSearchService.serviceFee(route).stripTrailingZeros().toPlainString(), route.getCurrency(), route.getCapacity(),
-                route.isActive(), routeSchedules.stream()
-                .sorted(Comparator.comparing(TransportSchedule::getDayOfWeek).thenComparing(TransportSchedule::getDepartsAt))
-                .map(s -> new StaffRouteResponse.Schedule(s.getId(), s.getDayOfWeek().getValue(), s.getDepartsAt().toString(),
-                        s.getLastDeparture() == null ? null : s.getLastDeparture().toString()))
-                .toList());
-    }
-
-    /** Prix en francs entiers (XOF, sans décimales). */
-    private static BigDecimal wholeFrancs(BigDecimal price) {
-        if (price.stripTrailingZeros().scale() > 0) {
-            throw invalid("invalid-price", "Prices are in whole CFA francs.");
-        }
-        return price;
-    }
-
-    private static String blankToNull(String value) {
-        return value == null || value.isBlank() ? null : value.trim();
-    }
-
-    private static StaffException notFound(String code) {
-        return new StaffException(HttpStatus.NOT_FOUND, code, "Not found.");
-    }
-
-    private static StaffException invalid(String code, String message) {
-        return new StaffException(HttpStatus.BAD_REQUEST, code, message);
     }
 }

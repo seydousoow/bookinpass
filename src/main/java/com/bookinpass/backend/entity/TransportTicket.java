@@ -16,7 +16,9 @@ import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.Instant;
 
-/** Billet d'un passager : son code est présenté à l'embarquement, valable une fois la réservation confirmée. */
+/**
+ * Billet d'un passager : son code est présenté à l'embarquement, valable une fois la réservation confirmée.
+ */
 @Entity
 @Table(name = "transport_ticket")
 @Getter
@@ -40,7 +42,9 @@ public class TransportTicket {
     @Column(name = "family_name", nullable = false)
     private String familyName;
 
-    /** Contrôle : une seule fois, par requête atomique ({@code TransportTicketRepository#scan}). */
+    /**
+     * Contrôle : une seule fois, par requête atomique ({@code TransportTicketRepository#scan}).
+     */
     @Column(name = "scanned_at", insertable = false, updatable = false)
     private Instant scannedAt;
 

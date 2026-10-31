@@ -3,7 +3,9 @@ package com.bookinpass.backend.dto.duffel;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-/** Corps de {@code POST /identity/customer/users} et {@code PUT /identity/customer/users/{id}} : client Duffel, un par e-mail. */
+/**
+ * Corps de {@code POST /identity/customer/users} et {@code PUT /identity/customer/users/{id}} : client Duffel, un par e-mail.
+ */
 public record DuffelCustomerUser(Data data) {
 
     @JsonInclude(JsonInclude.Include.NON_NULL)

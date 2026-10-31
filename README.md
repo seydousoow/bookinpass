@@ -1,3 +1,7 @@
+[![backend-image](https://github.com/seydousoow/bookinpass/actions/workflows/backend-image.yml/badge.svg)](https://github.com/seydousoow/bookinpass/actions/workflows/backend-image.yml)
+[![Qodana](https://github.com/seydousoow/bookinpass/actions/workflows/qodana_code_quality.yml/badge.svg)](https://github.com/seydousoow/bookinpass/actions/workflows/qodana_code_quality.yml)
+[![CodeQL](https://github.com/seydousoow/bookinpass/actions/workflows/github-code-scanning/codeql/badge.svg)](https://github.com/seydousoow/bookinpass/actions/workflows/github-code-scanning/codeql)
+
 # Book In Pass — backend Spring Boot
 
 API consommée par le site et le back-office Angular du dépôt [bookinpass-nx](https://github.com/seydousoow/bookinpass-nx). Java 25, Spring Boot 4.1, Spring Data JPA (Hibernate 7),

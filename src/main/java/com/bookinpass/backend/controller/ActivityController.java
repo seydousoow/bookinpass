@@ -5,8 +5,8 @@ import com.bookinpass.backend.config.StripeProperties;
 import com.bookinpass.backend.dto.request.ActivityBookingRequest;
 import com.bookinpass.backend.dto.request.ActivityCancellationRequest;
 import com.bookinpass.backend.dto.request.ActivityReviewRequest;
-import com.bookinpass.backend.dto.request.TransportConfirmationRequest;
 import com.bookinpass.backend.dto.request.MobilePaymentRequest;
+import com.bookinpass.backend.dto.request.TransportConfirmationRequest;
 import com.bookinpass.backend.dto.response.ActivityBookingResponse;
 import com.bookinpass.backend.dto.response.ActivityCardResponse;
 import com.bookinpass.backend.dto.response.ActivityDestinationResponse;
@@ -14,14 +14,14 @@ import com.bookinpass.backend.dto.response.ActivityDetailResponse;
 import com.bookinpass.backend.dto.response.ActivityHoldResponse;
 import com.bookinpass.backend.dto.response.ActivityReviewResponse;
 import com.bookinpass.backend.dto.response.ActivitySlotResponse;
-import com.bookinpass.backend.dto.response.PageResponse;
 import com.bookinpass.backend.dto.response.MobilePaymentResponse;
+import com.bookinpass.backend.dto.response.PageResponse;
 import com.bookinpass.backend.dto.response.PaymentMethodsResponse;
-import com.bookinpass.backend.service.activity.ActivityBookingService;
 import com.bookinpass.backend.service.activity.ActivityCatalogService;
-import com.bookinpass.backend.service.activity.ActivityMobilePaymentService;
-import com.bookinpass.backend.service.payment.PayDunyaCheckout;
 import com.bookinpass.backend.service.activity.ReviewService;
+import com.bookinpass.backend.service.booking.ActivityBookingService;
+import com.bookinpass.backend.service.booking.ActivityMobilePaymentService;
+import com.bookinpass.backend.service.payment.PayDunyaCheckout;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -160,7 +160,7 @@ public class ActivityController {
     @PostMapping(path = "bookings/{reference}/mobile-payment", consumes = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Payer via PayDunya", description = "Moyen, numéro national et code éventuel contrôlés ; ferme la session de carte, crée la facture PayDunya et la paie (SOFTPAY), ou rend la page de la carte PayDunya.")
     public MobilePaymentResponse mobilePayment(@PathVariable @Pattern(regexp = REFERENCE) String reference,
-                                                       @Valid @RequestBody MobilePaymentRequest request) {
+                                               @Valid @RequestBody MobilePaymentRequest request) {
         return mobile.start(reference.toUpperCase(), request);
     }
 

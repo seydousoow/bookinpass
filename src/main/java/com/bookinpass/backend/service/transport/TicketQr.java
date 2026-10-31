@@ -6,6 +6,7 @@ import com.google.zxing.WriterException;
 import com.google.zxing.common.BitMatrix;
 import com.google.zxing.qrcode.QRCodeWriter;
 import com.google.zxing.qrcode.decoder.ErrorCorrectionLevel;
+import org.jspecify.annotations.NonNull;
 
 import java.io.ByteArrayOutputStream;
 import java.nio.ByteBuffer;
@@ -21,20 +22,13 @@ import java.util.zip.DeflaterOutputStream;
  */
 public final class TicketQr {
 
-    /** Correction M (15 %) : lisible sur un écran fissuré ou une impression froissée. Marge : 2 modules. */
+    /**
+     * Correction M (15 %) : lisible sur un écran fissuré ou une impression froissée. Marge : 2 modules.
+     */
     private static final Map<EncodeHintType, Object> HINTS = Map.of(EncodeHintType.ERROR_CORRECTION, ErrorCorrectionLevel.M,
             EncodeHintType.MARGIN, 2);
 
     private TicketQr() {
-    }
-
-    /**
-     * Tracé SVG du QR code, à poser dans {@code <svg viewBox="0 0 size size"><path d="…"/></svg>} : un rectangle par
-     * suite de modules noirs d'une même ligne.
-     *
-     * @param size côté en modules, marges comprises
-     */
-    public record Svg(int size, String path) {
     }
 
     public static Svg svg(String code) {
@@ -57,24 +51,14 @@ public final class TicketQr {
         return new Svg(matrix.getWidth(), path.toString());
     }
 
-    /** PNG en niveaux de gris, {@code scale} pixels par module (noir sur blanc). */
+    /**
+     * PNG en niveaux de gris, {@code scale} pixels par module (noir sur blanc).
+     */
     public static byte[] png(String code, int scale) {
         BitMatrix matrix = matrix(code);
         int side = matrix.getWidth() * scale;
         // Une ligne = un octet de filtre (0 : aucun) puis un octet par pixel.
-        ByteArrayOutputStream raw = new ByteArrayOutputStream(side * (side + 1));
-        for (int y = 0; y < side; y++) {
-            raw.write(0);
-            for (int x = 0; x < side; x++) {
-                raw.write(matrix.get(x / scale, y / scale) ? 0x00 : 0xFF);
-            }
-        }
-        ByteArrayOutputStream compressed = new ByteArrayOutputStream();
-        try (DeflaterOutputStream deflater = new DeflaterOutputStream(compressed)) {
-            raw.writeTo(deflater);
-        } catch (java.io.IOException e) {
-            throw new IllegalStateException(e);
-        }
+        ByteArrayOutputStream compressed = getCompressed(scale, side, matrix);
         ByteArrayOutputStream png = new ByteArrayOutputStream();
         png.writeBytes(new byte[]{(byte) 0x89, 'P', 'N', 'G', '\r', '\n', 0x1A, '\n'});
         // IHDR : largeur, hauteur, 8 bits par pixel, niveaux de gris, compression, filtre et entrelacement standard.
@@ -83,6 +67,23 @@ public final class TicketQr {
         chunk(png, "IDAT", compressed.toByteArray());
         chunk(png, "IEND", new byte[0]);
         return png.toByteArray();
+    }
+
+    private static @NonNull ByteArrayOutputStream getCompressed(int scale, int side, BitMatrix matrix) {
+        ByteArrayOutputStream raw = new ByteArrayOutputStream(side * (side + 1));
+        for (int y = 0; y < side; y++) {
+            raw.write(0);
+            for (int x = 0; x < side; x++) {
+                raw.write(matrix.get(x / scale, y / scale) ? 0x00 : 0xFF);
+            }
+        }
+        ByteArrayOutputStream compressed = new ByteArrayOutputStream();
+        try (DeflaterOutputStream dlt = new DeflaterOutputStream(compressed)) {
+            raw.writeTo(dlt);
+        } catch (java.io.IOException e) {
+            throw new IllegalStateException(e);
+        }
+        return compressed;
     }
 
     private static BitMatrix matrix(String code) {
@@ -102,5 +103,14 @@ public final class TicketQr {
         png.writeBytes(name);
         png.writeBytes(data);
         png.writeBytes(ByteBuffer.allocate(4).putInt((int) crc.getValue()).array());
+    }
+
+    /**
+     * Tracé SVG du QR code, à poser dans {@code <svg viewBox="0 0 size size"><path d="…"/></svg>} : un rectangle par
+     * suite de modules noirs d'une même ligne.
+     *
+     * @param size côté en modules, marges comprises
+     */
+    public record Svg(int size, String path) {
     }
 }

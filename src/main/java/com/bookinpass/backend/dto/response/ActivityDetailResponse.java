@@ -30,7 +30,9 @@ public record ActivityDetailResponse(Integer id, String slug, String title, Acti
                                      @JsonProperty("featured_reviews") List<ActivityReviewResponse> featuredReviews,
                                      List<ActivityCardResponse> related) {
 
-    /** @param childPrice prix par enfant ; nul = pas de tarif enfant (les enfants paient le prix adulte) */
+    /**
+     * @param childPrice prix par enfant ; nul = pas de tarif enfant (les enfants paient le prix adulte)
+     */
     public record Option(Integer id, String title, String description, String price,
                          @JsonProperty("original_price") String originalPrice, @JsonProperty("child_price") String childPrice) {
     }

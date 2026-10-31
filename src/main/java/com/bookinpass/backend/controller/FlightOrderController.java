@@ -20,7 +20,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-/** Réservation d'un vol, une fois le paiement autorisé par Stripe. */
+/**
+ * Réservation d'un vol, une fois le paiement autorisé par Stripe.
+ */
 @RestController
 @RequiredArgsConstructor
 @Tag(name = OpenApiConfig.TAG_PAYMENTS)

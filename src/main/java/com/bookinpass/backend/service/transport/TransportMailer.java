@@ -27,7 +27,9 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class TransportMailer {
 
-    /** 6 pixels par module : environ 200 px de côté, net à l'écran comme à l'impression. */
+    /**
+     * 6 pixels par module : environ 200 px de côté, net à l'écran comme à l'impression.
+     */
     private static final int QR_SCALE = 6;
     private static final DateTimeFormatter TIME = DateTimeFormatter.ofPattern("HH:mm").withZone(TransportSearchService.ZONE);
 

@@ -4,7 +4,9 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.util.List;
 
-/** Départ, ses passagers (billets confirmés), ses bagages et ses incidents. */
+/**
+ * Départ, ses passagers (billets confirmés), ses bagages et ses incidents.
+ */
 public record StaffDepartureDetailResponse(StaffDepartureResponse departure, List<Passenger> passengers, List<StaffLuggageResponse> luggage,
                                            List<StaffIncidentResponse> incidents) {
 

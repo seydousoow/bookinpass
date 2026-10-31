@@ -44,6 +44,26 @@ public class StaffDeskService {
     private final TransportMailer mailer;
     private final Clock clock;
 
+    private static StaffRefundResponse refund(TransportMobilePayment payment) {
+        TransportBooking booking = payment.getBooking();
+        TransportRoute route = booking.getDeparture().getRoute();
+        return new StaffRefundResponse(payment.getId(), booking.getReference(),
+                booking.getTickets().stream().map(t -> t.getGivenName() + " " + t.getFamilyName()).collect(Collectors.joining(", ")),
+                booking.getEmail(), booking.getPhone(), route.getOrigin().placeName(), route.getDestination().placeName(),
+                text(booking.getDeparture().getDepartsAt()), payment.getAmount().stripTrailingZeros().toPlainString(), payment.getCurrency(),
+                payment.getProvider(), payment.getInvoiceToken(), payment.getReceiptUrl(), text(payment.getCompletedAt()), payment.getStatus(),
+                text(payment.getRefundedAt()), payment.getRefundedBy() == null ? null : payment.getRefundedBy().getFullName(), payment.getRefundNote());
+    }
+
+    private static boolean visible(StaffPrincipal by, TransportBooking booking) {
+        TransportRoute route = booking.getDeparture().getRoute();
+        return by.canSee(route.getOrigin().getId()) || by.canSee(route.getDestination().getId());
+    }
+
+    private static String text(Instant instant) {
+        return instant == null ? null : instant.toString();
+    }
+
     /**
      * Recherche : 6 caractères = référence ; au moins 6 chiffres = fin du numéro de téléphone ; sinon début du nom de
      * famille d'un passager (2 lettres au moins).
@@ -64,7 +84,9 @@ public class StaffDeskService {
                 .toList();
     }
 
-    /** Billets renvoyés à l'adresse de la réservation (confirmée) : chef de gare ou responsable. */
+    /**
+     * Billets renvoyés à l'adresse de la réservation (confirmée) : chef de gare ou responsable.
+     */
     @Transactional(readOnly = true)
     public StaffBookingResponse resendTickets(StaffPrincipal by, String reference) {
         if (by.role() == StaffRole.INSPECTOR) {
@@ -81,7 +103,9 @@ public class StaffDeskService {
         return response(booking);
     }
 
-    /** Paiements mobiles à rembourser (par défaut), ou aussi ceux déjà remboursés. */
+    /**
+     * Paiements mobiles à rembourser (par défaut), ou aussi ceux déjà remboursés.
+     */
     @Transactional(readOnly = true)
     public List<StaffRefundResponse> refunds(boolean all) {
         List<String> statuses = all ? List.of(TransportMobilePayment.REFUND_NEEDED, TransportMobilePayment.REFUNDED)
@@ -89,7 +113,9 @@ public class StaffDeskService {
         return mobilePayments.findByStatuses(statuses).stream().map(StaffDeskService::refund).toList();
     }
 
-    /** Remboursement fait à la main : noté, avec la personne qui l'a fait. */
+    /**
+     * Remboursement fait à la main : noté, avec la personne qui l'a fait.
+     */
     @Transactional
     public StaffRefundResponse markRefunded(StaffPrincipal by, Integer id, String note) {
         TransportMobilePayment payment = mobilePayments.findById(id)
@@ -124,25 +150,5 @@ public class StaffDeskService {
                 booking.getTickets().stream()
                         .map(t -> new StaffBookingResponse.Ticket(t.getGivenName(), t.getFamilyName(), valid ? t.getCode() : null, text(t.getScannedAt())))
                         .toList());
-    }
-
-    private static StaffRefundResponse refund(TransportMobilePayment payment) {
-        TransportBooking booking = payment.getBooking();
-        TransportRoute route = booking.getDeparture().getRoute();
-        return new StaffRefundResponse(payment.getId(), booking.getReference(),
-                booking.getTickets().stream().map(t -> t.getGivenName() + " " + t.getFamilyName()).collect(Collectors.joining(", ")),
-                booking.getEmail(), booking.getPhone(), route.getOrigin().placeName(), route.getDestination().placeName(),
-                text(booking.getDeparture().getDepartsAt()), payment.getAmount().stripTrailingZeros().toPlainString(), payment.getCurrency(),
-                payment.getProvider(), payment.getInvoiceToken(), payment.getReceiptUrl(), text(payment.getCompletedAt()), payment.getStatus(),
-                text(payment.getRefundedAt()), payment.getRefundedBy() == null ? null : payment.getRefundedBy().getFullName(), payment.getRefundNote());
-    }
-
-    private static boolean visible(StaffPrincipal by, TransportBooking booking) {
-        TransportRoute route = booking.getDeparture().getRoute();
-        return by.canSee(route.getOrigin().getId()) || by.canSee(route.getDestination().getId());
-    }
-
-    private static String text(Instant instant) {
-        return instant == null ? null : instant.toString();
     }
 }

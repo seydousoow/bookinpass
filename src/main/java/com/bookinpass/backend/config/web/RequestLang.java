@@ -43,7 +43,9 @@ public final class RequestLang {
         return DEFAULT;
     }
 
-    /** Posée par {@link LangFilter} ; ailleurs (tests, tâche hors requête), toujours suivie de {@link #clear()}. */
+    /**
+     * Posée par {@link LangFilter} ; ailleurs (tests, tâche hors requête), toujours suivie de {@link #clear()}.
+     */
     public static void set(String lang) {
         CURRENT.set(lang);
     }

@@ -5,22 +5,30 @@ import jakarta.persistence.Converter;
 
 import java.util.Arrays;
 
-/** Statut de la fiche d'une activité (colonne {@code activity.status}). */
+/**
+ * Statut de la fiche d'une activité (colonne {@code activity.status}).
+ */
 public enum ActivityStatus {
-    /** Brouillon : invisible sur le site. */
+    /**
+     * Brouillon : invisible sur le site.
+     */
     DRAFT,
-    /** En vente sur le site. */
+    /**
+     * En vente sur le site.
+     */
     PUBLISHED,
-    /** Retirée de la vente ; réservations et avis gardés. */
+    /**
+     * Retirée de la vente ; réservations et avis gardés.
+     */
     ARCHIVED;
-
-    public String dbValue() {
-        return name().toLowerCase();
-    }
 
     public static ActivityStatus of(String value) {
         return Arrays.stream(values()).filter(s -> s.dbValue().equals(value)).findFirst()
                 .orElseThrow(() -> new IllegalArgumentException("Unknown status " + value));
+    }
+
+    public String dbValue() {
+        return name().toLowerCase();
     }
 
     @Converter(autoApply = true)

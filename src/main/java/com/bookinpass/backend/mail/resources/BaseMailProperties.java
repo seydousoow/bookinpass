@@ -24,25 +24,34 @@ import java.util.Set;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public abstract class BaseMailProperties {
 
-    /** Valeurs nulles gardées : le gabarit lit {@code ${stop.country}} sans erreur de propriété absente. */
+    /**
+     * Valeurs nulles gardées : le gabarit lit {@code ${stop.country}} sans erreur de propriété absente.
+     */
     private static final JsonMapper MAPPER = JsonMapper.builder().build();
 
     private MailLang lang;
-    /** Nom du destinataire (« Bonjour … »). */
+    /**
+     * Nom du destinataire (« Bonjour … »).
+     */
     private String name;
     private String destination;
     private Set<String> bccRecipients;
-    /** Origine du site, posée par {@code MailService}.
+    /**
+     * Origine du site, posée par {@code MailService}.
      * -- SETTER --
      * Lien posé une fois l'objet construit (origine du site, configuration).
      */
     @Setter
     private String siteUrl;
-    /** Pièces jointes (nom du fichier → contenu), 8 Mo au plus chacune ; hors des variables du gabarit. */
+    /**
+     * Pièces jointes (nom du fichier → contenu), 8 Mo au plus chacune ; hors des variables du gabarit.
+     */
     @JsonIgnore
     @Builder.Default
     private Map<String, byte[]> attachments = new HashMap<>();
-    /** Images PNG affichées dans le corps (identifiant → contenu), lues par le gabarit en {@code src="cid:identifiant"}. */
+    /**
+     * Images PNG affichées dans le corps (identifiant → contenu), lues par le gabarit en {@code src="cid:identifiant"}.
+     */
     @JsonIgnore
     @Builder.Default
     private Map<String, byte[]> inlineImages = new HashMap<>();
@@ -50,7 +59,9 @@ public abstract class BaseMailProperties {
     @JsonIgnore
     public abstract MailType getMailType();
 
-    /** Variables du gabarit : tous les champs (classe fille comprise), en tables imbriquées. */
+    /**
+     * Variables du gabarit : tous les champs (classe fille comprise), en tables imbriquées.
+     */
     @SuppressWarnings("unchecked")
     public Map<String, Object> toHashMap() {
         Map<String, Object> map = new HashMap<String, Object>(MAPPER.convertValue(this, Map.class));

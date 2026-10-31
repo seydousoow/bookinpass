@@ -42,7 +42,6 @@ public class CacheConfig {
     public static final String AIRPORTS = "airports";
     public static final String AIRLINES = "airlines";
     public static final String RATES = "rates";
-    /** Commande Duffel, clé {@code bip::flight::{orderId}}. */
     public static final String FLIGHT_ORDERS = "flight";
 
     /**

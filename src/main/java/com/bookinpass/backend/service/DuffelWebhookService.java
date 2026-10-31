@@ -36,7 +36,23 @@ public class DuffelWebhookService {
     private final FlightOrderCache orderCache;
     private final FlightBookingService bookings;
 
-    /** @return type de l'événement reçu */
+    /**
+     * Commande visée : {@code order_id} de l'objet (annulation, changement), l'objet lui-même, ou la clé d'idempotence.
+     */
+    private static Optional<String> orderIdOf(JsonNode event) {
+        JsonNode object = event.path("data").path("object");
+        for (JsonNode candidate : new JsonNode[]{object.path("order_id"), object.path("id"), event.path("idempotency_key")}) {
+            String value = candidate.asString("");
+            if (value.startsWith("ord_")) {
+                return Optional.of(value);
+            }
+        }
+        return Optional.empty();
+    }
+
+    /**
+     * @return type de l'événement reçu
+     */
     public String handle(byte[] payload, String signature) {
         if (properties.webhookSecret() == null || properties.webhookSecret().isBlank()) {
             throw new PaymentException(HttpStatus.SERVICE_UNAVAILABLE, "webhooks-unavailable", "Webhooks are not configured.");
@@ -84,17 +100,5 @@ public class DuffelWebhookService {
         } catch (RuntimeException e) {
             log.error("Cancellation mail for order {} not sent", orderId, e);
         }
-    }
-
-    /** Commande visée : {@code order_id} de l'objet (annulation, changement), l'objet lui-même, ou la clé d'idempotence. */
-    private static Optional<String> orderIdOf(JsonNode event) {
-        JsonNode object = event.path("data").path("object");
-        for (JsonNode candidate : new JsonNode[]{object.path("order_id"), object.path("id"), event.path("idempotency_key")}) {
-            String value = candidate.asString("");
-            if (value.startsWith("ord_")) {
-                return Optional.of(value);
-            }
-        }
-        return Optional.empty();
     }
 }

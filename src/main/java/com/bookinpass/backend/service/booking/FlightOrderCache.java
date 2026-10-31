@@ -27,7 +27,9 @@ public class FlightOrderCache {
         this.cache = Objects.requireNonNull(caches.getCache(CacheConfig.FLIGHT_ORDERS), "cache " + CacheConfig.FLIGHT_ORDERS);
     }
 
-    /** Réponse Duffel ({@code {"data": order}}), depuis le cache ou relue chez Duffel. */
+    /**
+     * Réponse Duffel ({@code {"data": order}}), depuis le cache ou relue chez Duffel.
+     */
     public String get(String orderId) {
         String cached = cache.get(orderId, String.class);
         if (cached != null) {
@@ -38,12 +40,16 @@ public class FlightOrderCache {
         return order;
     }
 
-    /** Commande tout juste reçue de Duffel (création) : mise en cache telle quelle. */
+    /**
+     * Commande tout juste reçue de Duffel (création) : mise en cache telle quelle.
+     */
     public void put(String orderId, String order) {
         cache.put(orderId, order);
     }
 
-    /** La commande a changé : relue chez Duffel ; à défaut, l'entrée est retirée plutôt que servie périmée. */
+    /**
+     * La commande a changé : relue chez Duffel ; à défaut, l'entrée est retirée plutôt que servie périmée.
+     */
     public void refresh(String orderId) {
         try {
             cache.put(orderId, duffel.getOrder(orderId));

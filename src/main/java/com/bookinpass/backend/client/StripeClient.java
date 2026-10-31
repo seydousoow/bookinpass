@@ -107,12 +107,16 @@ public class StripeClient {
         return post("/v1/checkout/sessions/" + sessionId + "/expire", new LinkedMultiValueMap<>(), idempotencyKey, "checkout session expiry");
     }
 
-    /** {@code POST /v1/payment_intents/{id}/capture} — encaisse l'autorisation, une fois la commande créée. */
+    /**
+     * {@code POST /v1/payment_intents/{id}/capture} — encaisse l'autorisation, une fois la commande créée.
+     */
     public JsonNode capturePaymentIntent(String paymentIntentId, String idempotencyKey) {
         return post("/v1/payment_intents/" + paymentIntentId + "/capture", new LinkedMultiValueMap<>(), idempotencyKey, "capture");
     }
 
-    /** {@code POST /v1/payment_intents/{id}/cancel} — libère l'autorisation : rien n'est débité. */
+    /**
+     * {@code POST /v1/payment_intents/{id}/cancel} — libère l'autorisation : rien n'est débité.
+     */
     public JsonNode cancelPaymentIntent(String paymentIntentId, String reason, String idempotencyKey) {
         MultiValueMap<String, String> form = new LinkedMultiValueMap<>();
         form.add("cancellation_reason", reason);

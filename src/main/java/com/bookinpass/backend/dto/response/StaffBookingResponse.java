@@ -28,7 +28,9 @@ public record StaffBookingResponse(String reference,
                                    @JsonProperty("confirmed_at") String confirmedAt,
                                    List<Ticket> tickets) {
 
-    /** Code présent une fois la réservation confirmée. */
+    /**
+     * Code présent une fois la réservation confirmée.
+     */
     public record Ticket(@JsonProperty("given_name") String givenName, @JsonProperty("family_name") String familyName, String code,
                          @JsonProperty("scanned_at") String scannedAt) {
     }

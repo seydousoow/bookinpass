@@ -1,12 +1,12 @@
 package com.bookinpass.backend.controller;
 
+import com.bookinpass.backend.config.OpenApiConfig;
 import com.bookinpass.backend.dto.request.StaffIncidentRequest;
 import com.bookinpass.backend.dto.request.StaffResolveRequest;
 import com.bookinpass.backend.dto.response.StaffIncidentResponse;
-import com.bookinpass.backend.staff.StaffOperationsService;
-import com.bookinpass.backend.config.OpenApiConfig;
 import com.bookinpass.backend.entity.StaffRole;
 import com.bookinpass.backend.staff.StaffAccess;
+import com.bookinpass.backend.staff.StaffOperationsService;
 import com.bookinpass.backend.staff.StaffPrincipal;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -25,7 +25,9 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
-/** Incidents : signalés par tout le personnel, clos par un chef de gare ou un responsable. */
+/**
+ * Incidents : signalés par tout le personnel, clos par un chef de gare ou un responsable.
+ */
 @RestController
 @RequiredArgsConstructor
 @Tag(name = OpenApiConfig.TAG_STAFF)

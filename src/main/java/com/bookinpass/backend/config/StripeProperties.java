@@ -11,8 +11,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * @param frontendUrl    origine du site ({@code https://bookinpass.com}) : base du {@code return_url} des moyens à redirection
  */
 @ConfigurationProperties("bookinpass.stripe")
-public record StripeProperties(String baseUrl, String secretKey, String publishableKey, String apiVersion, String webhookSecret,
-                               String frontendUrl) {
+public record StripeProperties(String baseUrl, String secretKey, String publishableKey, String apiVersion, String webhookSecret, String frontendUrl) {
 
     public boolean enabled() {
         return secretKey != null && !secretKey.isBlank() && publishableKey != null && !publishableKey.isBlank();

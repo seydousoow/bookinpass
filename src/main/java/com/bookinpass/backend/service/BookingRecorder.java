@@ -50,6 +50,52 @@ public class BookingRecorder {
     private final JsonMapper json;
     private final Clock clock;
 
+    private static void describe(StripePayment payment, JsonNode session, JsonNode method) {
+        payment.describe(text(method.path("type")), text(method.path("card").path("brand")), text(method.path("card").path("last4")),
+                text(session.path("customer_details").path("email")), text(session.path("customer_details").path("name")));
+    }
+
+    /**
+     * La commande visée : {@code order_id} de l'objet (annulation, changement), l'objet lui-même, ou la clé d'idempotence.
+     */
+    private static Optional<String> orderIdOf(JsonNode event, JsonNode object) {
+        for (String candidate : new String[]{text(object.path("order_id")), text(object.path("id")), text(event.path("idempotency_key"))}) {
+            if (candidate != null && candidate.startsWith("ord_")) {
+                return Optional.of(candidate);
+            }
+        }
+        return Optional.empty();
+    }
+
+    private static void withRefund(FlightOrderEvent history, JsonNode cancellation) {
+        String amount = text(cancellation.path("refund_amount"));
+        history.withRefund(amount == null ? null : new BigDecimal(amount), text(cancellation.path("refund_currency")),
+                text(cancellation.path("refund_to")));
+    }
+
+    /**
+     * Duffel écrit ses dates {@code 2020-04-11 15:48:11.642000+00:00} ou en ISO 8601 strict.
+     */
+    static Instant parseDuffelTime(String value) {
+        return OffsetDateTime.parse(value.replace(' ', 'T')).toInstant();
+    }
+
+    /**
+     * Départ du dernier trajet : l'aller d'un aller simple, le retour d'un aller-retour. Date locale de l'aéroport
+     * ({@code departing_at} n'a pas de fuseau), nulle si l'offre ne la donne pas.
+     */
+    static LocalDate lastTravelDate(JsonNode slices) {
+        if (!slices.isArray() || slices.isEmpty()) {
+            return null;
+        }
+        String departure = text(slices.get(slices.size() - 1).path("segments").path(0).path("departing_at"));
+        return departure == null || departure.length() < 10 ? null : LocalDate.parse(departure.substring(0, 10));
+    }
+
+    private static String text(JsonNode node) {
+        return node.isString() && !node.asString().isBlank() ? node.asString() : null;
+    }
+
     /**
      * Autorisation obtenue : le paiement est enregistré (une seule fois). Session relue chez Stripe (PaymentIntent
      * dépliée) ou reçue par webhook (PaymentIntent réduite à son identifiant). Les deux arrivent souvent ensemble :
@@ -76,18 +122,15 @@ public class BookingRecorder {
         paymentEvents.save(new StripePaymentEvent(payment, "authorised", null, payment.getAmount(), null, payment.getAuthorisedAt()));
     }
 
-    private static void describe(StripePayment payment, JsonNode session, JsonNode method) {
-        payment.describe(text(method.path("type")), text(method.path("card").path("brand")), text(method.path("card").path("last4")),
-                text(session.path("customer_details").path("email")), text(session.path("customer_details").path("name")));
-    }
-
-    /** Autorisation libérée (prix changé, commande refusée) : rien n'a été débité. */
+    /**
+     * Autorisation libérée (prix changé, commande refusée) : rien n'a été débité.
+     */
     @Transactional
     public void recordRelease(String sessionId, String reason) {
         payments.findByCheckoutSessionId(sessionId).ifPresent(payment -> {
             Instant now = clock.instant();
             payment.released(reason, now);
-            paymentEvents.save(new StripePaymentEvent(payment, "released", null, null, details("reason", reason), now));
+            paymentEvents.save(new StripePaymentEvent(payment, "released", null, null, details(reason), now));
         });
     }
 
@@ -107,7 +150,7 @@ public class BookingRecorder {
     public void recordCaptureFailure(String sessionId, String reason) {
         payments.findByCheckoutSessionId(sessionId).ifPresent(payment -> {
             payment.captureFailed(reason);
-            paymentEvents.save(new StripePaymentEvent(payment, "capture_failed", null, null, details("reason", reason), clock.instant()));
+            paymentEvents.save(new StripePaymentEvent(payment, "capture_failed", null, null, details(reason), clock.instant()));
         });
     }
 
@@ -238,27 +281,6 @@ public class BookingRecorder {
         return true;
     }
 
-    /** La commande visée : {@code order_id} de l'objet (annulation, changement), l'objet lui-même, ou la clé d'idempotence. */
-    private static Optional<String> orderIdOf(JsonNode event, JsonNode object) {
-        for (String candidate : new String[]{text(object.path("order_id")), text(object.path("id")), text(event.path("idempotency_key"))}) {
-            if (candidate != null && candidate.startsWith("ord_")) {
-                return Optional.of(candidate);
-            }
-        }
-        return Optional.empty();
-    }
-
-    private static void withRefund(FlightOrderEvent history, JsonNode cancellation) {
-        String amount = text(cancellation.path("refund_amount"));
-        history.withRefund(amount == null ? null : new BigDecimal(amount), text(cancellation.path("refund_currency")),
-                text(cancellation.path("refund_to")));
-    }
-
-    /** Duffel écrit ses dates {@code 2020-04-11 15:48:11.642000+00:00} ou en ISO 8601 strict. */
-    static Instant parseDuffelTime(String value) {
-        return OffsetDateTime.parse(value.replace(' ', 'T')).toInstant();
-    }
-
     @Transactional
     public void linkDuffelUser(Integer userId, String duffelUserId) {
         users.findById(userId).ifPresent(user -> user.linkDuffelUser(duffelUserId));
@@ -289,18 +311,6 @@ public class BookingRecorder {
     }
 
     /**
-     * Départ du dernier trajet : l'aller d'un aller simple, le retour d'un aller-retour. Date locale de l'aéroport
-     * ({@code departing_at} n'a pas de fuseau), nulle si l'offre ne la donne pas.
-     */
-    static LocalDate lastTravelDate(JsonNode slices) {
-        if (!slices.isArray() || slices.isEmpty()) {
-            return null;
-        }
-        String departure = text(slices.get(slices.size() - 1).path("segments").path(0).path("departing_at"));
-        return departure == null || departure.length() < 10 ? null : LocalDate.parse(departure.substring(0, 10));
-    }
-
-    /**
      * Annulation confirmée depuis le site : la commande passe à {@code cancelled}, le remboursement Duffel est gardé
      * dans l'historique. Le webhook {@code order_cancellation.confirmed} qui suit est dédoublonné par son identifiant.
      *
@@ -321,13 +331,17 @@ public class BookingRecorder {
         return true;
     }
 
-    /** Statut enregistré d'une commande, vide si elle n'est pas chez nous. */
+    /**
+     * Statut enregistré d'une commande, vide si elle n'est pas chez nous.
+     */
     @Transactional(readOnly = true)
     public Optional<FlightOrderStatus> statusOf(String orderId) {
         return orders.findByDuffelOrderId(orderId).map(FlightOrder::getStatus);
     }
 
-    /** {@code {currency, fee_rate, flight: {price, markup}, services: [{id, type, quantity, price, markup}]}}. */
+    /**
+     * {@code {currency, fee_rate, flight: {price, markup}, services: [{id, type, quantity, price, markup}]}}.
+     */
     String pricing(FlightQuote quote) {
         ObjectNode pricing = json.createObjectNode();
         pricing.put("currency", quote.currency());
@@ -347,13 +361,9 @@ public class BookingRecorder {
         return json.writeValueAsString(pricing);
     }
 
-    private String details(String key, String value) {
+    private String details(String value) {
         ObjectNode node = json.createObjectNode();
-        node.put(key, value);
+        node.put("reason", value);
         return json.writeValueAsString(node);
-    }
-
-    private static String text(JsonNode node) {
-        return node.isString() && !node.asString().isBlank() ? node.asString() : null;
     }
 }

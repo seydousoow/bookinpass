@@ -15,7 +15,9 @@ import org.hibernate.type.SqlTypes;
 
 import java.time.Instant;
 
-/** Session du back-office : condensé SHA-256 du jeton porté par le cookie, et son échéance. */
+/**
+ * Session du back-office : condensé SHA-256 du jeton porté par le cookie, et son échéance.
+ */
 @Entity
 @Table(name = "staff_session")
 @Getter

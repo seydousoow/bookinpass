@@ -7,6 +7,7 @@ import com.bookinpass.backend.dto.response.MobilePaymentResponse;
 import com.bookinpass.backend.dto.response.PaymentMethodsResponse;
 import com.bookinpass.backend.exception.PaymentException;
 import lombok.RequiredArgsConstructor;
+import org.jspecify.annotations.NonNull;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 
@@ -34,7 +35,9 @@ import java.util.regex.Pattern;
 @RequiredArgsConstructor
 public class PayDunyaCheckout {
 
-    /** Tentatives de paiement par réservation sur {@link #ATTEMPT_WINDOW} (codes OTP essayés, factures créées). */
+    /**
+     * Tentatives de paiement par réservation sur {@link #ATTEMPT_WINDOW} (codes OTP essayés, factures créées).
+     */
     public static final int MAX_ATTEMPTS = 5;
     public static final Duration ATTEMPT_WINDOW = Duration.ofMinutes(20);
     private static final Pattern OTP = Pattern.compile("\\d{4,8}");
@@ -43,23 +46,17 @@ public class PayDunyaCheckout {
     private final PayDunyaProperties properties;
     private final PaymentDataCipher cipher;
 
-    /** Moyen, numéro national et code contrôlés. {@code phone} et {@code otp} sont nuls pour la carte. */
-    public record Attempt(PaymentMethod method, String phone, String otp) {
-
-        /** Numéro au format international ({@code +221771234567}) ; nul pour la carte. */
-        public String international() {
-            return phone == null ? null : "+" + method.country().dialCode() + phone;
+    /**
+     * Montant PayDunya : francs CFA (XOF) entiers, sans décimales.
+     */
+    public static long francs(BigDecimal total, String currency) {
+        if (!"XOF".equals(currency)) {
+            throw new PaymentException(HttpStatus.SERVICE_UNAVAILABLE, "payments-unavailable", "PayDunya payments are only offered in XOF.");
         }
-
-        /** Numéro masqué pour l'affichage ({@code +221 77*****67}). */
-        public String masked() {
-            return phone == null ? null : "+" + method.country().dialCode() + " " + phone.substring(0, 2)
-                    + "*".repeat(phone.length() - 4) + phone.substring(phone.length() - 2);
-        }
-
-        @Override
-        public String toString() {
-            return "Attempt[method=" + method.id() + "]";
+        try {
+            return total.stripTrailingZeros().longValueExact();
+        } catch (ArithmeticException e) {
+            throw new IllegalStateException("XOF amount with decimals: " + total, e);
         }
     }
 
@@ -67,14 +64,18 @@ public class PayDunyaCheckout {
         return properties.enabled() && cipher.configured() && !methods().isEmpty();
     }
 
-    /** Moyens configurés ({@code PAYDUNYA_METHODS}, vide = tous), dans l'ordre de l'énumération. */
+    /**
+     * Moyens configurés ({@code PAYDUNYA_METHODS}, vide = tous), dans l'ordre de l'énumération.
+     */
     public List<PaymentMethod> methods() {
         List<String> configured = properties.methods() == null ? List.of() : properties.methods().stream()
                 .map(String::trim).filter(m -> !m.isEmpty()).toList();
         return Arrays.stream(PaymentMethod.values()).filter(m -> configured.isEmpty() || configured.contains(m.id())).toList();
     }
 
-    /** Moyens annoncés au front ; aucun si PayDunya ou la clé de chiffrement manque. */
+    /**
+     * Moyens annoncés au front ; aucun si PayDunya ou la clé de chiffrement manque.
+     */
     public List<PaymentMethodsResponse.Method> offered() {
         if (!available()) {
             return List.of();
@@ -83,7 +84,9 @@ public class PayDunyaCheckout {
                 m.mobileMoney() ? m.country().dialCode() : null, m.otp())).toList();
     }
 
-    /** Moyen proposé, numéro du pays (et de l'opérateur), code présent si le moyen en demande un. */
+    /**
+     * Moyen proposé, numéro du pays (et de l'opérateur), code présent si le moyen en demande un.
+     */
     public Attempt validate(MobilePaymentRequest request) {
         if (!available()) {
             throw new PaymentException(HttpStatus.SERVICE_UNAVAILABLE, "payments-unavailable", "PayDunya payments are not configured.");
@@ -104,19 +107,9 @@ public class PayDunyaCheckout {
         return new Attempt(method, phone, request.otp());
     }
 
-    /** Montant PayDunya : francs CFA (XOF) entiers, sans décimales. */
-    public static long francs(BigDecimal total, String currency) {
-        if (!"XOF".equals(currency)) {
-            throw new PaymentException(HttpStatus.SERVICE_UNAVAILABLE, "payments-unavailable", "PayDunya payments are only offered in XOF.");
-        }
-        try {
-            return total.stripTrailingZeros().longValueExact();
-        } catch (ArithmeticException e) {
-            throw new IllegalStateException("XOF amount with decimals: " + total, e);
-        }
-    }
-
-    /** Numéro chiffré pour la base ; nul pour la carte. */
+    /**
+     * Numéro chiffré pour la base ; nul pour la carte.
+     */
     public String encryptedPhone(Attempt attempt) {
         return attempt.international() == null ? null : cipher.encrypt(attempt.international());
     }
@@ -133,7 +126,9 @@ public class PayDunyaCheckout {
                 properties.callbackUrl(), attempt.method().mobileMoney() ? List.of() : List.of("card"));
     }
 
-    /** Paiement de la facture : page PayDunya pour la carte, SOFTPAY pour le mobile money. */
+    /**
+     * Paiement de la facture : page PayDunya pour la carte, SOFTPAY pour le mobile money.
+     */
     public MobilePaymentResponse pay(Attempt attempt, PayDunyaClient.Invoice invoice, PayDunyaClient.Customer customer) {
         PaymentMethod method = attempt.method();
         if (!method.mobileMoney()) {
@@ -143,7 +138,9 @@ public class PayDunyaCheckout {
         return new MobilePaymentResponse(method.step().name().toLowerCase(Locale.ROOT), softpay.url(), softpay.omUrl(), softpay.maxitUrl(), null);
     }
 
-    /** IPN venue de PayDunya : {@code data[hash]} est le SHA-512 de la clé principale. Comparaison en temps constant. */
+    /**
+     * IPN venue de PayDunya : {@code data[hash]} est le SHA-512 de la clé principale. Comparaison en temps constant.
+     */
     public boolean authentic(String hash) {
         if (hash == null || properties.masterKey() == null || properties.masterKey().isBlank()) {
             return false;
@@ -154,6 +151,32 @@ public class PayDunyaCheckout {
             return MessageDigest.isEqual(expected, hash.trim().toLowerCase(Locale.ROOT).getBytes(StandardCharsets.US_ASCII));
         } catch (NoSuchAlgorithmException e) {
             throw new IllegalStateException(e);
+        }
+    }
+
+    /**
+     * Moyen, numéro national et code contrôlés. {@code phone} et {@code otp} sont nuls pour la carte.
+     */
+    public record Attempt(PaymentMethod method, String phone, String otp) {
+
+        /**
+         * Numéro au format international ({@code +221771234567}) ; nul pour la carte.
+         */
+        public String international() {
+            return phone == null ? null : "+" + method.country().dialCode() + phone;
+        }
+
+        /**
+         * Numéro masqué pour l'affichage ({@code +221 77*****67}).
+         */
+        public String masked() {
+            return phone == null ? null : "+" + method.country().dialCode() + " " + phone.substring(0, 2)
+                    + "*".repeat(phone.length() - 4) + phone.substring(phone.length() - 2);
+        }
+
+        @Override
+        public @NonNull String toString() {
+            return "Attempt[method=" + method.id() + "]";
         }
     }
 }

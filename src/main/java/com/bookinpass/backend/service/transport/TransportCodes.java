@@ -2,7 +2,9 @@ package com.bookinpass.backend.service.transport;
 
 import java.security.SecureRandom;
 
-/** Codes lus à voix haute ou recopiés à la main (réservation, billet, bagage) : sans 0/O ni 1/I. */
+/**
+ * Codes lus à voix haute ou recopiés à la main (réservation, billet, bagage) : sans 0/O ni 1/I.
+ */
 public final class TransportCodes {
 
     private static final String ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";

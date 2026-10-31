@@ -1,23 +1,29 @@
 package com.bookinpass.backend.config;
 
-import java.util.Arrays;
+import org.jspecify.annotations.NonNull;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
+import java.util.Arrays;
+
 /**
- * CORS de l'API pour le front, quand front et API ne partagent pas l'origine (`https://bookinpass.com` →
+ * CORS de l'API pour le front, quand front et API ne partagent pas l'origine ('https://bookinpass.com' →
  * `https://api.bookinpass.com`) ; derrière un même domaine (relais `/api`), sans effet. Les webhooks (Stripe, Duffel)
  * viennent de serveurs et n'en ont pas besoin.
  */
 @Configuration(proxyBeanMethods = false)
 class CorsConfig implements WebMvcConfigurer {
 
-    /** Origines exactes (schéma + hôte + port), séparées par des virgules ({@code bookinpass.cors.allowed-origins}). */
+    /**
+     * Origines exactes (schéma + hôte + port), séparées par des virgules ({@code bookinpass.cors.allowed-origins}).
+     */
     private final String[] allowedOrigins;
 
-    /** Origines du back-office : seules admises sur {@code /staff/**}, avec le cookie de session. */
+    /**
+     * Origines du back-office : seules admises sur {@code /staff/**}, avec le cookie de session.
+     */
     private final String[] staffOrigins;
 
     CorsConfig(@Value("${bookinpass.cors.allowed-origins:}") String allowedOrigins, @Value("${bookinpass.staff.allowed-origins:}") String staffOrigins) {
@@ -30,7 +36,7 @@ class CorsConfig implements WebMvcConfigurer {
     }
 
     @Override
-    public void addCorsMappings(CorsRegistry registry) {
+    public void addCorsMappings(@NonNull CorsRegistry registry) {
         // En premier : la première correspondance l'emporte, et /staff/** n'admet pas les origines du site public.
         if (staffOrigins.length > 0) {
             registry.addMapping("/staff/**")

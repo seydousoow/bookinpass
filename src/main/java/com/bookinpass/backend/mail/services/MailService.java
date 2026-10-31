@@ -49,7 +49,9 @@ public class MailService {
         }
     }
 
-    /** Sujet et corps HTML, sans envoi (tests, aperçu). */
+    /**
+     * Sujet et corps HTML, sans envoi (tests, aperçu).
+     */
     public <T extends BaseMailProperties> Rendered render(T properties) {
         Locale locale = (properties.getLang() == null ? MailLang.FR : properties.getLang()).toLocale();
         properties.setSiteUrl(mailProperties.siteUrl());

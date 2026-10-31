@@ -9,7 +9,9 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 
-/** Corps de {@code POST /air/orders} : commande immédiate ({@code instant}), payée sur le solde Duffel. */
+/**
+ * Corps de {@code POST /air/orders} : commande immédiate ({@code instant}), payée sur le solde Duffel.
+ */
 public record DuffelOrderRequest(Data data) {
 
     public record Data(@JsonProperty("selected_offers") List<String> selectedOffers,
@@ -33,7 +35,9 @@ public record DuffelOrderRequest(Data data) {
                             @JsonProperty("infant_passenger_id") String infantPassengerId) {
     }
 
-    /** {@code amount} : billet + services au prix Duffel, sans nos frais ni marges (encaissés par Stripe). */
+    /**
+     * {@code amount} : billet + services au prix Duffel, sans nos frais ni marges (encaissés par Stripe).
+     */
     public record Payment(String type, String currency, String amount) {
     }
 }

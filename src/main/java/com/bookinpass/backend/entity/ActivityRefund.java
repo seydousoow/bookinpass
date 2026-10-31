@@ -65,7 +65,9 @@ public class ActivityRefund {
     @Column(name = "failure_reason")
     private String failureReason;
 
-    /** Nul : demandé par le client. */
+    /**
+     * Nul : demandé par le client.
+     */
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "requested_by")
     private StaffUser requestedBy;
@@ -97,7 +99,9 @@ public class ActivityRefund {
         return !FAILED.equals(status);
     }
 
-    /** Remboursé par Stripe. */
+    /**
+     * Remboursé par Stripe.
+     */
     public void refundedByStripe(String stripeRefundId, Instant at) {
         this.status = REFUNDED;
         this.stripeRefundId = stripeRefundId;
@@ -109,7 +113,9 @@ public class ActivityRefund {
         this.failureReason = reason;
     }
 
-    /** Mobile money remboursé à la main (opérateur, référence de transaction dans {@code note}). */
+    /**
+     * Mobile money remboursé à la main (opérateur, référence de transaction dans {@code note}).
+     */
     public void refundedByHand(StaffUser by, String note, Instant at) {
         this.status = REFUNDED;
         this.refundedBy = by;

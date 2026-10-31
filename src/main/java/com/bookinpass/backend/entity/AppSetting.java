@@ -14,7 +14,9 @@ import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.Instant;
 
-/** Réglage du back-office, modifiable sans redéploiement (ex. {@code reviews.auto_moderation}). */
+/**
+ * Réglage du back-office, modifiable sans redéploiement (ex. {@code reviews.auto_moderation}).
+ */
 @Entity
 @Table(name = "app_setting")
 @Getter

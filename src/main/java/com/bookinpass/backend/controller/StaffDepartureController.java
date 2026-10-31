@@ -1,13 +1,13 @@
 package com.bookinpass.backend.controller;
 
+import com.bookinpass.backend.config.OpenApiConfig;
 import com.bookinpass.backend.dto.request.StaffCapacityRequest;
 import com.bookinpass.backend.dto.response.StaffDepartureDetailResponse;
 import com.bookinpass.backend.dto.response.StaffDepartureResponse;
 import com.bookinpass.backend.dto.response.StaffTicketCheckResponse;
-import com.bookinpass.backend.staff.StaffOperationsService;
-import com.bookinpass.backend.config.OpenApiConfig;
 import com.bookinpass.backend.entity.StaffRole;
 import com.bookinpass.backend.staff.StaffAccess;
+import com.bookinpass.backend.staff.StaffOperationsService;
 import com.bookinpass.backend.staff.StaffPrincipal;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -29,7 +29,9 @@ import org.springframework.web.bind.annotation.RestController;
 import java.time.LocalDate;
 import java.util.List;
 
-/** Départs du jour d'une gare et contrôle des billets. */
+/**
+ * Départs du jour d'une gare et contrôle des billets.
+ */
 @RestController
 @RequiredArgsConstructor
 @Tag(name = OpenApiConfig.TAG_STAFF)

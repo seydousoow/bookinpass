@@ -25,7 +25,9 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
-/** Comptes du personnel : administrateurs (tous) et managers (chefs de gare, contrôleurs). */
+/**
+ * Comptes du personnel : administrateurs (tous) et managers (chefs de gare, contrôleurs).
+ */
 @RestController
 @RequiredArgsConstructor
 @Tag(name = OpenApiConfig.TAG_STAFF)

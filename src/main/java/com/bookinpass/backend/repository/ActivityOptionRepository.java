@@ -16,7 +16,9 @@ public interface ActivityOptionRepository extends JpaRepository<ActivityOption, 
     @Query("select o from ActivityOption o join fetch o.activity a join fetch a.city where o.id = :id")
     Optional<ActivityOption> findWithActivity(@Param("id") Integer id);
 
-    /** Options en vente des activités {@code activityIds} (prix « à partir de » des cartes). */
+    /**
+     * Options en vente des activités {@code activityIds} (prix « à partir de » des cartes).
+     */
     @Query("select o from ActivityOption o where o.activity.id in :activityIds and o.active = true")
     List<ActivityOption> findActiveByActivityIds(@Param("activityIds") Collection<Integer> activityIds);
 }

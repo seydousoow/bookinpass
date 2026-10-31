@@ -35,104 +35,86 @@ import java.util.List;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Activity {
 
+    @OneToMany(mappedBy = "activity", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OrderBy("position, id")
+    private final List<ActivityOption> options = new ArrayList<>();
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
-
-    /** Adresse de la page sur le site ({@code /activities/<slug>}). */
+    /**
+     * Adresse de la page sur le site ({@code /activities/<slug>}).
+     */
     @Column(nullable = false, length = 120)
     private String slug;
-
     @Column(nullable = false, length = 20)
     private ActivityStatus status;
-
     @Column(nullable = false)
     private String title;
-
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "city_id")
     private City city;
-
     @Column(nullable = false, length = 30)
     private String category;
-
     @Column(name = "provider_name", nullable = false)
     private String providerName;
-
     @Column(nullable = false)
     private String summary;
-
     @Column(nullable = false)
     private String description;
-
-    /** JSON : tableau de textes. */
+    /**
+     * JSON : tableau de textes.
+     */
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(nullable = false)
     private String highlights;
-
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(nullable = false)
     private String includes;
-
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(nullable = false)
     private String excludes;
-
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "not_allowed", nullable = false)
     private String notAllowed;
-
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "know_before", nullable = false)
     private String knowBefore;
-
-    /** JSON : {@code [{name, kind, duration_minutes, optional, description}]}. */
+    /**
+     * JSON : {@code [{name, kind, duration_minutes, optional, description}]}.
+     */
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(nullable = false)
     private String itinerary;
-
-    /** JSON : {@code [{url, alt}]}, la première est l'image principale. */
+    /**
+     * JSON : {@code [{url, alt}]}, la première est l'image principale.
+     */
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(nullable = false)
     private String images;
-
     @Column(name = "meeting_point", nullable = false)
     private String meetingPoint;
-
     private Double latitude;
-
     private Double longitude;
-
     @Column(name = "duration_min_minutes", nullable = false)
     private short durationMinMinutes;
-
     @Column(name = "duration_max_minutes")
     private Short durationMaxMinutes;
-
-    /** Annulation gratuite jusqu'à N heures avant le début ; nul = non remboursable. */
+    /**
+     * Annulation gratuite jusqu'à N heures avant le début ; nul = non remboursable.
+     */
     @Column(name = "free_cancellation_hours")
     private Short freeCancellationHours;
-
     @JdbcTypeCode(SqlTypes.CHAR)
     @Column(nullable = false, length = 3)
     private String currency;
-
     @Column(name = "review_summary")
     private String reviewSummary;
-
     @Column(name = "review_summary_count")
     private Integer reviewSummaryCount;
-
     @Column(name = "review_summary_at")
     private Instant reviewSummaryAt;
-
     @Column(name = "published_at")
     private Instant publishedAt;
-
-    @OneToMany(mappedBy = "activity", cascade = CascadeType.ALL, orphanRemoval = true)
-    @OrderBy("position, id")
-    private List<ActivityOption> options = new ArrayList<>();
-
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
@@ -140,17 +122,6 @@ public class Activity {
     @UpdateTimestamp
     @Column(name = "updated_at", nullable = false)
     private Instant updatedAt;
-
-    /**
-     * Contenu modifiable d'une fiche ; listes déjà en JSON.
-     *
-     * @param durationMaxMinutes nul : durée fixe ({@code durationMinMinutes})
-     */
-    public record Content(String title, City city, String category, String providerName, String summary, String description,
-                          String highlights, String includes, String excludes, String notAllowed, String knowBefore,
-                          String itinerary, String images, String meetingPoint, Double latitude, Double longitude,
-                          short durationMinMinutes, Short durationMaxMinutes, Short freeCancellationHours, String currency) {
-    }
 
     public Activity(String slug, Content content) {
         this.slug = slug;
@@ -207,5 +178,16 @@ public class Activity {
 
     public boolean isPublished() {
         return status == ActivityStatus.PUBLISHED;
+    }
+
+    /**
+     * Contenu modifiable d'une fiche ; listes déjà en JSON.
+     *
+     * @param durationMaxMinutes nul : durée fixe ({@code durationMinMinutes})
+     */
+    public record Content(String title, City city, String category, String providerName, String summary, String description,
+                          String highlights, String includes, String excludes, String notAllowed, String knowBefore,
+                          String itinerary, String images, String meetingPoint, Double latitude, Double longitude,
+                          short durationMinMinutes, Short durationMaxMinutes, Short freeCancellationHours, String currency) {
     }
 }

@@ -14,13 +14,21 @@ import java.time.Duration;
 public class DuffelException extends RuntimeException {
 
     private final HttpStatusCode status;
-    /** Catégorie Duffel ({@code validation_error}, {@code invalid_state_error}…). */
+    /**
+     * Catégorie Duffel ({@code validation_error}, {@code invalid_state_error}…).
+     */
     private final @Nullable String type;
-    /** Code Duffel précis ; {@code null} si le corps n'en donne pas (mode démo, réponse non JSON). */
+    /**
+     * Code Duffel précis ; {@code null} si le corps n'en donne pas (mode démo, réponse non JSON).
+     */
     private final @Nullable String code;
-    /** {@code x-request-id} : à communiquer au support Duffel. */
+    /**
+     * {@code x-request-id} : à communiquer au support Duffel.
+     */
     private final @Nullable String requestId;
-    /** 429 : délai avant la remise à zéro du quota ({@code ratelimit-reset}). */
+    /**
+     * 429 : délai avant la remise à zéro du quota ({@code ratelimit-reset}).
+     */
     private final @Nullable Duration retryAfter;
 
     public DuffelException(HttpStatusCode status, String message) {

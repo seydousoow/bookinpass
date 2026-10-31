@@ -43,10 +43,27 @@ public class ActivityContent {
     private final JsonMapper json;
     private final ActivityReviewRepository reviews;
 
-    /** Notes publiées d'une activité. */
-    public record Ratings(Double average, long count, Double value, Double service, Double organization) {
+    public static ActivityCityResponse city(City city) {
+        return new ActivityCityResponse(city.getId(), city.getName(), city.getCountryCode(), city.getTimezone());
+    }
 
-        static final Ratings NONE = new Ratings(null, 0, null, null, null);
+    public static ZoneId zone(Activity activity) {
+        return ZoneId.of(activity.getCity().getTimezone());
+    }
+
+    /**
+     * « 15000 », « 12.5 » ; nul pour nul.
+     */
+    public static String plain(BigDecimal amount) {
+        return amount == null ? null : amount.stripTrailingZeros().toPlainString();
+    }
+
+    public static String text(Instant instant) {
+        return instant == null ? null : instant.toString();
+    }
+
+    private static Double round(Double value) {
+        return value == null ? null : BigDecimal.valueOf(value).setScale(1, RoundingMode.HALF_UP).doubleValue();
     }
 
     public String write(List<?> values) {
@@ -65,7 +82,9 @@ public class ActivityContent {
         return value == null ? List.of() : json.readValue(value, IMAGES);
     }
 
-    /** Résumé des avis (JSON {@code {"fr", "en"}}) dans la langue demandée ; nul s'il n'a pas été écrit. */
+    /**
+     * Résumé des avis (JSON {@code {"fr", "en"}}) dans la langue demandée ; nul s'il n'a pas été écrit.
+     */
     public String summary(String value, String lang) {
         if (value == null) {
             return null;
@@ -74,13 +93,17 @@ public class ActivityContent {
         return both.path("en".equals(lang) ? "en" : "fr").asString(null);
     }
 
-    /** Photo principale ; nulle si la fiche n'en a pas. */
+    /**
+     * Photo principale ; nulle si la fiche n'en a pas.
+     */
     public ActivityImage cover(Activity activity) {
         List<ActivityImage> all = images(activity.getImages());
         return all.isEmpty() ? null : all.getFirst();
     }
 
-    /** Notes publiées des activités {@code ids} ; une activité sans avis n'y figure pas. */
+    /**
+     * Notes publiées des activités {@code ids} ; une activité sans avis n'y figure pas.
+     */
     public Map<Integer, Ratings> ratings(Collection<Integer> ids) {
         Map<Integer, Ratings> all = new HashMap<>();
         if (ids.isEmpty()) {
@@ -97,7 +120,9 @@ public class ActivityContent {
         return ratings(List.of(id)).getOrDefault(id, Ratings.NONE);
     }
 
-    /** Notes et répartition par étoile d'une activité. */
+    /**
+     * Notes et répartition par étoile d'une activité.
+     */
     public ActivityRatingResponse rating(Integer activityId) {
         Ratings ratings = ratings(activityId);
         List<Long> distribution = new ArrayList<>(List.of(0L, 0L, 0L, 0L, 0L));
@@ -108,24 +133,11 @@ public class ActivityContent {
                 ratings.organization());
     }
 
-    public static ActivityCityResponse city(City city) {
-        return new ActivityCityResponse(city.getId(), city.getName(), city.getCountryCode(), city.getTimezone());
-    }
+    /**
+     * Notes publiées d'une activité.
+     */
+    public record Ratings(Double average, long count, Double value, Double service, Double organization) {
 
-    public static ZoneId zone(Activity activity) {
-        return ZoneId.of(activity.getCity().getTimezone());
-    }
-
-    /** « 15000 », « 12.5 » ; nul pour nul. */
-    public static String plain(BigDecimal amount) {
-        return amount == null ? null : amount.stripTrailingZeros().toPlainString();
-    }
-
-    public static String text(Instant instant) {
-        return instant == null ? null : instant.toString();
-    }
-
-    private static Double round(Double value) {
-        return value == null ? null : BigDecimal.valueOf(value).setScale(1, RoundingMode.HALF_UP).doubleValue();
+        static final Ratings NONE = new Ratings(null, 0, null, null, null);
     }
 }

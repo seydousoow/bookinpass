@@ -5,7 +5,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 /**
  * Départ d'un jour, vu d'une gare. Heures en UTC (heure de Dakar).
  *
- * @param capacity  {@code null} : service continu, places non comptées
+ * @param capacity   {@code null} : service continu, places non comptées
  * @param passengers billets confirmés ; {@code scanned} : déjà contrôlés
  */
 public record StaffDepartureResponse(Integer id,

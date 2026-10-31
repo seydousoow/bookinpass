@@ -28,9 +28,9 @@ public interface ActivityReviewRepository extends JpaRepository<ActivityReview, 
             where r.activity.id = :activityId and r.status = 'approved' and (:rating = 0 or r.rating = :rating)
               and (:text = '' or lower(r.text) like concat('%', :text, '%'))""",
             countQuery = """
-            select count(r) from ActivityReview r
-            where r.activity.id = :activityId and r.status = 'approved' and (:rating = 0 or r.rating = :rating)
-              and (:text = '' or lower(r.text) like concat('%', :text, '%'))""")
+                    select count(r) from ActivityReview r
+                    where r.activity.id = :activityId and r.status = 'approved' and (:rating = 0 or r.rating = :rating)
+                      and (:text = '' or lower(r.text) like concat('%', :text, '%'))""")
     Page<ActivityReview> findPublished(@Param("activityId") Integer activityId, @Param("rating") int rating, @Param("text") String text,
                                        Pageable page);
 
@@ -43,15 +43,21 @@ public interface ActivityReviewRepository extends JpaRepository<ActivityReview, 
             from ActivityReview r where r.status = 'approved' and r.activity.id in :activityIds group by r.activity.id""")
     List<Object[]> ratings(@Param("activityIds") Collection<Integer> activityIds);
 
-    /** Nombre d'avis publiés par note : {@code [note, nombre]}. */
+    /**
+     * Nombre d'avis publiés par note : {@code [note, nombre]}.
+     */
     @Query("select r.rating, count(r) from ActivityReview r where r.status = 'approved' and r.activity.id = :activityId group by r.rating")
     List<Object[]> distribution(@Param("activityId") Integer activityId);
 
-    /** Avis récents publiés pour le résumé de Claude. */
+    /**
+     * Avis récents publiés pour le résumé de Claude.
+     */
     @Query("select r from ActivityReview r where r.activity.id = :activityId and r.status = 'approved' order by r.createdAt desc")
     List<ActivityReview> findRecentPublished(@Param("activityId") Integer activityId, Pageable page);
 
-    /** Avis pour le back-office : statuts, activité (nulle = toutes) ; les plus récents d'abord. */
+    /**
+     * Avis pour le back-office : statuts, activité (nulle = toutes) ; les plus récents d'abord.
+     */
     @Query(value = """
             select r from ActivityReview r join fetch r.activity a join fetch r.booking b left join fetch r.moderatedBy
             where r.status in :statuses and (:activityId is null or a.id = :activityId)
@@ -61,7 +67,9 @@ public interface ActivityReviewRepository extends JpaRepository<ActivityReview, 
 
     long countByStatus(String status);
 
-    /** Avis en attente que Claude n'a pas encore lus (au plus {@code maxAttempts} essais). */
+    /**
+     * Avis en attente que Claude n'a pas encore lus (au plus {@code maxAttempts} essais).
+     */
     @Query("""
             select r.id from ActivityReview r where r.status = 'pending' and r.aiCheckedAt is null and r.aiAttempts < :maxAttempts
             order by r.createdAt""")

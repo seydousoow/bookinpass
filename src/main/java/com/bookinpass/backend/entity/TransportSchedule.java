@@ -62,7 +62,9 @@ public class TransportSchedule {
         this.lastDeparture = lastDeparture;
     }
 
-    /** Jour ISO en base : 1 = lundi … 7 = dimanche, comme {@link DayOfWeek#getValue()}. */
+    /**
+     * Jour ISO en base : 1 = lundi … 7 = dimanche, comme {@link DayOfWeek#getValue()}.
+     */
     @Converter
     public static class IsoDayConverter implements AttributeConverter<DayOfWeek, Short> {
         @Override

@@ -67,16 +67,24 @@ public interface DuffelClient {
      */
     String createCustomerUser(DuffelCustomerUser user);
 
-    /** {@code GET /identity/customer/users?email=} — le client déjà créé pour cet e-mail, s'il existe. */
+    /**
+     * {@code GET /identity/customer/users?email=} — le client déjà créé pour cet e-mail, s'il existe.
+     */
     String findCustomerUsers(String email);
 
-    /** {@code PUT /identity/customer/users/{id}} — remplace nom, prénom, e-mail et téléphone du client. */
+    /**
+     * {@code PUT /identity/customer/users/{id}} — remplace nom, prénom, e-mail et téléphone du client.
+     */
     String updateCustomerUser(String customerUserId, DuffelCustomerUser user);
 
-    /** {@code PATCH /air/orders/{id}} — rattache des clients Duffel à une commande. */
+    /**
+     * {@code PATCH /air/orders/{id}} — rattache des clients Duffel à une commande.
+     */
     String updateOrder(String orderId, DuffelOrderUpdate update);
 
-    /** {@code GET /air/orders/{id}} — la commande à jour (vols, voyageurs, actions possibles, annulation éventuelle). */
+    /**
+     * {@code GET /air/orders/{id}} — la commande à jour (vols, voyageurs, actions possibles, annulation éventuelle).
+     */
     String getOrder(String orderId);
 
     /**
@@ -85,9 +93,13 @@ public interface DuffelClient {
      */
     String createOrderCancellation(String orderId);
 
-    /** {@code GET /air/order_cancellations/{id}} — un devis d'annulation (pour vérifier sa commande avant confirmation). */
+    /**
+     * {@code GET /air/order_cancellations/{id}} — un devis d'annulation (pour vérifier sa commande avant confirmation).
+     */
     String getOrderCancellation(String cancellationId);
 
-    /** {@code POST /air/order_cancellations/{id}/actions/confirm} — annule la commande chez la compagnie. */
+    /**
+     * {@code POST /air/order_cancellations/{id}/actions/confirm} — annule la commande chez la compagnie.
+     */
     String confirmOrderCancellation(String cancellationId);
 }

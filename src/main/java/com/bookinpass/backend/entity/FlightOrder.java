@@ -22,70 +22,70 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
-/** Commande Duffel enregistrée après sa création (table {@code flight_order}), avec le détail du prix de vente. */
+/**
+ * Commande Duffel enregistrée après sa création (table {@code flight_order}), avec le détail du prix de vente.
+ */
 @Entity
 @Table(name = "flight_order")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class FlightOrder {
 
+    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
+    private final List<FlightOrderPassenger> passengers = new ArrayList<>();
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
-
     @Column(name = "duffel_order_id", nullable = false, unique = true)
     private String duffelOrderId;
-
     @Column(name = "offer_id", nullable = false)
     private String offerId;
-
-    /** Référence compagnie (PNR). */
+    /**
+     * Référence compagnie (PNR).
+     */
     @Column(name = "booking_reference")
     private String bookingReference;
-
     @Column(nullable = false, length = 30)
     private FlightOrderStatus status;
-
     @Column(nullable = false, length = 3)
     private String currency;
-
-    /** Payé à Duffel (solde), sans nos marges. */
+    /**
+     * Payé à Duffel (solde), sans nos marges.
+     */
     @Column(name = "duffel_amount", nullable = false, precision = 12, scale = 2)
     private BigDecimal duffelAmount;
-
-    /** Payé par le client (Stripe), frais BIP et marges compris. */
+    /**
+     * Payé par le client (Stripe), frais BIP et marges compris.
+     */
     @Column(name = "selling_amount", nullable = false, precision = 12, scale = 2)
     private BigDecimal sellingAmount;
-
-    /** JSON : {@code {currency, fee_rate, flight: {price, markup}, services: [{id, type, quantity, price, markup}]}}. */
+    /**
+     * JSON : {@code {currency, fee_rate, flight: {price, markup}, services: [{id, type, quantity, price, markup}]}}.
+     */
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(nullable = false, columnDefinition = "jsonb")
     private String pricing;
-
     @Column(name = "live_mode", nullable = false)
     private boolean liveMode;
-
     @Column(name = "booked_at", nullable = false)
     private Instant bookedAt;
-
-    /** Paiement encaissé : réservation définitive. */
+    /**
+     * Paiement encaissé : réservation définitive.
+     */
     @Column(name = "confirmed_at")
     private Instant confirmedAt;
-
     @Column(name = "cancelled_at")
     private Instant cancelledAt;
-
-    /** Départ du dernier vol (retour d'un aller-retour), date locale ; la réservation se gère jusqu'à deux mois après. */
+    /**
+     * Départ du dernier vol (retour d'un aller-retour), date locale ; la réservation se gère jusqu'à deux mois après.
+     */
     @Column(name = "last_travel_date")
     private LocalDate lastTravelDate;
-
-    /** Langue des e-mails de la commande ({@code fr}, {@code en}). */
+    /**
+     * Langue des e-mails de la commande ({@code fr}, {@code en}).
+     */
     @Column(nullable = false, length = 2)
     private String lang = "fr";
-
-    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<FlightOrderPassenger> passengers = new ArrayList<>();
-
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
@@ -109,7 +109,9 @@ public class FlightOrder {
         this.lastTravelDate = lastTravelDate;
     }
 
-    /** {@code en} pour une réservation faite sur le site en anglais, {@code fr} sinon. */
+    /**
+     * {@code en} pour une réservation faite sur le site en anglais, {@code fr} sinon.
+     */
     public void useLang(String lang) {
         this.lang = lang != null && lang.toLowerCase().startsWith("en") ? "en" : "fr";
     }

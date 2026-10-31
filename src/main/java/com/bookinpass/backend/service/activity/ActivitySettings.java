@@ -8,7 +8,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-/** Réglages des activités gardés en base ({@code app_setting}), modifiables au back-office. */
+/**
+ * Réglages des activités gardés en base ({@code app_setting}), modifiables au back-office.
+ */
 @Service
 @RequiredArgsConstructor
 public class ActivitySettings {
@@ -18,7 +20,9 @@ public class ActivitySettings {
     private final AppSettingRepository settings;
     private final StaffUserRepository users;
 
-    /** Avis jugés sans problème par Claude publiés tout seuls (et abus évidents rejetés). */
+    /**
+     * Avis jugés sans problème par Claude publiés tout seuls (et abus évidents rejetés).
+     */
     @Transactional(readOnly = true)
     public boolean autoModeration() {
         return settings.findById(AUTO_MODERATION).map(s -> Boolean.parseBoolean(s.getValue())).orElse(false);

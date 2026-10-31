@@ -13,16 +13,22 @@ import java.util.Optional;
 @Repository
 public interface StaffSessionRepository extends JpaRepository<StaffSession, String> {
 
-    /** Session et compte en une requête : chaque appel du back-office la lit. */
+    /**
+     * Session et compte en une requête : chaque appel du back-office la lit.
+     */
     @Query("select s from StaffSession s join fetch s.staff u left join fetch u.station where s.tokenHash = :hash")
     Optional<StaffSession> findWithStaff(@Param("hash") String tokenHash);
 
-    /** Toutes les sessions d'un compte (désactivation, nouveau mot de passe). */
+    /**
+     * Toutes les sessions d'un compte (désactivation, nouveau mot de passe).
+     */
     @Modifying
     @Query("delete from StaffSession s where s.staff.id = :staffId")
     int deleteByStaffId(@Param("staffId") Integer staffId);
 
-    /** Sessions d'un compte sauf {@code keep} (celle qui vient de changer le mot de passe). */
+    /**
+     * Sessions d'un compte sauf {@code keep} (celle qui vient de changer le mot de passe).
+     */
     @Modifying
     @Query("delete from StaffSession s where s.staff.id = :staffId and s.tokenHash <> :keep")
     int deleteOthers(@Param("staffId") Integer staffId, @Param("keep") String keep);

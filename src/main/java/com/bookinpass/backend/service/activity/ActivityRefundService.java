@@ -16,6 +16,7 @@ import com.bookinpass.backend.repository.ActivityRefundRepository;
 import com.bookinpass.backend.repository.ActivitySlotRepository;
 import com.bookinpass.backend.repository.StaffUserRepository;
 import com.bookinpass.backend.repository.StripePaymentRepository;
+import com.bookinpass.backend.service.booking.ActivityBookingService;
 import com.bookinpass.backend.service.pricing.FlightPricing;
 import com.bookinpass.backend.staff.StaffPrincipal;
 import lombok.RequiredArgsConstructor;
@@ -58,8 +59,22 @@ public class ActivityRefundService {
     private final TransactionTemplate tx;
     private final Clock clock;
 
-    /** Remboursement Stripe à faire, lu en transaction. */
-    private record CardRefund(Integer id, String reference, String paymentIntentId, long minorUnits) {
+    private static void requireWithin(BigDecimal amount, BigDecimal refundable) {
+        if (amount.signum() < 0 || amount.compareTo(refundable) > 0) {
+            throw new ActivityException(HttpStatus.BAD_REQUEST, "refund-too-high",
+                    "At most " + ActivityContent.plain(refundable) + " can still be refunded.");
+        }
+    }
+
+    static StaffActivityRefundResponse response(ActivityRefund refund) {
+        ActivityBooking booking = refund.getBooking();
+        return new StaffActivityRefundResponse(refund.getId(), booking.getReference(), booking.getSlot().getOption().getActivity().getTitle(),
+                booking.getSlot().getStartsAt().toString(), booking.getGivenName() + " " + booking.getFamilyName(), booking.getEmail(),
+                booking.getPhone(), refund.getMethod(), ActivityContent.plain(refund.getAmount()), refund.getCurrency(), refund.getStatus(),
+                refund.getReason(), refund.getFailureReason(),
+                refund.getRequestedBy() == null ? null : refund.getRequestedBy().getFullName(),
+                refund.getRefundedBy() == null ? null : refund.getRefundedBy().getFullName(), refund.getNote(),
+                refund.getCreatedAt().toString(), ActivityContent.text(refund.getRefundedAt()));
     }
 
     /**
@@ -69,8 +84,8 @@ public class ActivityRefundService {
      * @param by nul : annulée par le client
      */
     public void cancel(String reference, StaffPrincipal by, String reason, BigDecimal amount) {
-        Integer refundId = tx.execute(status -> {
-            ActivityBooking booking = bookings.lockByReference(reference).orElseThrow(ActivityBookingService::notFound);
+        Integer refundId = tx.execute(_ -> {
+            ActivityBooking booking = bookings.lockByReference(reference).orElseThrow(ActivityBookingService::bookingNotFound);
             if (booking.getStatus() != ActivityBookingStatus.CONFIRMED) {
                 throw new ActivityException(HttpStatus.CONFLICT, "booking-not-confirmed", "Only a paid booking can be cancelled.");
             }
@@ -89,10 +104,12 @@ public class ActivityRefundService {
         ActivityBookingService.safely("cancellation mail of " + reference, () -> mailer.sendCancellation(reference));
     }
 
-    /** Remboursement partiel ou total sans annuler (geste commercial), sur une réservation payée. */
+    /**
+     * Remboursement partiel ou total sans annuler (geste commercial), sur une réservation payée.
+     */
     public void refund(String reference, StaffPrincipal by, BigDecimal amount, String reason) {
-        Integer refundId = tx.execute(status -> {
-            ActivityBooking booking = bookings.lockByReference(reference).orElseThrow(ActivityBookingService::notFound);
+        Integer refundId = tx.execute(_ -> {
+            ActivityBooking booking = bookings.lockByReference(reference).orElseThrow(ActivityBookingService::bookingNotFound);
             if (booking.getStatus() != ActivityBookingStatus.CONFIRMED && booking.getStatus() != ActivityBookingStatus.CANCELLED) {
                 throw new ActivityException(HttpStatus.CONFLICT, "booking-not-confirmed", "Only a paid booking can be refunded.");
             }
@@ -108,7 +125,7 @@ public class ActivityRefundService {
      * entier. Rend le nombre de réservations annulées.
      */
     public int cancelSlot(Integer slotId, StaffPrincipal by, String reason) {
-        List<String> paid = tx.execute(status -> {
+        List<String> paid = tx.execute(_ -> {
             ActivitySlot slot = slots.findById(slotId)
                     .orElseThrow(() -> new ActivityException(HttpStatus.NOT_FOUND, "slot-not-found", "Unknown time slot."));
             if (slot.isCancelled()) {
@@ -134,35 +151,42 @@ public class ActivityRefundService {
      * Paiement mobile arrivé alors que les places n'étaient plus disponibles : remboursement à faire à la main.
      * Appelé dans la transaction qui a verrouillé la réservation.
      */
-    void openLatePaymentRefund(ActivityBooking booking, ActivityMobilePayment payment) {
+    public void openLatePaymentRefund(ActivityBooking booking, ActivityMobilePayment payment) {
         refunds.save(new ActivityRefund(booking, ActivityRefund.MOBILE_MONEY, payment.getAmount(),
                 "Paiement reçu après la libération des places", null));
     }
 
-    /** Mobile money remboursé à la main : noté, avec la personne qui l'a fait. */
+    /**
+     * Mobile money remboursé à la main : noté, avec la personne qui l'a fait.
+     */
     public StaffActivityRefundResponse markRefunded(StaffPrincipal by, Integer id, String note) {
-        return tx.execute(status -> {
+        return tx.execute(_ -> {
             ActivityRefund refund = refunds.findById(id)
                     .orElseThrow(() -> new ActivityException(HttpStatus.NOT_FOUND, "refund-not-found", "Unknown refund."));
             if (!ActivityRefund.PENDING.equals(refund.getStatus()) || !ActivityRefund.MOBILE_MONEY.equals(refund.getMethod())) {
                 throw new ActivityException(HttpStatus.CONFLICT, "not-refundable", "This refund is not waiting to be done by hand.");
             }
             refund.refundedByHand(users.getReferenceById(by.id()), note.trim(), clock.instant());
+            //noinspection LoggingSimilarMessage
             log.info("Staff {} refunded {} {} by hand on activity booking {}", by.username(), refund.getAmount(), refund.getCurrency(),
                     refund.getBooking().getReference());
             return response(refund);
         });
     }
 
-    /** Remboursements à faire à la main (mobile money) ; avec {@code all}, aussi les faits et les échoués. */
+    /**
+     * Remboursements à faire à la main (mobile money) ; avec {@code all}, aussi les faits et les échoués.
+     */
     public List<StaffActivityRefundResponse> refunds(boolean all) {
         List<String> statuses = all ? List.of(ActivityRefund.PENDING, ActivityRefund.REFUNDED, ActivityRefund.FAILED) : List.of(ActivityRefund.PENDING);
-        return tx.execute(status -> refunds.findByStatuses(statuses).stream().map(ActivityRefundService::response).toList());
+        return tx.execute(_ -> refunds.findByStatuses(statuses).stream().map(ActivityRefundService::response).toList());
     }
 
-    /** Un remboursement Stripe échoué est retenté (nouvelle ligne : l'ancienne reste dans l'historique). */
+    /**
+     * Un remboursement Stripe échoué est retenté (nouvelle ligne : l'ancienne reste dans l'historique).
+     */
     public void retry(StaffPrincipal by, Integer id) {
-        Integer next = tx.execute(status -> {
+        Integer next = tx.execute(_ -> {
             ActivityRefund failed = refunds.findById(id)
                     .orElseThrow(() -> new ActivityException(HttpStatus.NOT_FOUND, "refund-not-found", "Unknown refund."));
             if (!ActivityRefund.FAILED.equals(failed.getStatus())) {
@@ -175,14 +199,18 @@ public class ActivityRefundService {
         issue(next);
     }
 
-    /** Payé moins remboursé (remboursements échoués exclus) ; zéro si rien n'a été payé. */
+    /**
+     * Payé moins remboursé (remboursements échoués exclus) ; zéro si rien n'a été payé.
+     */
     BigDecimal refundable(ActivityBooking booking) {
         BigDecimal refunded = refunds.findByBookingId(booking.getId()).stream()
                 .filter(ActivityRefund::counts).map(ActivityRefund::getAmount).reduce(BigDecimal.ZERO, BigDecimal::add);
         return paid(booking).subtract(refunded).max(BigDecimal.ZERO);
     }
 
-    /** Montant encaissé : carte capturée, ou mobile money reçu (à temps ou en retard). */
+    /**
+     * Montant encaissé : carte capturée, ou mobile money reçu (à temps ou en retard).
+     */
     BigDecimal paid(ActivityBooking booking) {
         Optional<StripePayment> card = cardPayments.findFirstByActivityBookingIdOrderByIdDesc(booking.getId());
         if (card.isPresent() && card.get().getAmountCaptured() > 0) {
@@ -199,9 +227,11 @@ public class ActivityRefundService {
         return refunds.save(new ActivityRefund(booking, card ? ActivityRefund.CARD : ActivityRefund.MOBILE_MONEY, amount, reason, by));
     }
 
-    /** Remboursement par carte envoyé à Stripe ; le mobile money reste en attente d'un responsable. */
+    /**
+     * Remboursement par carte envoyé à Stripe ; le mobile money reste en attente d'un responsable.
+     */
     private void issue(Integer refundId) {
-        CardRefund card = tx.execute(status -> {
+        CardRefund card = tx.execute(_ -> {
             ActivityRefund refund = refunds.findById(refundId).orElseThrow();
             if (!ActivityRefund.CARD.equals(refund.getMethod()) || !ActivityRefund.PENDING.equals(refund.getStatus())) {
                 return null;
@@ -231,7 +261,7 @@ public class ActivityRefundService {
         }
         String failure = outcome;
         String refundOf = stripeId;
-        tx.executeWithoutResult(status -> refunds.findById(card.id()).ifPresent(refund -> {
+        tx.executeWithoutResult(_ -> refunds.findById(card.id()).ifPresent(refund -> {
             if (failure == null) {
                 refund.refundedByStripe(refundOf, clock.instant());
             } else {
@@ -245,21 +275,9 @@ public class ActivityRefundService {
         }
     }
 
-    private static void requireWithin(BigDecimal amount, BigDecimal refundable) {
-        if (amount.signum() < 0 || amount.compareTo(refundable) > 0) {
-            throw new ActivityException(HttpStatus.BAD_REQUEST, "refund-too-high",
-                    "At most " + ActivityContent.plain(refundable) + " can still be refunded.");
-        }
-    }
-
-    static StaffActivityRefundResponse response(ActivityRefund refund) {
-        ActivityBooking booking = refund.getBooking();
-        return new StaffActivityRefundResponse(refund.getId(), booking.getReference(), booking.getSlot().getOption().getActivity().getTitle(),
-                booking.getSlot().getStartsAt().toString(), booking.getGivenName() + " " + booking.getFamilyName(), booking.getEmail(),
-                booking.getPhone(), refund.getMethod(), ActivityContent.plain(refund.getAmount()), refund.getCurrency(), refund.getStatus(),
-                refund.getReason(), refund.getFailureReason(),
-                refund.getRequestedBy() == null ? null : refund.getRequestedBy().getFullName(),
-                refund.getRefundedBy() == null ? null : refund.getRefundedBy().getFullName(), refund.getNote(),
-                refund.getCreatedAt().toString(), ActivityContent.text(refund.getRefundedAt()));
+    /**
+     * Remboursement Stripe à faire, lu en transaction.
+     */
+    private record CardRefund(Integer id, String reference, String paymentIntentId, long minorUnits) {
     }
 }

@@ -44,7 +44,9 @@ public class ActivityOption {
     @Column(nullable = false, precision = 12, scale = 2)
     private BigDecimal price;
 
-    /** Prix barré affiché à côté du prix ; nul s'il n'y a pas de réduction. */
+    /**
+     * Prix barré affiché à côté du prix ; nul s'il n'y a pas de réduction.
+     */
     @Column(name = "original_price", precision = 12, scale = 2)
     private BigDecimal originalPrice;
 
@@ -76,7 +78,9 @@ public class ActivityOption {
         edit(title, description, price, originalPrice, childPrice, capacity, true);
     }
 
-    /** Prix et places pour les réservations suivantes ; les réservations faites gardent leur prix. */
+    /**
+     * Prix et places pour les réservations suivantes ; les réservations faites gardent leur prix.
+     */
     public void edit(String title, String description, BigDecimal price, BigDecimal originalPrice, BigDecimal childPrice, int capacity,
                      boolean active) {
         this.title = title;

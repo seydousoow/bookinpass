@@ -16,7 +16,9 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-/** Envoi par AWS SES ({@code SendRawEmail}), trois essais espacés. L'appelant gère l'asynchronisme. */
+/**
+ * Envoi par AWS SES ({@code SendRawEmail}), trois essais espacés. L'appelant gère l'asynchronisme.
+ */
 @Slf4j
 @Service
 public class MailSenderService {
@@ -29,38 +31,6 @@ public class MailSenderService {
 
     public MailSenderService(ObjectProvider<SimpleEmailServiceJavaMailSender> javaMailSender) {
         this.javaMailSender = javaMailSender;
-    }
-
-    /**
-     * @param tags         étiquettes SES ({@code X-SES-MESSAGE-TAGS}), renvoyées sur les événements de remise
-     * @param inlineImages images PNG du corps, par identifiant ({@code cid:…} dans le HTML)
-     * @return {@code true} si SES a accepté l'e-mail
-     */
-    public boolean sendEmailWithRetry(String type, String from, String personal, String to, Set<String> bcc, String subject,
-                                      String body, Map<String, String> tags, Map<String, byte[]> attachments,
-                                      Map<String, byte[]> inlineImages) {
-        SimpleEmailServiceJavaMailSender sender = javaMailSender.getIfAvailable();
-        if (sender == null) {
-            log.warn("Mail [{}] not sent: SES is not configured (MAIL_ENABLED=false)", type);
-            return false;
-        }
-        for (int attempt = 1; attempt <= MAX_RETRIES; attempt++) {
-            try {
-                send(sender, from, personal, to, bcc, subject, body, tags, attachments, inlineImages);
-                log.info("Mail [{}] sent", type);
-                return true;
-            } catch (Exception e) {
-                log.warn("Attempt {} to send mail [{}] failed: {}", attempt, type, e.getMessage());
-                try {
-                    TimeUnit.MILLISECONDS.sleep(RETRY_BACKOFF_MS * attempt);
-                } catch (InterruptedException _) {
-                    Thread.currentThread().interrupt();
-                    break;
-                }
-            }
-        }
-        log.error("All {} attempts to send mail [{}] failed", MAX_RETRIES, type);
-        return false;
     }
 
     private static void send(SimpleEmailServiceJavaMailSender sender, String from, String personal, String to, Set<String> bcc,
@@ -103,5 +73,37 @@ public class MailSenderService {
                     .collect(Collectors.joining(", ")));
         }
         sender.send(message);
+    }
+
+    /**
+     * @param tags         étiquettes SES ({@code X-SES-MESSAGE-TAGS}), renvoyées sur les événements de remise
+     * @param inlineImages images PNG du corps, par identifiant ({@code cid:…} dans le HTML)
+     * @return {@code true} si SES a accepté l'e-mail
+     */
+    public boolean sendEmailWithRetry(String type, String from, String personal, String to, Set<String> bcc, String subject,
+                                      String body, Map<String, String> tags, Map<String, byte[]> attachments,
+                                      Map<String, byte[]> inlineImages) {
+        SimpleEmailServiceJavaMailSender sender = javaMailSender.getIfAvailable();
+        if (sender == null) {
+            log.warn("Mail [{}] not sent: SES is not configured (MAIL_ENABLED=false)", type);
+            return false;
+        }
+        for (int attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+            try {
+                send(sender, from, personal, to, bcc, subject, body, tags, attachments, inlineImages);
+                log.info("Mail [{}] sent", type);
+                return true;
+            } catch (Exception e) {
+                log.warn("Attempt {} to send mail [{}] failed: {}", attempt, type, e.getMessage());
+                try {
+                    TimeUnit.MILLISECONDS.sleep(RETRY_BACKOFF_MS * attempt);
+                } catch (InterruptedException _) {
+                    Thread.currentThread().interrupt();
+                    break;
+                }
+            }
+        }
+        log.error("All {} attempts to send mail [{}] failed", MAX_RETRIES, type);
+        return false;
     }
 }

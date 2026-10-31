@@ -35,6 +35,18 @@ import java.util.Set;
 public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
 
     /**
+     * Codes Duffel qui disent que l'offre (vol) ou le tarif (hébergement) n'est plus réservable :
+     * le front renvoie vers une nouvelle recherche.
+     */
+    private static final Set<String> OFFER_GONE = Set.of("offer_expired", "offer_no_longer_available",
+            "offer_request_already_booked", "order_creation_already_attempted",
+            "result_no_longer_available", "rate_unavailable");
+    /**
+     * L'offre existe toujours, mais pas telle que l'utilisateur l'a vue : il faut la relire.
+     */
+    private static final Set<String> OFFER_CHANGED = Set.of("price_changed", "ancillary_service_not_available");
+
+    /**
      * Une valeur non convertible (« abc » pour un entier) ne doit pas exposer les types Java au client.
      */
     private static String describe(ObjectError error) {
@@ -50,16 +62,6 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
         problem.setProperty("errors", errors);
         return ResponseEntity.badRequest().headers(headers).body(problem);
     }
-
-    /**
-     * Codes Duffel qui disent que l'offre (vol) ou le tarif (hébergement) n'est plus réservable :
-     * le front renvoie vers une nouvelle recherche.
-     */
-    private static final Set<String> OFFER_GONE = Set.of("offer_expired", "offer_no_longer_available",
-            "offer_request_already_booked", "order_creation_already_attempted",
-            "result_no_longer_available", "rate_unavailable");
-    /** L'offre existe toujours, mais pas telle que l'utilisateur l'a vue : il faut la relire. */
-    private static final Set<String> OFFER_CHANGED = Set.of("price_changed", "ancillary_service_not_available");
 
     /**
      * Traduction des erreurs Duffel (voir « Response handling ») :

@@ -11,6 +11,8 @@ public interface UserRepository extends JpaRepository<User, Integer> {
 
     Optional<User> findByMatchKey(String matchKey);
 
-    /** Un client Duffel déjà connu pour cet e-mail (Duffel n'en accepte qu'un par e-mail). */
+    /**
+     * Un client Duffel déjà connu pour cet e-mail (Duffel n'en accepte qu'un par e-mail).
+     */
     Optional<User> findFirstByEmailIgnoreCaseAndDuffelUserIdIsNotNull(String email);
 }

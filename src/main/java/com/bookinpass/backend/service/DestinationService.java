@@ -27,6 +27,15 @@ public class DestinationService {
 
     private final CityRepository cities;
 
+    /**
+     * Sans accents, en minuscules, toute ponctuation ramenée à une espace : « Saint-Louis » → {@code saint louis}.
+     * Doit rester identique à {@code normalize} de {@code scripts/generate_cities_migration.py}.
+     */
+    public static String normalize(String value) {
+        String decomposed = COMBINING_MARKS.matcher(Normalizer.normalize(value, Normalizer.Form.NFKD)).replaceAll("");
+        return NON_ALPHANUMERIC.matcher(decomposed.toLowerCase(Locale.ROOT)).replaceAll(" ").strip();
+    }
+
     public List<DestinationResponse> search(String query, int limit) {
         String normalized = normalize(query);
         if (normalized.length() < MIN_QUERY_LENGTH) {
@@ -37,14 +46,5 @@ public class DestinationService {
 
     public Optional<DestinationResponse> find(int id) {
         return cities.findById(id).map(DestinationResponse::from);
-    }
-
-    /**
-     * Sans accents, en minuscules, toute ponctuation ramenée à une espace : « Saint-Louis » → {@code saint louis}.
-     * Doit rester identique à {@code normalize} de {@code scripts/generate_cities_migration.py}.
-     */
-    public static String normalize(String value) {
-        String decomposed = COMBINING_MARKS.matcher(Normalizer.normalize(value, Normalizer.Form.NFKD)).replaceAll("");
-        return NON_ALPHANUMERIC.matcher(decomposed.toLowerCase(Locale.ROOT)).replaceAll(" ").strip();
     }
 }

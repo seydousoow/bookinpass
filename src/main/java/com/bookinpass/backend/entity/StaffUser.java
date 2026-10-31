@@ -18,14 +18,18 @@ import org.hibernate.annotations.UpdateTimestamp;
 import java.time.Duration;
 import java.time.Instant;
 
-/** Compte du personnel (back-office). Le mot de passe n'est gardé que haché (BCrypt). */
+/**
+ * Compte du personnel (back-office). Le mot de passe n'est gardé que haché (BCrypt).
+ */
 @Entity
 @Table(name = "staff_user")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class StaffUser {
 
-    /** Échecs de connexion de suite avant blocage, et durée du blocage. */
+    /**
+     * Échecs de connexion de suite avant blocage, et durée du blocage.
+     */
     public static final int MAX_FAILED_LOGINS = 5;
     public static final Duration LOCK = Duration.ofMinutes(15);
 
@@ -47,7 +51,9 @@ public class StaffUser {
     @Column(nullable = false, length = 20)
     private StaffRole role;
 
-    /** Gare de travail ; vide pour admin et manager. */
+    /**
+     * Gare de travail ; vide pour admin et manager.
+     */
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "station_id")
     private TransportStation station;
@@ -75,7 +81,9 @@ public class StaffUser {
     @Column(name = "updated_at", nullable = false)
     private Instant updatedAt;
 
-    /** Nouveau compte, mot de passe provisoire : à changer à la première connexion. */
+    /**
+     * Nouveau compte, mot de passe provisoire : à changer à la première connexion.
+     */
     public StaffUser(String username, String passwordHash, String fullName, String phone, StaffRole role, TransportStation station) {
         this.username = username;
         this.passwordHash = passwordHash;
@@ -103,13 +111,17 @@ public class StaffUser {
         }
     }
 
-    /** Mot de passe choisi par la personne elle-même. */
+    /**
+     * Mot de passe choisi par la personne elle-même.
+     */
     public void changePassword(String passwordHash) {
         this.passwordHash = passwordHash;
         this.mustChangePassword = false;
     }
 
-    /** Mot de passe provisoire donné par un responsable : à changer à la prochaine connexion. */
+    /**
+     * Mot de passe provisoire donné par un responsable : à changer à la prochaine connexion.
+     */
     public void resetPassword(String passwordHash) {
         this.passwordHash = passwordHash;
         this.mustChangePassword = true;

@@ -29,7 +29,37 @@ public class StaffUserService {
     private final TransportStationRepository stations;
     private final StaffAuthService auth;
 
-    /** Son propre compte (profil du back-office). */
+    static StaffUserResponse response(StaffUser user) {
+        return new StaffUserResponse(user.getId(), user.getUsername(), user.getFullName(), user.getPhone(), user.getRole().dbValue(),
+                user.getStation() == null ? null : station(user.getStation()), user.isActive(), user.isMustChangePassword(),
+                user.getLastLoginAt() == null ? null : user.getLastLoginAt().toString());
+    }
+
+    public static StaffStationResponse station(TransportStation station) {
+        return new StaffStationResponse(station.getId(), station.getCode(), station.getName(), station.placeName(), station.getAddress(),
+                station.getPhone());
+    }
+
+    /**
+     * Admin : tous les rôles ; manager : chefs de gare et contrôleurs.
+     */
+    private static void requireManageable(StaffPrincipal by, StaffRole role) {
+        if (by.role() != StaffRole.ADMIN && role.allStations()) {
+            throw new StaffException(HttpStatus.FORBIDDEN, "forbidden", "Only an administrator manages administrators and managers.");
+        }
+    }
+
+    private static StaffException notFound() {
+        return new StaffException(HttpStatus.NOT_FOUND, "staff-not-found", "Unknown staff member.");
+    }
+
+    private static StaffException invalid(String code, String message) {
+        return new StaffException(HttpStatus.BAD_REQUEST, code, message);
+    }
+
+    /**
+     * Son propre compte (profil du back-office).
+     */
     @Transactional(readOnly = true)
     public StaffUserResponse me(StaffPrincipal staff) {
         return response(users.findById(staff.id()).orElseThrow(StaffUserService::notFound));
@@ -78,7 +108,9 @@ public class StaffUserService {
         return response(user);
     }
 
-    /** Mot de passe provisoire : sessions fermées, blocage levé, changement exigé à la connexion. */
+    /**
+     * Mot de passe provisoire : sessions fermées, blocage levé, changement exigé à la connexion.
+     */
     @Transactional
     public StaffUserResponse resetPassword(StaffPrincipal by, Integer id, String temporaryPassword) {
         StaffUser user = users.findById(id).orElseThrow(StaffUserService::notFound);
@@ -89,17 +121,6 @@ public class StaffUserService {
         return response(user);
     }
 
-    static StaffUserResponse response(StaffUser user) {
-        return new StaffUserResponse(user.getId(), user.getUsername(), user.getFullName(), user.getPhone(), user.getRole().dbValue(),
-                user.getStation() == null ? null : station(user.getStation()), user.isActive(), user.isMustChangePassword(),
-                user.getLastLoginAt() == null ? null : user.getLastLoginAt().toString());
-    }
-
-    public static StaffStationResponse station(TransportStation station) {
-        return new StaffStationResponse(station.getId(), station.getCode(), station.getName(), station.placeName(), station.getAddress(),
-                station.getPhone());
-    }
-
     private TransportStation station(StaffRole role, Integer stationId) {
         if (role.allStations()) {
             return null;
@@ -108,20 +129,5 @@ public class StaffUserService {
             throw invalid("station-required", "Station chiefs and inspectors work in a station.");
         }
         return stations.findById(stationId).orElseThrow(() -> invalid("station-not-found", "Unknown station."));
-    }
-
-    /** Admin : tous les rôles ; manager : chefs de gare et contrôleurs. */
-    private static void requireManageable(StaffPrincipal by, StaffRole role) {
-        if (by.role() != StaffRole.ADMIN && role.allStations()) {
-            throw new StaffException(HttpStatus.FORBIDDEN, "forbidden", "Only an administrator manages administrators and managers.");
-        }
-    }
-
-    private static StaffException notFound() {
-        return new StaffException(HttpStatus.NOT_FOUND, "staff-not-found", "Unknown staff member.");
-    }
-
-    private static StaffException invalid(String code, String message) {
-        return new StaffException(HttpStatus.BAD_REQUEST, code, message);
     }
 }

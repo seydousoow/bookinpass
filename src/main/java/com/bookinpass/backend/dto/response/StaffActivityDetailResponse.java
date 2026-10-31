@@ -4,7 +4,9 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.util.List;
 
-/** Fiche complète d'une activité pour le back-office : contenu modifiable, options, résumé des avis. */
+/**
+ * Fiche complète d'une activité pour le back-office : contenu modifiable, options, résumé des avis.
+ */
 public record StaffActivityDetailResponse(Integer id, String slug, String status, String title, ActivityCityResponse city, String category,
                                           @JsonProperty("provider_name") String providerName, String summary, String description,
                                           List<String> highlights, List<String> includes, List<String> excludes,

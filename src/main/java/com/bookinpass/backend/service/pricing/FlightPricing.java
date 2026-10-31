@@ -25,7 +25,9 @@ public final class FlightPricing {
     public static final BigDecimal OTHER_FEE = new BigDecimal("0.05");
     public static final BigDecimal ANCILLARY_MARKUP = new BigDecimal("0.20");
 
-    /** Devises sans décimales chez Stripe : leur montant s'exprime en unités entières. */
+    /**
+     * Devises sans décimales chez Stripe : leur montant s'exprime en unités entières.
+     */
     private static final Set<String> ZERO_DECIMAL = Set.of("BIF", "CLP", "DJF", "GNF", "JPY", "KMF", "KRW", "MGA", "PYG",
             "RWF", "UGX", "VND", "VUV", "XAF", "XOF", "XPF");
 
@@ -36,7 +38,9 @@ public final class FlightPricing {
         return ZERO_DECIMAL.contains(currency.toUpperCase()) ? 0 : 2;
     }
 
-    /** Taux des frais : même pays (tous les départs et arrivées), sinon taux général — pays inconnu compris. */
+    /**
+     * Taux des frais : même pays (tous les départs et arrivées), sinon taux général — pays inconnu compris.
+     */
     public static BigDecimal serviceFeeRate(JsonNode offer) {
         Set<String> countries = new HashSet<>();
         for (JsonNode slice : offer.path("slices")) {
@@ -46,14 +50,18 @@ public final class FlightPricing {
         return countries.size() == 1 && !countries.contains("") ? SAME_COUNTRY_FEE : OTHER_FEE;
     }
 
-    /** Frais de service BIP sur le billet ({@code total_amount} de l'offre), arrondis à la devise. */
+    /**
+     * Frais de service BIP sur le billet ({@code total_amount} de l'offre), arrondis à la devise.
+     */
     public static BigDecimal serviceFee(JsonNode offer) {
         String currency = offer.path("total_currency").asString();
         BigDecimal ticket = new BigDecimal(offer.path("total_amount").asString());
         return ticket.multiply(serviceFeeRate(offer)).setScale(decimals(currency), RoundingMode.HALF_UP);
     }
 
-    /** Prix de vente unitaire d'un service : prix Duffel +20 %, arrondi à la devise. */
+    /**
+     * Prix de vente unitaire d'un service : prix Duffel +20 %, arrondi à la devise.
+     */
     public static BigDecimal ancillaryUnitPrice(BigDecimal duffelUnitPrice, String currency) {
         return duffelUnitPrice.multiply(BigDecimal.ONE.add(ANCILLARY_MARKUP)).setScale(decimals(currency), RoundingMode.HALF_UP);
     }

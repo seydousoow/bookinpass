@@ -3,9 +3,9 @@ package com.bookinpass.backend.controller;
 import com.bookinpass.backend.config.OpenApiConfig;
 import com.bookinpass.backend.service.DuffelWebhookService;
 import com.bookinpass.backend.service.PaymentService;
-import com.bookinpass.backend.service.activity.ActivityMobilePaymentService;
+import com.bookinpass.backend.service.booking.ActivityMobilePaymentService;
+import com.bookinpass.backend.service.booking.TransportMobilePaymentService;
 import com.bookinpass.backend.service.payment.PayDunyaCheckout;
-import com.bookinpass.backend.service.transport.TransportMobilePaymentService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -45,7 +45,9 @@ public class WebhookController {
     private final TransportMobilePaymentService transportMobile;
     private final ActivityMobilePaymentService activityMobile;
 
-    /** URL à déclarer chez Duffel. Corps lu en octets : la signature porte sur le corps exact envoyé par Duffel. */
+    /**
+     * URL à déclarer chez Duffel. Corps lu en octets : la signature porte sur le corps exact envoyé par Duffel.
+     */
     @PostMapping(path = "/duffel", consumes = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Webhook Duffel", description = "Événements Duffel signés (`X-Duffel-Signature`) : commandes, changements de vol, paiements, ping.")
     @ApiResponse(responseCode = "200", description = "Événement reçu — `{\"success\": true}`, la réponse attendue par Duffel")
@@ -57,7 +59,9 @@ public class WebhookController {
         return Map.of("success", true);
     }
 
-    /** URL à déclarer chez Stripe. Corps lu en octets : la signature porte sur le corps exact envoyé par Stripe. */
+    /**
+     * URL à déclarer chez Stripe. Corps lu en octets : la signature porte sur le corps exact envoyé par Stripe.
+     */
     @PostMapping(path = "/stripe", consumes = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Webhook Stripe", description = "Événements des sessions Checkout, signés (`Stripe-Signature`).")
     @ApiResponse(responseCode = "204", description = "Événement reçu")

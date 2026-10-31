@@ -19,7 +19,9 @@ import java.util.HexFormat;
  */
 public final class WebhookSignature {
 
-    /** Stripe : horodatage à 5 min près, contre le rejeu (chaque nouvelle tentative est signée de nouveau). */
+    /**
+     * Stripe : horodatage à 5 min près, contre le rejeu (chaque nouvelle tentative est signée de nouveau).
+     */
     public static final Duration STRIPE_TOLERANCE = Duration.ofMinutes(5);
 
     private WebhookSignature() {
