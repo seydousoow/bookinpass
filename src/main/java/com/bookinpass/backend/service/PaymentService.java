@@ -3,8 +3,8 @@ package com.bookinpass.backend.service;
 import com.bookinpass.backend.client.StripeClient;
 import com.bookinpass.backend.client.WebhookSignature;
 import com.bookinpass.backend.config.StripeProperties;
-import com.bookinpass.backend.dto.request.PriceOfferRequest;
 import com.bookinpass.backend.dto.request.PriceOfferRequest.IntendedService;
+import com.bookinpass.backend.dto.request.PriceOfferRequest;
 import com.bookinpass.backend.dto.response.CheckoutSessionResponse;
 import com.bookinpass.backend.exception.PaymentException;
 import com.bookinpass.backend.service.pricing.FlightPricing;
@@ -14,6 +14,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.json.JsonMapper;
 import tools.jackson.databind.node.ObjectNode;
@@ -107,7 +108,7 @@ public class PaymentService {
         FlightQuote quote = quote(offerId, services);
         String summary = summary(services);
         // Retour sur la page de l'offre : le formulaire y relit la session et reprend son statut.
-        String returnUrl = stripeProperties.frontendUrl().replaceAll("/+$", "") + returnPath + "?checkout_session_id={CHECKOUT_SESSION_ID}";
+        String returnUrl = StringUtils.trimTrailingCharacter(stripeProperties.frontendUrl(), '/') + returnPath + "?checkout_session_id={CHECKOUT_SESSION_ID}";
         JsonNode session = stripe.createCheckoutSession(quote.sellingMinorUnits(), quote.currency(), label(quote.offer()), returnUrl, locale,
                 Map.of("offer_id", offerId, "services", summary, "amount", quote.sellingTotal().toPlainString()),
                 idempotencyKey(offerId, summary, Long.toString(quote.sellingMinorUnits()), quote.currency(), Integer.toString(attempt), locale));
@@ -129,7 +130,7 @@ public class PaymentService {
         BigDecimal total = StayPricing.sellingTotal(quote);
         long minorUnits = total.movePointRight(FlightPricing.decimals(currency)).longValueExact();
         String label = quote.path("accommodation").path("name").asString("Book In Pass");
-        String returnUrl = stripeProperties.frontendUrl().replaceAll("/+$", "") + returnPath + "?checkout_session_id={CHECKOUT_SESSION_ID}";
+        String returnUrl = StringUtils.trimTrailingCharacter(stripeProperties.frontendUrl(), '/') + returnPath + "?checkout_session_id={CHECKOUT_SESSION_ID}";
         JsonNode session = stripe.createCheckoutSession(minorUnits, currency, label, returnUrl, locale,
                 Map.of("quote_id", quoteId, "kind", "stay", "amount", total.toPlainString()),
                 "bip-stay-" + idempotencyKey(quoteId, Long.toString(minorUnits), currency, Integer.toString(attempt), locale));

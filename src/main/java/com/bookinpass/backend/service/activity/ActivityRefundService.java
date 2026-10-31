@@ -265,7 +265,7 @@ public class ActivityRefundService {
             if (failure == null) {
                 refund.refundedByStripe(refundOf, clock.instant());
             } else {
-                refund.failed(failure);
+                refund.markFailed(failure);
             }
         }));
         if (failure == null) {

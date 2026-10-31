@@ -11,6 +11,7 @@ import lombok.experimental.SuperBuilder;
 import tools.jackson.databind.json.JsonMapper;
 
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
@@ -69,8 +70,18 @@ public abstract class BaseMailProperties {
         map.remove("bccRecipients");
         map.remove("attachments");
         map.remove("inlineImages");
-        map.put("baseUrl", siteUrl == null ? "" : siteUrl.replaceAll("/+$", ""));
-        map.put("lang", (lang == null ? MailLang.FR : lang).name().toLowerCase(java.util.Locale.ROOT));
+        String url;
+        if (siteUrl != null) {
+            int end = siteUrl.length();
+            while (end > 0 && siteUrl.charAt(end - 1) == '/') {
+                end--;
+            }
+            url = siteUrl.substring(0, end);
+        } else {
+            url = null;
+        }
+        map.put("baseUrl", url);
+        map.put("lang", (lang == null ? MailLang.FR : lang).name().toLowerCase(Locale.ROOT));
         return map;
     }
 

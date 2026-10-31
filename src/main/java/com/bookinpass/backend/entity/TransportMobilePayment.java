@@ -132,7 +132,7 @@ public class TransportMobilePayment implements SeatMobilePayment {
     /**
      * Client remboursé (opérateur, référence de transaction dans {@code note}).
      */
-    public void refunded(StaffUser by, String note, Instant at) {
+    public void markRefunded(StaffUser by, String note, Instant at) {
         this.status = REFUNDED;
         this.refundedBy = by;
         this.refundNote = note;

@@ -229,10 +229,10 @@ public class BookingRecorder {
                 }
             }
             case "payment_intent.payment_failed", "checkout.session.async_payment_failed" ->
-                    payment.failed(object.path("last_payment_error").path("code").asString(type));
+                    payment.markFailed(object.path("last_payment_error").path("code").asString(type));
             case "charge.refunded" -> {
                 amount = object.path("amount_refunded").asLong();
-                payment.refunded(amount, at);
+                payment.markRefunded(amount, at);
             }
             default -> {
                 // Événement suivi pour l'historique seulement (session terminée, autorisation mise à jour…).

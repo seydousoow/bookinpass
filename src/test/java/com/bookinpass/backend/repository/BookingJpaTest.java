@@ -103,7 +103,7 @@ class BookingJpaTest {
         order.cancel(now.plusSeconds(3600));
         orderEvents.save(new FlightOrderEvent(order, "order_cancellation.confirmed", "wev_1", "{\"refund_to\":\"balance\"}", now)
                 .withRefund(new BigDecimal("150.00"), "EUR", "balance"));
-        payment.refunded(10000, now);
+        payment.markRefunded(10000, now);
         entityManager.flush();
         entityManager.clear();
 

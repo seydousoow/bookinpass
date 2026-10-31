@@ -4,10 +4,13 @@ import tools.jackson.databind.JsonNode;
 
 import java.math.BigDecimal;
 import java.text.NumberFormat;
+import java.time.DateTimeException;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
@@ -39,7 +42,6 @@ public final class FlightItinerary {
             for (int i = 0; i < segments.size(); i++) {
                 JsonNode segment = segments.get(i);
                 LocalDateTime arrival = dateTime(segment.path("arriving_at"));
-                LocalDateTime next = i + 1 < segments.size() ? dateTime(segments.get(i + 1).path("departing_at")) : null;
                 JsonNode cabin = segment.path("passengers").path(0);
                 String marketing = segment.path("marketing_carrier").path("name").asString("");
                 String operating = segment.path("operating_carrier").path("name").asString("");
@@ -53,7 +55,7 @@ public final class FlightItinerary {
                         duration(segment.path("duration").asString("")),
                         text(cabin.path("cabin_class")),
                         text(cabin.path("cabin_class_marketing_name")),
-                        arrival != null && next != null ? format(Duration.between(arrival, next)) : null));
+                        i + 1 < segments.size() ? layover(segment, segments.get(i + 1)) : null));
             }
             trips.add(new Trip(start == null ? null : capitalize(start.format(longDate), locale), city(slice.path("origin")),
                     city(slice.path("destination")), duration(slice.path("duration").asString("")), legs));
@@ -205,6 +207,30 @@ public final class FlightItinerary {
         long hours = duration.toHours();
         int minutes = duration.toMinutesPart();
         return hours == 0 ? minutes + "m" : minutes == 0 ? hours + "h" : hours + "h " + minutes + "m";
+    }
+
+    /**
+     * Correspondance : chaque heure est locale à son aéroport, comparée sur la même ligne de temps.
+     */
+    private static String layover(JsonNode segment, JsonNode next) {
+        ZonedDateTime arrival = zoned(segment.path("arriving_at"), segment.path("destination"));
+        ZonedDateTime departure = zoned(next.path("departing_at"), next.path("origin"));
+        return arrival == null || departure == null ? null : format(Duration.between(arrival, departure));
+    }
+
+    /**
+     * Fuseau de l'aéroport ; absent ou inconnu, UTC (deux heures sans fuseau se comparent telles quelles).
+     */
+    private static ZonedDateTime zoned(JsonNode at, JsonNode airport) {
+        LocalDateTime local = dateTime(at);
+        if (local == null) {
+            return null;
+        }
+        try {
+            return local.atZone(ZoneId.of(airport.path("time_zone").asString("")));
+        } catch (DateTimeException e) {
+            return local.atZone(ZoneOffset.UTC);
+        }
     }
 
     private static LocalDateTime dateTime(JsonNode node) {

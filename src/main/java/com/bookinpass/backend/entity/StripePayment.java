@@ -161,7 +161,7 @@ public class StripePayment {
         this.releasedAt = at;
     }
 
-    public void failed(String reason) {
+    public void markFailed(String reason) {
         this.status = StripePaymentStatus.FAILED;
         this.failureReason = reason;
     }
@@ -169,7 +169,7 @@ public class StripePayment {
     /**
      * Remboursement cumulé : total ou partiel selon le montant encaissé.
      */
-    public void refunded(long totalRefunded, Instant at) {
+    public void markRefunded(long totalRefunded, Instant at) {
         this.amountRefunded = totalRefunded;
         this.refundedAt = at;
         this.status = totalRefunded >= amountCaptured ? StripePaymentStatus.REFUNDED : StripePaymentStatus.PARTIALLY_REFUNDED;

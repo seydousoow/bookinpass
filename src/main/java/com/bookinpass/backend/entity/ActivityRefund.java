@@ -108,7 +108,7 @@ public class ActivityRefund {
         this.refundedAt = at;
     }
 
-    public void failed(String reason) {
+    public void markFailed(String reason) {
         this.status = FAILED;
         this.failureReason = reason;
     }

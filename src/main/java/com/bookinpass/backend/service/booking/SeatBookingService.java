@@ -17,6 +17,7 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.transaction.support.TransactionTemplate;
+import org.springframework.util.StringUtils;
 import tools.jackson.databind.JsonNode;
 
 import java.math.BigDecimal;
@@ -172,7 +173,7 @@ public abstract sealed class SeatBookingService<B extends SeatBooking, V> permit
 
         JsonNode session;
         try {
-            String returnUrl = stripeProperties.frontendUrl().replaceAll("/+$", "") + returnPath + "?checkout_session_id={CHECKOUT_SESSION_ID}";
+            String returnUrl = StringUtils.trimTrailingCharacter(stripeProperties.frontendUrl(), '/') + returnPath + "?checkout_session_id={CHECKOUT_SESSION_ID}";
             session = stripe.createCheckoutSession(held.minorUnits(), held.currency(), held.label(), returnUrl, locale,
                     Map.of("kind", kind, "booking", held.reference(), "amount", plain(held.total())),
                     "bip-" + kind + "-" + held.reference() + "-" + locale, held.holdExpiresAt().minus(HOLD.minus(SESSION)));

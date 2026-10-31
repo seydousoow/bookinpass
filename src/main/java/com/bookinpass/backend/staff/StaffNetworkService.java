@@ -167,7 +167,7 @@ public class StaffNetworkService {
         List<TransportSchedule> existing = schedules.findByRouteIdOrderByDayOfWeekAscDepartsAtAsc(routeId);
         for (Integer day : request.days().stream().distinct().toList()) {
             DayOfWeek dayOfWeek = DayOfWeek.of(day);
-            if (existing.stream().noneMatch(s -> s.getDayOfWeek() == dayOfWeek && s.getDepartsAt().equals(request.departsAt()))) {
+            if (existing.stream().noneMatch(s -> s.getDayOfWeek().equals(dayOfWeek) && s.getDepartsAt().equals(request.departsAt()))) {
                 schedules.save(new TransportSchedule(route, dayOfWeek, request.departsAt(), request.lastDeparture()));
             }
         }
