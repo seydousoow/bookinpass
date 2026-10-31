@@ -13,7 +13,10 @@ import tools.jackson.databind.json.JsonMapper;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
+
+import static java.util.Optional.ofNullable;
 
 /**
  * Données communes à tous les e-mails : destinataire, langue, nom affiché. Chaque type d'e-mail en hérite et ajoute
@@ -70,18 +73,15 @@ public abstract class BaseMailProperties {
         map.remove("bccRecipients");
         map.remove("attachments");
         map.remove("inlineImages");
-        String url;
-        if (siteUrl != null) {
-            int end = siteUrl.length();
-            while (end > 0 && siteUrl.charAt(end - 1) == '/') {
+        String url = ofNullable(siteUrl).map(s -> {
+            var end = s.length();
+            while (end > 0 && s.charAt(end - 1) == '/') {
                 end--;
             }
-            url = siteUrl.substring(0, end);
-        } else {
-            url = null;
-        }
+            return s.substring(0, end);
+        }).orElse("");
         map.put("baseUrl", url);
-        map.put("lang", (lang == null ? MailLang.FR : lang).name().toLowerCase(Locale.ROOT));
+        map.put("lang", Objects.requireNonNullElse(lang, MailLang.FR).name().toLowerCase(Locale.ROOT));
         return map;
     }
 
