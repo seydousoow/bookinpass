@@ -4,12 +4,16 @@ import com.bookinpass.backend.entity.ActivityMobilePayment;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.time.Instant;
 import java.util.Optional;
 
 @Repository
 public interface ActivityMobilePaymentRepository extends JpaRepository<ActivityMobilePayment, Integer> {
 
     Optional<ActivityMobilePayment> findByInvoiceToken(String invoiceToken);
+
+    /** Tentatives de paiement récentes d'une réservation (limite de fréquence). */
+    long countByBookingIdAndCreatedAtAfter(Integer bookingId, Instant after);
 
     boolean existsByInvoiceToken(String invoiceToken);
 

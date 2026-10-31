@@ -15,7 +15,7 @@ None of the integration's values are placeholders.
 
 **Files containing these values:**
 - [src/main/java/com/bookinpass/backend/client/StripeClient.java](src/main/java/com/bookinpass/backend/client/StripeClient.java)
-- [backend/src/main/java/com/bookinpass/backend/service/PaymentService.java](backend/src/main/java/com/bookinpass/backend/service/PaymentService.java)
+- [src/main/java/com/bookinpass/backend/service/PaymentService.java](src/main/java/com/bookinpass/backend/service/PaymentService.java)
 
 | Field | Current Value | What to Set |
 |-------|--------------|-------------|
@@ -27,7 +27,7 @@ None of the integration's values are placeholders.
 These parameters were configured in Checkout Studio and are already set correctly.
 
 **Files containing these parameters:**
-- [backend/src/main/java/com/bookinpass/backend/client/StripeClient.java](backend/src/main/java/com/bookinpass/backend/client/StripeClient.java)
+- [src/main/java/com/bookinpass/backend/client/StripeClient.java](src/main/java/com/bookinpass/backend/client/StripeClient.java)
 - `apps/front/src/app/core/payment/payment-form/payment-form.ts` in bookinpass-nx (appearance)
 
 | Parameter | Value |
@@ -67,14 +67,14 @@ same session (reload, return from a redirect). The front increments `attempt` wh
 
    ⚠️ A test secret key was pasted into a chat on 2026-10-16. **Roll it** (Dashboard → Developers → API keys) and
    update `.env`.
-2. **Webhook.** Endpoint: `POST {API}/payments/webhooks/stripe`. Subscribe to these events (they update
+2. **Webhook.** Endpoint: `POST {API}/webhooks/stripe`. Subscribe to these events (they update
    `stripe_payment`):
    - `checkout.session.completed`: authorisation recorded, even if the customer closes the tab before the booking
    - `checkout.session.async_payment_succeeded` and `checkout.session.async_payment_failed`
    - `payment_intent.succeeded` (captured), `payment_intent.canceled` (released), `payment_intent.payment_failed`
    - `charge.refunded` (refunded or partially refunded)
 
-   Locally: `stripe listen --forward-to localhost:8080/api/payments/webhooks/stripe`, then copy the `whsec_…` it prints.
+   Locally: `stripe listen --forward-to localhost:8080/api/webhooks/stripe`, then copy the `whsec_…` it prints.
 3. **Payment methods.** The Dashboard settings decide what the form shows. Redirect-based methods come back to `return_url`.
 4. **Dependencies.** None added. The backend calls the REST API directly (no Java SDK, because of the GraalVM native
    image). The frontend uses `@stripe/stripe-js` 10.1, whose `loadStripe` loads Stripe.js from `js.stripe.com`
@@ -85,12 +85,12 @@ same session (reload, return from a redirect). The front increments `attempt` wh
 | File | Role |
 |------|------|
 | `.../client/StripeClient.java` | `POST /v1/checkout/sessions` |
-| `backend/.../client/StripeWebhookVerifier.java` | `Stripe-Signature` check (HMAC-SHA256, 5-minute tolerance) |
-| `backend/.../service/PaymentService.java` | Selling price recomputed from Duffel, session creation, webhook handling |
-| `backend/.../controller/PaymentController.java` | `POST /payments/flights/{offerId}/checkout-session`, `POST /payments/webhooks/stripe` |
-| `backend/.../service/FlightOrderService.java` | Booking: session checked with Stripe, Duffel order, capture or cancel |
-| `backend/.../controller/FlightOrderController.java` | `POST /flights/orders` |
-| `backend/.../config/StripeProperties.java` | Keys, `api-version`, `webhook-secret`, `frontend-url` |
+| `.../client/StripeWebhookVerifier.java` | `Stripe-Signature` check (HMAC-SHA256, 5-minute tolerance) |
+| `.../service/PaymentService.java` | Selling price recomputed from Duffel, session creation, webhook handling |
+| `.../controller/PaymentController.java` | `POST /payments/flights/{offerId}/checkout-session` (webhook : `WebhookController`, `POST /webhooks/stripe`) |
+| `.../service/FlightOrderService.java` | Booking: session checked with Stripe, Duffel order, capture or cancel |
+| `.../controller/FlightOrderController.java` | `POST /flights/orders` |
+| `.../config/StripeProperties.java` | Keys, `api-version`, `webhook-secret`, `frontend-url` |
 | `frontend/src/app/core/payment/payment.service.ts` | Calls the backend endpoint |
 | `frontend/src/app/core/payment/payment-form/` | `<bip-payment-form>`: embedded form, shared by every booking type |
 

@@ -140,17 +140,23 @@ bookinpass:
   # Origines du front autorisées (CORS), séparées par des virgules ; par défaut celle de FRONTEND_URL.
   cors:
     allowed-origins: ${CORS_ALLOWED_ORIGINS:${FRONTEND_URL:http://localhost:4200}}
-  # PayDunya : billets de car payés par Wave, Orange Money, Free Money. Clés vides = moyen masqué.
+  # PayDunya : billets de car et activités, mobile money sur notre page (SOFTPAY) ou carte sur la page PayDunya.
+  # Montants en francs CFA entiers. Clés vides = moyens masqués.
   paydunya:
     base-url: ${PAYDUNYA_BASE_URL:https://app.paydunya.com/sandbox-api/v1}
     master-key: ${PAYDUNYA_MASTER_KEY:}
     private-key: ${PAYDUNYA_PRIVATE_KEY:}
     token: ${PAYDUNYA_TOKEN:}
-    # Identifiants PayDunya des moyens proposés (à vérifier dans le tableau de bord) ; vide = tous ceux du compte.
-    channels: ${PAYDUNYA_CHANNELS:wave-senegal,orange-money-senegal,free-money-senegal}
-    # Adresse publique de l'IPN (PayDunya l'appelle depuis Internet).
+    # Moyens proposés, dans cet ordre d'affichage ; vide = tous : paydunya-card, wave-senegal, orange-money-senegal,
+    # wave-ci, orange-money-ci, orange-money-burkina, orange-money-mali.
+    methods: ${PAYDUNYA_METHODS:}
+    # Adresse publique de l'IPN (PayDunya l'appelle depuis Internet) : https://<domaine de l'API>/api/webhooks/paydunya
     callback-url: ${PAYDUNYA_CALLBACK_URL:}
     store-name: Book In Pass
+  # Chiffrement des numéros de mobile money conservés (AES-256-GCM) : <id>:<clé de 32 octets en base64>, la plus récente
+  # en tête, séparées par des virgules (rotation). Vide = mobile money masqué. Clé : openssl rand -base64 32
+  payment-data:
+    keys: ${PAYMENT_DATA_KEYS:}
   # Claude : modération des avis d'activités et résumé des avis. Clé vide = avis modérés à la main seulement.
   anthropic:
     base-url: https://api.anthropic.com

@@ -6,7 +6,7 @@ import com.bookinpass.backend.dto.request.ActivityBookingRequest;
 import com.bookinpass.backend.dto.request.ActivityCancellationRequest;
 import com.bookinpass.backend.dto.request.ActivityReviewRequest;
 import com.bookinpass.backend.dto.request.TransportConfirmationRequest;
-import com.bookinpass.backend.dto.request.TransportMobilePaymentRequest;
+import com.bookinpass.backend.dto.request.MobilePaymentRequest;
 import com.bookinpass.backend.dto.response.ActivityBookingResponse;
 import com.bookinpass.backend.dto.response.ActivityCardResponse;
 import com.bookinpass.backend.dto.response.ActivityDestinationResponse;
@@ -15,11 +15,12 @@ import com.bookinpass.backend.dto.response.ActivityHoldResponse;
 import com.bookinpass.backend.dto.response.ActivityReviewResponse;
 import com.bookinpass.backend.dto.response.ActivitySlotResponse;
 import com.bookinpass.backend.dto.response.PageResponse;
-import com.bookinpass.backend.dto.response.TransportMobilePaymentResponse;
-import com.bookinpass.backend.dto.response.TransportPaymentMethodsResponse;
+import com.bookinpass.backend.dto.response.MobilePaymentResponse;
+import com.bookinpass.backend.dto.response.PaymentMethodsResponse;
 import com.bookinpass.backend.service.activity.ActivityBookingService;
 import com.bookinpass.backend.service.activity.ActivityCatalogService;
 import com.bookinpass.backend.service.activity.ActivityMobilePaymentService;
+import com.bookinpass.backend.service.payment.PayDunyaCheckout;
 import com.bookinpass.backend.service.activity.ReviewService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -72,6 +73,7 @@ public class ActivityController {
     private final ActivityCatalogService catalog;
     private final ActivityBookingService bookings;
     private final ActivityMobilePaymentService mobile;
+    private final PayDunyaCheckout paydunya;
     private final ReviewService reviews;
     private final StripeProperties stripe;
 
@@ -93,9 +95,9 @@ public class ActivityController {
     }
 
     @GetMapping("payment-methods")
-    @Operation(summary = "Moyens de paiement", description = "Carte (Stripe) et mobile money (PayDunya, activités en XOF), selon la configuration.")
-    public TransportPaymentMethodsResponse paymentMethods() {
-        return new TransportPaymentMethodsResponse(stripe.enabled(), mobile.available());
+    @Operation(summary = "Moyens de paiement", description = "Carte Stripe et moyens PayDunya (activités en XOF), selon la configuration.")
+    public PaymentMethodsResponse paymentMethods() {
+        return new PaymentMethodsResponse(stripe.enabled(), paydunya.offered());
     }
 
     @GetMapping("{slug}")
@@ -156,10 +158,10 @@ public class ActivityController {
     }
 
     @PostMapping(path = "bookings/{reference}/mobile-payment", consumes = MediaType.APPLICATION_JSON_VALUE)
-    @Operation(summary = "Payer par Wave / Orange Money", description = "Ferme la session de carte, crée une facture PayDunya et rend sa page de paiement.")
-    public TransportMobilePaymentResponse mobilePayment(@PathVariable @Pattern(regexp = REFERENCE) String reference,
-                                                       @Valid @RequestBody TransportMobilePaymentRequest request) {
-        return new TransportMobilePaymentResponse(mobile.start(reference.toUpperCase(), request.returnPath()));
+    @Operation(summary = "Payer via PayDunya", description = "Moyen, numéro national et code éventuel contrôlés ; ferme la session de carte, crée la facture PayDunya et la paie (SOFTPAY), ou rend la page de la carte PayDunya.")
+    public MobilePaymentResponse mobilePayment(@PathVariable @Pattern(regexp = REFERENCE) String reference,
+                                                       @Valid @RequestBody MobilePaymentRequest request) {
+        return mobile.start(reference.toUpperCase(), request);
     }
 
     @PostMapping("bookings/{reference}/mobile-payment/confirmation")

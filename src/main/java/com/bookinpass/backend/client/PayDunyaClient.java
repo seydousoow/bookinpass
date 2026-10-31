@@ -1,6 +1,7 @@
 package com.bookinpass.backend.client;
 
 import com.bookinpass.backend.exception.PaymentException;
+import com.bookinpass.backend.service.payment.PaymentMethod;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
@@ -14,9 +15,9 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * API PayDunya « checkout invoice » (JSON, clés en en-têtes {@code PAYDUNYA-*}) : facture à payer sur la page PayDunya
- * (Wave, Orange Money…), puis relecture de son statut. L'IPN n'est jamais crue sur parole : seul {@link #confirm}
- * fait foi.
+ * API PayDunya (JSON, clés en en-têtes {@code PAYDUNYA-*}) : facture ({@code checkout-invoice}), paiement direct de
+ * cette facture par mobile money ({@code softpay}), puis relecture de son statut. L'IPN n'est jamais crue sur parole :
+ * seul {@link #confirm} fait foi. Corps jamais journalisés (numéros, codes OTP).
  */
 @Slf4j
 public class PayDunyaClient {
@@ -35,6 +36,13 @@ public class PayDunyaClient {
 
     /** Client prérempli sur la page PayDunya. */
     public record Customer(String name, String email, String phone) {
+    }
+
+    /**
+     * Réponse SOFTPAY acceptée : {@code url} à ouvrir (Wave, QR code Orange Money), liens vers les applications Orange
+     * Money et Max it ; tout nul quand le code OTP a suffi ou que le client valide sur son téléphone.
+     */
+    public record Softpay(String url, String omUrl, String maxitUrl) {
     }
 
     /**
@@ -79,6 +87,49 @@ public class PayDunyaClient {
         }
         // La page de paiement est dans `response_text` (la documentation ne donne pas d'autre champ).
         return new Invoice(response.path("token").asString(), response.path("response_text").asString());
+    }
+
+    /**
+     * {@code POST /softpay/{path}} : paiement de la facture {@code invoiceToken} par le numéro national {@code phone}.
+     * Chaque moyen a ses propres noms de champs. Refus ({@code success} faux) : {@code payment-refused}, message
+     * générique (celui de PayDunya est journalisé, jamais rendu).
+     */
+    public Softpay softpay(PaymentMethod method, String invoiceToken, Customer customer, String phone, String otp) {
+        ObjectNode body = json.createObjectNode();
+        switch (method) {
+            case WAVE_SENEGAL -> body.put("wave_senegal_fullName", customer.name()).put("wave_senegal_email", customer.email())
+                    .put("wave_senegal_phone", phone).put("wave_senegal_payment_token", invoiceToken);
+            case ORANGE_MONEY_SENEGAL -> body.put("customer_name", customer.name()).put("customer_email", customer.email())
+                    .put("phone_number", phone).put("invoice_token", invoiceToken);
+            case WAVE_COTE_D_IVOIRE -> body.put("wave_ci_fullName", customer.name()).put("wave_ci_email", customer.email())
+                    .put("wave_ci_phone", phone).put("wave_ci_payment_token", invoiceToken);
+            case ORANGE_MONEY_COTE_D_IVOIRE -> body.put("orange_money_ci_customer_fullname", customer.name())
+                    .put("orange_money_ci_email", customer.email()).put("orange_money_ci_phone_number", phone)
+                    .put("orange_money_ci_otp", otp).put("payment_token", invoiceToken);
+            case ORANGE_MONEY_BURKINA_FASO -> body.put("name_bf", customer.name()).put("email_bf", customer.email())
+                    .put("phone_bf", phone).put("otp_code", otp).put("payment_token", invoiceToken);
+            // Adresse demandée par PayDunya, non collectée : le pays.
+            case ORANGE_MONEY_MALI -> body.put("orange_money_mali_customer_fullname", customer.name())
+                    .put("orange_money_mali_email", customer.email()).put("orange_money_mali_phone_number", phone)
+                    .put("orange_money_mali_customer_address", "Mali").put("payment_token", invoiceToken);
+            case PAYDUNYA_CARD -> throw new IllegalArgumentException("Card payments go through the PayDunya page");
+        }
+        JsonNode response = json.readTree(client.post()
+                .uri("/softpay/{path}", method.softpayPath())
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(json.writeValueAsString(body))
+                .retrieve()
+                .onStatus(HttpStatusCode::isError, (_, res) -> {
+                    throw failure("softpay " + method.id(), res.getStatusCode().value(), null);
+                })
+                .body(String.class));
+        if (!response.path("success").asBoolean(false)) {
+            log.warn("PayDunya softpay {} refused for invoice {}: {}", method.id(), invoiceToken, response.path("message").asString(""));
+            throw new PaymentException(HttpStatus.UNPROCESSABLE_CONTENT, "payment-refused",
+                    "The payment was refused; check the number and the code, then try again.");
+        }
+        JsonNode apps = response.path("other_url");
+        return new Softpay(response.path("url").asString(null), apps.path("om_url").asString(null), apps.path("maxit_url").asString(null));
     }
 
     /**

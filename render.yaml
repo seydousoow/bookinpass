@@ -103,7 +103,8 @@ services:
       - key: STRIPE_WEBHOOK_SECRET
         sync: false
 
-      # PayDunya : billets de car et activités payés par Wave / Orange Money / Free Money. Clés vides = moyen masqué.
+      # PayDunya : billets de car et activités, mobile money sur notre page (SOFTPAY) ou carte sur la page PayDunya.
+      # Clés vides = moyens masqués.
       # Valeur conseillée : https://app.paydunya.com/sandbox-api/v1 (test), puis https://app.paydunya.com/api/v1
       - key: PAYDUNYA_BASE_URL
         sync: false
@@ -113,12 +114,16 @@ services:
         sync: false
       - key: PAYDUNYA_TOKEN
         sync: false
-      # Valeur conseillée : https://bip-back.dicortex.com/api/transport/payments/paydunya
+      # Valeur conseillée : https://bip.dicortex.com/api/webhooks/paydunya
       - key: PAYDUNYA_CALLBACK_URL
         sync: false
-      # Moyens proposés sur la page PayDunya ; vide = tous ceux du compte.
-      # Valeur conseillée : wave-senegal,orange-money-senegal,free-money-senegal
-      - key: PAYDUNYA_CHANNELS
+      # Moyens proposés, dans cet ordre ; vide = tous (paydunya-card, wave-senegal, orange-money-senegal, wave-ci,
+      # orange-money-ci, orange-money-burkina, orange-money-mali).
+      - key: PAYDUNYA_METHODS
+        sync: false
+      # Chiffrement des numéros de mobile money (AES-256-GCM) : k1:<openssl rand -base64 32>. Rotation : k2:…,k1:…
+      # (ne jamais retirer une clé tant que des paiements en dépendent). Vide = mobile money masqué.
+      - key: PAYMENT_DATA_KEYS
         sync: false
 
       # Claude : modération des avis d'activités et résumé des avis. Clé vide = avis modérés à la main seulement.

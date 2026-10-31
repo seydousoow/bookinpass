@@ -19,11 +19,9 @@ import org.springframework.aot.hint.MemberCategory;
 import org.springframework.aot.hint.annotation.RegisterReflection;
 import org.springframework.http.MediaType;
 import org.springframework.http.ProblemDetail;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -59,17 +57,5 @@ public class PaymentController {
     public CheckoutSessionResponse stayCheckout(@Parameter(description = "Identifiant de devis Duffel", example = "quo_0000AS0NZdKjjnnHZmSUbI") @PathVariable @Pattern(regexp = "quo_[A-Za-z0-9]+") String quoteId,
                                                 @Valid @RequestBody StayPaymentRequest request) {
         return payments.createStayCheckout(quoteId, request.returnPath(), request.attempt(), request.locale());
-    }
-
-    /** Corps lu en octets : la signature porte sur le corps exact envoyé par Stripe. */
-    @PostMapping(path = "/webhooks/stripe", consumes = MediaType.APPLICATION_JSON_VALUE)
-    @Operation(summary = "Webhook Stripe", description = "Événements des sessions Checkout, signés (`Stripe-Signature`). Appelé par Stripe uniquement.")
-    @ApiResponse(responseCode = "204", description = "Événement reçu")
-    @ApiResponse(responseCode = "400", description = "Signature invalide ou trop ancienne (`invalid-signature`)", content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE, schema = @Schema(implementation = ProblemDetail.class)))
-    @ApiResponse(responseCode = "503", description = "Secret de webhook non configuré (`payments-unavailable`)", content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE, schema = @Schema(implementation = ProblemDetail.class)))
-    public ResponseEntity<Void> stripeWebhook(@RequestHeader(name = "Stripe-Signature", required = false) String signature,
-                                              @RequestBody byte[] payload) {
-        payments.handleWebhook(payload, signature);
-        return ResponseEntity.noContent().build();
     }
 }

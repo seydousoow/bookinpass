@@ -65,16 +65,6 @@ class PaymentControllerTest {
     }
 
     @Test
-    void stripeWebhookPassesTheRawBodyAndSignature() {
-        String payload = "{\"type\":\"checkout.session.completed\"}";
-
-        assertThat(mvc.post().uri("/payments/webhooks/stripe").header("Stripe-Signature", "t=1,v1=ab")
-                .contentType(MediaType.APPLICATION_JSON).content(payload))
-                .hasStatus(HttpStatus.NO_CONTENT);
-        org.mockito.Mockito.verify(payments).handleWebhook(argThat(body -> new String(body).equals(payload)), eq("t=1,v1=ab"));
-    }
-
-    @Test
     void stayCheckoutIsCreatedForTheQuote() {
         given(payments.createStayCheckout("quo_1", "/stays/srr_1", 0, "auto")).willReturn(new CheckoutSessionResponse("cs_s", "cs_s_secret", "pk_test", "220.50", "EUR"));
 

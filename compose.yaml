@@ -86,13 +86,14 @@ services:
       EXPEDIA_SECRET: ${EXPEDIA_SECRET:-}
       EXPEDIA_LOG_LEVEL: ${EXPEDIA_LOG_LEVEL:-info}
 
-      # PayDunya : Wave, Orange Money, Free Money (car et activités). Clés vides = moyen masqué.
+      # PayDunya : mobile money (SOFTPAY) et carte PayDunya (car et activités). Clés vides = moyens masqués.
       PAYDUNYA_BASE_URL: ${PAYDUNYA_BASE_URL:-https://app.paydunya.com/sandbox-api/v1}
       PAYDUNYA_MASTER_KEY: ${PAYDUNYA_MASTER_KEY:-}
       PAYDUNYA_PRIVATE_KEY: ${PAYDUNYA_PRIVATE_KEY:-}
       PAYDUNYA_TOKEN: ${PAYDUNYA_TOKEN:-}
-      PAYDUNYA_CHANNELS: ${PAYDUNYA_CHANNELS:-wave-senegal,orange-money-senegal,free-money-senegal}
+      PAYDUNYA_METHODS: ${PAYDUNYA_METHODS:-}
       PAYDUNYA_CALLBACK_URL: ${PAYDUNYA_CALLBACK_URL:-}
+      PAYMENT_DATA_KEYS: ${PAYMENT_DATA_KEYS:-}
 
       # Back-office du personnel : origine, cookie de session, premier administrateur.
       BACKOFFICE_URL: ${BACKOFFICE_URL:-http://localhost:4300}

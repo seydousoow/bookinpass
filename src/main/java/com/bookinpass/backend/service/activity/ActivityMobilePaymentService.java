@@ -2,8 +2,9 @@ package com.bookinpass.backend.service.activity;
 
 import com.bookinpass.backend.client.PayDunyaClient;
 import com.bookinpass.backend.client.StripeClient;
-import com.bookinpass.backend.config.PayDunyaProperties;
 import com.bookinpass.backend.config.StripeProperties;
+import com.bookinpass.backend.dto.request.MobilePaymentRequest;
+import com.bookinpass.backend.dto.response.MobilePaymentResponse;
 import com.bookinpass.backend.dto.response.ActivityBookingResponse;
 import com.bookinpass.backend.entity.Activity;
 import com.bookinpass.backend.entity.ActivityBooking;
@@ -13,6 +14,8 @@ import com.bookinpass.backend.exception.ActivityException;
 import com.bookinpass.backend.exception.PaymentException;
 import com.bookinpass.backend.repository.ActivityBookingRepository;
 import com.bookinpass.backend.repository.ActivityMobilePaymentRepository;
+import com.bookinpass.backend.service.payment.PayDunyaCheckout;
+import com.bookinpass.backend.service.payment.PaymentMethod;
 import com.bookinpass.backend.service.activity.ActivityBookingService.Settlement;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -30,10 +33,10 @@ import java.util.Locale;
 import java.util.Map;
 
 /**
- * Activités payées par Wave, Orange Money ou Free Money, via PayDunya, comme les billets de car : la session de carte
- * est fermée, une facture PayDunya est créée, les places restent bloquées 20 minutes au moins ; au retour du client
- * (ou à l'IPN) la facture est relue chez PayDunya. Payée après la revente des places : un remboursement à la main est
- * ouvert au back-office.
+ * Activités payées via PayDunya, comme les billets de car ({@link PayDunyaCheckout}) : session de carte Stripe
+ * fermée, facture PayDunya créée puis payée sur notre page (mobile money) ou sur la page PayDunya (carte), places
+ * bloquées 20 minutes au moins ; la facture est relue chez PayDunya (le front, l'IPN). Payée après la revente des
+ * places : un remboursement à la main est ouvert au back-office.
  */
 @Slf4j
 @Service
@@ -48,7 +51,7 @@ public class ActivityMobilePaymentService {
     private final ActivityBookingRepository bookings;
     private final ActivityMobilePaymentRepository mobile;
     private final PayDunyaClient paydunya;
-    private final PayDunyaProperties properties;
+    private final PayDunyaCheckout checkout;
     private final StripeClient stripe;
     private final StripeProperties stripeProperties;
     private final TransactionTemplate tx;
@@ -59,7 +62,7 @@ public class ActivityMobilePaymentService {
     }
 
     public boolean available() {
-        return properties.enabled();
+        return checkout.available();
     }
 
     /** Facture PayDunya de cette application ? L'IPN est partagée avec les billets de car. */
@@ -67,34 +70,56 @@ public class ActivityMobilePaymentService {
         return token != null && mobile.existsByInvoiceToken(token);
     }
 
-    /** Page PayDunya où payer la réservation {@code reference} (places encore bloquées). */
-    public String start(String reference, String returnPath) {
-        if (!available()) {
-            throw new PaymentException(HttpStatus.SERVICE_UNAVAILABLE, "payments-unavailable", "Mobile money is not configured.");
-        }
+    /**
+     * Paiement PayDunya de la réservation {@code reference} (places encore bloquées) : moyen, numéro et code contrôlés,
+     * session de carte fermée, facture créée puis payée sur notre page (SOFTPAY) ou sur la page PayDunya (carte). La
+     * réponse dit au client quoi faire ; un code OTP accepté est relu aussitôt.
+     */
+    public MobilePaymentResponse start(String reference, MobilePaymentRequest request) {
+        PayDunyaCheckout.Attempt attempt = checkout.validate(request);
         Instant now = clock.instant();
-        Order order = tx.execute(status -> bookings.findByReference(reference)
-                .filter(b -> b.getStatus() == ActivityBookingStatus.HELD && b.getHoldExpiresAt().isAfter(now))
-                .map(ActivityMobilePaymentService::order)
-                .orElse(null));
+        Order order = tx.execute(status -> {
+            ActivityBooking booking = bookings.findByReference(reference)
+                    .filter(b -> b.getStatus() == ActivityBookingStatus.HELD && b.getHoldExpiresAt().isAfter(now))
+                    .orElse(null);
+            if (booking == null) {
+                return null;
+            }
+            if (mobile.countByBookingIdAndCreatedAtAfter(booking.getId(), now.minus(PayDunyaCheckout.ATTEMPT_WINDOW)) >= PayDunyaCheckout.MAX_ATTEMPTS) {
+                throw new PaymentException(HttpStatus.TOO_MANY_REQUESTS, "too-many-attempts", "Too many payment attempts; wait a few minutes.");
+            }
+            return order(booking);
+        });
         if (order == null) {
             throw new ActivityException(HttpStatus.CONFLICT, "hold-expired", "These places are no longer held; start again.");
         }
-        if (!"XOF".equals(order.currency())) {
-            throw new PaymentException(HttpStatus.SERVICE_UNAVAILABLE, "payments-unavailable", "Mobile money is only offered in XOF.");
-        }
+        long francs = PayDunyaCheckout.francs(order.total(), order.currency());
         closeCardSession(order);
 
-        String site = stripeProperties.frontendUrl().replaceAll("/+$", "") + returnPath + "?mobile=" + reference;
-        PayDunyaClient.Invoice invoice = paydunya.createInvoice(order.total().longValueExact(), order.description(), properties.storeName(),
-                order.customer(), Map.of("booking", reference, "kind", ActivityBookingService.KIND), site, site + "&cancelled=1",
-                properties.callbackUrl(), properties.channels());
+        String site = stripeProperties.frontendUrl().replaceAll("/+$", "") + request.returnPath() + "?mobile=" + reference;
+        PayDunyaClient.Invoice invoice = checkout.invoice(attempt, francs, order.description(), order.customer(),
+                Map.of("booking", reference, "kind", ActivityBookingService.KIND), site, site + "&cancelled=1");
         tx.executeWithoutResult(status -> {
             ActivityBooking booking = bookings.lockByReference(reference).orElseThrow();
-            mobile.save(new ActivityMobilePayment(booking, invoice.token(), order.total(), order.currency()));
+            mobile.save(new ActivityMobilePayment(booking, invoice.token(), order.total(), order.currency(), attempt.method().id(),
+                    checkout.encryptedPhone(attempt), attempt.masked()));
             booking.extendHold(clock.instant().plus(MOBILE_HOLD));
         });
-        return invoice.url();
+        MobilePaymentResponse next;
+        try {
+            next = checkout.pay(attempt, invoice, order.customer());
+        } catch (PaymentException e) {
+            // Refus explicite de PayDunya seulement : sur une panne, le paiement a pu partir, la facture reste à relire.
+            if ("payment-refused".equals(e.code())) {
+                tx.executeWithoutResult(status -> mobile.findByInvoiceToken(invoice.token()).filter(ActivityMobilePayment::isPending)
+                        .ifPresent(p -> p.close("failed")));
+            }
+            throw e;
+        }
+        if (attempt.method().step() == PaymentMethod.Step.OTP) {
+            apply(invoice.token());
+        }
+        return new MobilePaymentResponse(next.step(), next.url(), next.omUrl(), next.maxitUrl(), sale.view(reference).status());
     }
 
     /** Retour du client depuis PayDunya : facture relue ; réservation confirmée, ou encore en attente du paiement. */

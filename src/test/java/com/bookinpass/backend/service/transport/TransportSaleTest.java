@@ -3,11 +3,18 @@ package com.bookinpass.backend.service.transport;
 import com.bookinpass.backend.client.StripeClient;
 import com.bookinpass.backend.client.PayDunyaClient;
 import com.bookinpass.backend.config.PayDunyaProperties;
+import com.bookinpass.backend.config.PaymentDataProperties;
+import com.bookinpass.backend.dto.request.MobilePaymentRequest;
+import com.bookinpass.backend.service.payment.PayDunyaCheckout;
+import com.bookinpass.backend.service.payment.PaymentDataCipher;
+import com.bookinpass.backend.service.payment.PaymentMethod;
 import com.bookinpass.backend.config.StripeProperties;
 import com.bookinpass.backend.dto.request.TransportBookingRequest;
+import com.bookinpass.backend.dto.response.MobilePaymentResponse;
 import com.bookinpass.backend.dto.response.TransportBookingResponse;
 import com.bookinpass.backend.dto.response.TransportDepartureResponse;
 import com.bookinpass.backend.dto.response.TransportHoldResponse;
+import com.bookinpass.backend.exception.PaymentException;
 import com.bookinpass.backend.exception.TransportException;
 import com.bookinpass.backend.service.BookingRecorder;
 import com.bookinpass.backend.service.StripeCheckoutEvent;
@@ -21,6 +28,7 @@ import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
+import org.springframework.http.HttpStatus;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.transaction.annotation.Propagation;
@@ -47,10 +55,12 @@ import java.util.concurrent.Future;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyMap;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.reset;
@@ -65,7 +75,7 @@ import static org.mockito.Mockito.verify;
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 @Transactional(propagation = Propagation.NOT_SUPPORTED)
 @Testcontainers
-@Import({TransportSearchService.class, TransportBookingService.class, TransportMobilePaymentService.class, BookingRecorder.class, TransportSaleTest.Config.class})
+@Import({TransportSearchService.class, TransportBookingService.class, TransportMobilePaymentService.class, BookingRecorder.class, PayDunyaCheckout.class, PaymentDataCipher.class, TransportSaleTest.Config.class})
 class TransportSaleTest {
 
     @Container
@@ -93,7 +103,12 @@ class TransportSaleTest {
         @Bean
         PayDunyaProperties payDunyaProperties() {
             return new PayDunyaProperties("https://app.paydunya.com/sandbox-api/v1", "master", "private", "token",
-                    List.of("wave-senegal", "orange-money-senegal"), "https://api.example.com/api/transport/payments/paydunya", "Book In Pass");
+                    List.of(), "https://api.example.com/api/webhooks/paydunya", "Book In Pass");
+        }
+
+        @Bean
+        PaymentDataProperties paymentDataProperties() {
+            return new PaymentDataProperties("k1:" + java.util.Base64.getEncoder().encodeToString(new byte[32]));
         }
 
         @Bean
@@ -115,6 +130,9 @@ class TransportSaleTest {
     TransportMobilePaymentService mobile;
 
     @Autowired
+    PaymentDataCipher cipher;
+
+    @Autowired
     TransportSearchService search;
 
     @Autowired
@@ -131,6 +149,8 @@ class TransportSaleTest {
     @BeforeEach
     void cleanSlate() {
         clock.set(NOW);
+        given(paydunya.softpay(any(), anyString(), any(), anyString(), any()))
+                .willReturn(new PayDunyaClient.Softpay("https://pay.wave.com/c/test", null, null));
         jdbc.update("UPDATE stripe_payment SET transport_booking_id = NULL");
         jdbc.update("DELETE FROM transport_mobile_payment");
         jdbc.update("DELETE FROM transport_booking");
@@ -322,6 +342,11 @@ class TransportSaleTest {
                 .isInstanceOfSatisfying(TransportException.class, e -> assertThat(e.code()).isEqualTo("departure-closed"));
     }
 
+    /** Wave Sénégal depuis notre page, numéro national. */
+    private static MobilePaymentRequest wave(String returnPath) {
+        return new MobilePaymentRequest("wave-senegal", "77 123 45 67", null, returnPath);
+    }
+
     /** Facture PayDunya {@code token} relue : statut et montant payé. */
     private void invoice(String token, String status, long amount, String booking) {
         given(paydunya.confirm(token)).willReturn(json.readTree("""
@@ -336,21 +361,109 @@ class TransportSaleTest {
     }
 
     @Test
-    @DisplayName("Wave / Orange Money : session de carte fermée, facture PayDunya au montant des billets, places bloquées 20 min de plus")
-    void mobileMoneyStartsAPayDunyaInvoice() {
+    @DisplayName("Wave depuis notre page : session de carte fermée, facture en francs CFA au nom du numéro, payée par SOFTPAY ; numéro chiffré, places bloquées 20 min de plus")
+    void mobileMoneyPaysTheInvoiceFromOurPage() {
         TransportHoldResponse hold = sale.hold(request(UUID.randomUUID(), "Sène"));
         cardSession(hold.reference(), "open");
-        given(paydunya.createInvoice(eq(4120L), anyString(), eq("Book In Pass"), any(), eq(Map.of("booking", hold.reference())),
-                eq("http://localhost:4200/bus/book?mobile=" + hold.reference()), anyString(), anyString(), eq(List.of("wave-senegal", "orange-money-senegal"))))
-                .willReturn(new PayDunyaClient.Invoice("test_" + hold.reference(), "https://paydunya/checkout/test_" + hold.reference()));
+        String token = "test_" + hold.reference();
+        given(paydunya.createInvoice(eq(4120L), anyString(), eq("Book In Pass"), argThat(c -> "+221771234567".equals(c.phone())),
+                eq(Map.of("booking", hold.reference())), eq("http://localhost:4200/bus/book?mobile=" + hold.reference()), anyString(),
+                eq("https://api.example.com/api/webhooks/paydunya"), eq(List.of())))
+                .willReturn(new PayDunyaClient.Invoice(token, "https://paydunya/checkout/" + token));
         clock.set(NOW.plus(Duration.ofMinutes(30)));
 
-        assertThat(mobile.start(hold.reference(), "/bus/book")).isEqualTo("https://paydunya/checkout/test_" + hold.reference());
+        MobilePaymentResponse next = mobile.start(hold.reference(), wave("/bus/book"));
 
+        assertThat(next).isEqualTo(new MobilePaymentResponse("redirect", "https://pay.wave.com/c/test", null, null, "held"));
+        verify(paydunya).softpay(eq(PaymentMethod.WAVE_SENEGAL), eq(token), any(), eq("771234567"), isNull());
         verify(stripe).expireCheckoutSession("cs_" + hold.reference(), "bip-expire-cs_" + hold.reference());
         assertThat(jdbc.queryForObject("SELECT hold_expires_at FROM transport_booking", java.sql.Timestamp.class).toInstant())
                 .isEqualTo(NOW.plus(Duration.ofMinutes(50)));
-        assertThat(jdbc.queryForObject("SELECT status FROM transport_mobile_payment", String.class)).isEqualTo("pending");
+        Map<String, Object> row = jdbc.queryForMap("SELECT status, method, phone_masked, phone_encrypted FROM transport_mobile_payment");
+        assertThat(row).containsEntry("status", "pending").containsEntry("method", "wave-senegal").containsEntry("phone_masked", "+221 77*****67");
+        assertThat((String) row.get("phone_encrypted")).startsWith("k1:").doesNotContain("771234567");
+        assertThat(cipher.decrypt((String) row.get("phone_encrypted"))).isEqualTo("+221771234567");
+    }
+
+    @Test
+    @DisplayName("Orange Money Côte d'Ivoire : code OTP transmis, paiement relu aussitôt ; réservation confirmée dans la réponse")
+    void acceptedOtpConfirmsAtOnce() {
+        TransportHoldResponse hold = sale.hold(request(UUID.randomUUID(), "Sène"));
+        String token = "test_" + hold.reference();
+        cardSession(hold.reference(), "expired");
+        given(paydunya.createInvoice(anyLong(), anyString(), anyString(), any(), anyMap(), anyString(), anyString(), anyString(), any()))
+                .willReturn(new PayDunyaClient.Invoice(token, "https://paydunya/checkout/" + token));
+        given(paydunya.softpay(eq(PaymentMethod.ORANGE_MONEY_COTE_D_IVOIRE), eq(token), any(), eq("0707123456"), eq("4821")))
+                .willReturn(new PayDunyaClient.Softpay(null, null, null));
+        invoice(token, "completed", 4120, hold.reference());
+
+        MobilePaymentResponse next = mobile.start(hold.reference(), new MobilePaymentRequest("orange-money-ci", "+225 07 07 12 34 56", "4821", "/bus/book"));
+
+        assertThat(next.step()).isEqualTo("otp");
+        assertThat(next.status()).isEqualTo("confirmed");
+        verify(mailer).send(hold.reference());
+    }
+
+    @Test
+    @DisplayName("Paiement refusé par PayDunya (code faux) : erreur rendue, facture close, nouvelle tentative possible")
+    void refusedSoftpayClosesTheInvoice() {
+        TransportHoldResponse hold = sale.hold(request(UUID.randomUUID(), "Sène"));
+        cardSession(hold.reference(), "expired");
+        given(paydunya.createInvoice(anyLong(), anyString(), anyString(), any(), anyMap(), anyString(), anyString(), anyString(), any()))
+                .willReturn(new PayDunyaClient.Invoice("test_refused", "https://paydunya/checkout/test_refused"));
+        given(paydunya.softpay(any(), eq("test_refused"), any(), anyString(), any()))
+                .willThrow(new PaymentException(HttpStatus.UNPROCESSABLE_CONTENT, "payment-refused", "refused"));
+
+        assertThatThrownBy(() -> mobile.start(hold.reference(), new MobilePaymentRequest("orange-money-burkina", "70 12 34 56", "1234", "/bus/book")))
+                .isInstanceOfSatisfying(PaymentException.class, e -> assertThat(e.code()).isEqualTo("payment-refused"));
+        assertThat(jdbc.queryForObject("SELECT status FROM transport_mobile_payment", String.class)).isEqualTo("failed");
+    }
+
+    @Test
+    @DisplayName("Numéro d'un autre pays ou d'un autre opérateur, code absent : refusé avant toute facture")
+    void invalidPaymentDetailsAreRefusedBeforeAnyInvoice() {
+        TransportHoldResponse hold = sale.hold(request(UUID.randomUUID(), "Sène"));
+
+        assertThatThrownBy(() -> mobile.start(hold.reference(), new MobilePaymentRequest("wave-senegal", "0707123456", null, "/bus/book")))
+                .isInstanceOfSatisfying(PaymentException.class, e -> assertThat(e.code()).isEqualTo("invalid-phone"));
+        assertThatThrownBy(() -> mobile.start(hold.reference(), new MobilePaymentRequest("orange-money-senegal", "761234567", null, "/bus/book")))
+                .isInstanceOfSatisfying(PaymentException.class, e -> assertThat(e.code()).isEqualTo("invalid-phone"));
+        assertThatThrownBy(() -> mobile.start(hold.reference(), new MobilePaymentRequest("orange-money-ci", "0707123456", null, "/bus/book")))
+                .isInstanceOfSatisfying(PaymentException.class, e -> assertThat(e.code()).isEqualTo("otp-required"));
+        assertThatThrownBy(() -> mobile.start(hold.reference(), new MobilePaymentRequest("free-money-senegal", "761234567", null, "/bus/book")))
+                .isInstanceOfSatisfying(PaymentException.class, e -> assertThat(e.code()).isEqualTo("unknown-payment-method"));
+        verify(paydunya, never()).createInvoice(anyLong(), anyString(), anyString(), any(), anyMap(), anyString(), anyString(), anyString(), any());
+    }
+
+    @Test
+    @DisplayName("Cinq tentatives en 20 minutes : la sixième est refusée (429)")
+    void attemptsAreRateLimited() {
+        TransportHoldResponse hold = sale.hold(request(UUID.randomUUID(), "Sène"));
+        cardSession(hold.reference(), "expired");
+        given(paydunya.createInvoice(anyLong(), anyString(), anyString(), any(), anyMap(), anyString(), anyString(), anyString(), any()))
+                .willAnswer(i -> new PayDunyaClient.Invoice("test_" + UUID.randomUUID(), "https://paydunya/checkout"));
+        for (int i = 0; i < PayDunyaCheckout.MAX_ATTEMPTS; i++) {
+            mobile.start(hold.reference(), wave("/bus/book"));
+        }
+
+        assertThatThrownBy(() -> mobile.start(hold.reference(), wave("/bus/book")))
+                .isInstanceOfSatisfying(PaymentException.class, e -> assertThat(e.status()).isEqualTo(HttpStatus.TOO_MANY_REQUESTS));
+    }
+
+    @Test
+    @DisplayName("Carte PayDunya : facture limitée au canal carte, payée sur la page PayDunya ; aucun numéro conservé")
+    void payDunyaCardRedirectsToItsPage() {
+        TransportHoldResponse hold = sale.hold(request(UUID.randomUUID(), "Sène"));
+        cardSession(hold.reference(), "expired");
+        given(paydunya.createInvoice(anyLong(), anyString(), anyString(), any(), anyMap(), anyString(), anyString(), anyString(), eq(List.of("card"))))
+                .willReturn(new PayDunyaClient.Invoice("test_card", "https://paydunya/checkout/test_card"));
+
+        MobilePaymentResponse next = mobile.start(hold.reference(), new MobilePaymentRequest("paydunya-card", null, null, "/bus/book"));
+
+        assertThat(next).isEqualTo(new MobilePaymentResponse("redirect", "https://paydunya/checkout/test_card", null, null, "held"));
+        verify(paydunya, never()).softpay(any(), anyString(), any(), anyString(), any());
+        assertThat(jdbc.queryForMap("SELECT method, phone_encrypted FROM transport_mobile_payment"))
+                .containsEntry("method", "paydunya-card").containsEntry("phone_encrypted", null);
     }
 
     @Test
@@ -361,7 +474,7 @@ class TransportSaleTest {
         cardSession(hold.reference(), "open");
         given(paydunya.createInvoice(anyLong(), anyString(), anyString(), any(), anyMap(), anyString(), anyString(), anyString(), any()))
                 .willReturn(new PayDunyaClient.Invoice(token, "https://paydunya/checkout/" + token));
-        mobile.start(hold.reference(), "/bus/book");
+        mobile.start(hold.reference(), wave("/bus/book"));
 
         invoice(token, "pending", 4120, hold.reference());
         assertThat(mobile.confirm(hold.reference()).status()).isEqualTo("held");
@@ -384,7 +497,7 @@ class TransportSaleTest {
         cardSession(hold.reference(), "expired");
         given(paydunya.createInvoice(anyLong(), anyString(), anyString(), any(), anyMap(), anyString(), anyString(), anyString(), any()))
                 .willReturn(new PayDunyaClient.Invoice(token, "https://paydunya/checkout/" + token));
-        mobile.start(hold.reference(), "/bus/book");
+        mobile.start(hold.reference(), wave("/bus/book"));
         invoice(token, "completed", 100, hold.reference());
 
         assertThat(mobile.confirm(hold.reference()).status()).isEqualTo("held");
@@ -398,7 +511,7 @@ class TransportSaleTest {
         TransportHoldResponse hold = sale.hold(request(UUID.randomUUID(), "Sène"));
         cardSession(hold.reference(), "complete");
 
-        assertThatThrownBy(() -> mobile.start(hold.reference(), "/bus/book"))
+        assertThatThrownBy(() -> mobile.start(hold.reference(), wave("/bus/book")))
                 .isInstanceOfSatisfying(TransportException.class, e -> assertThat(e.code()).isEqualTo("already-paid"));
         verify(paydunya, never()).createInvoice(anyLong(), anyString(), anyString(), any(), anyMap(), anyString(), anyString(), anyString(), any());
     }
@@ -412,7 +525,7 @@ class TransportSaleTest {
         cardSession(late.reference(), "open");
         given(paydunya.createInvoice(anyLong(), anyString(), anyString(), any(), anyMap(), anyString(), anyString(), anyString(), any()))
                 .willReturn(new PayDunyaClient.Invoice(token, "https://paydunya/checkout/" + token));
-        mobile.start(late.reference(), "/bus/book");
+        mobile.start(late.reference(), wave("/bus/book"));
         clock.set(NOW.plus(Duration.ofHours(1)));
         sale.releaseExpired();
         clock.set(NOW);

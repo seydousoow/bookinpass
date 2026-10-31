@@ -70,7 +70,7 @@ cabine chez Duffel, recalcule le prix de vente (billet + frais de service BIP 3 
 sièges +20 %, `FlightPricing`, mêmes règles que le front) et crée une session Checkout en autorisation seule
 (`payment_intent_data[capture_method]=manual`, réglages Checkout Studio, clé d'idempotence, API `2026-03-25.dahlia`).
 Clés : `STRIPE_SECRET_KEY`, `STRIPE_PUBLISHABLE_KEY` ; vides = 503 `payments-unavailable`. `FRONTEND_URL` : base du
-retour après un moyen à redirection. Webhook signé : `POST /payments/webhooks/stripe` (`STRIPE_WEBHOOK_SECRET`,
+retour après un moyen à redirection. Webhook signé : `POST /webhooks/stripe` (`STRIPE_WEBHOOK_SECRET`,
 en-tête `Stripe-Signature` vérifié). Reste à faire : voir [STRIPE_INTEGRATION_TODO.md](STRIPE_INTEGRATION_TODO.md).
 
 **Webhooks Duffel.** `POST /webhooks/duffel` (déclaré chez Duffel : `https://bip-back.dicortex.com/api/webhooks/duffel`) reçoit les événements Duffel (commandes, changements de vol décidés
@@ -101,8 +101,24 @@ et heures locales (fuseau de la ville GeoNames), mise en vente. Le site lit `GET
 36 min, Stripe Checkout en autorisation seule (`kind=activity`) ou PayDunya (XOF), capture, bon d'échange par e-mail.
 Annulation gratuite par le client jusqu'à `free_cancellation_hours` avant le début ; annulation et remboursements
 (partiels, gestes commerciaux, créneau annulé) par un responsable. Carte : `POST /v1/refunds` chez Stripe ; mobile
-money : remboursement à la main, noté au back-office (`/staff/activity-refunds`). L'IPN PayDunya reste
-`/transport/payments/paydunya` : la facture dit si elle paie une activité ou des billets de car.
+money : remboursement à la main, noté au back-office (`/staff/activity-refunds`). L'IPN PayDunya est
+`/webhooks/paydunya` : la facture dit si elle paie une activité ou des billets de car.
+
+**PayDunya (car et activités).** Montants en francs CFA entiers. `GET …/payment-methods` rend la carte Stripe (toutes
+cartes, American Express comprise) et les moyens PayDunya de `PAYDUNYA_METHODS` : carte PayDunya (page PayDunya, la
+saisie d'une carte exige PCI-DSS), Wave et Orange Money au Sénégal, Wave et Orange Money en Côte d'Ivoire, Orange Money
+au Burkina Faso et au Mali — chacun avec son pays et son indicatif imposé. Le site envoie moyen, numéro national et code
+OTP éventuel (Orange Money Côte d'Ivoire et Burkina Faso) en JSON à `POST …/bookings/{ref}/mobile-payment`, en HTTPS ;
+le serveur revérifie le moyen, le numéro (pays, et opérateur pour Orange Money) et le code, prend le montant de la
+réservation, crée la facture (`checkout-invoice/create`) puis la paie (`/softpay/{moyen}`) avec les clés du compte, qui
+ne quittent jamais le serveur. Réponse : `redirect` (lien Wave, page carte), `qr` (QR code et liens Orange Money / Max
+it), `otp` (code accepté, paiement relu aussitôt) ou `phone` (validation sur le téléphone) ; le site relit ensuite
+`…/mobile-payment/confirmation`. Cinq tentatives au plus par réservation en 20 minutes. Le numéro est conservé chiffré
+(AES-256-GCM, `PAYMENT_DATA_KEYS`, rotation par identifiant de clé) avec une version masquée ; le code OTP n'est jamais
+conservé ni journalisé. IPN : `POST /webhooks/paydunya`, refusée (403) sans `data[hash]` = SHA-512 de la clé
+principale, puis facture relue chez PayDunya.
+
+**Webhooks.** Tous dans `WebhookController` : `/webhooks/stripe`, `/webhooks/duffel`, `/webhooks/paydunya`.
 
 **Avis et Claude.** Un avis par réservation payée, après le créneau ; en attente jusqu'à modération. Toutes les 2 heures
 (`REVIEW_MODERATION_INTERVAL`, durée ISO-8601, `PT2H` par défaut), les avis en attente partent chez Claude en un seul

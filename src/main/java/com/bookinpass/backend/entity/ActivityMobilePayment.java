@@ -58,6 +58,17 @@ public class ActivityMobilePayment {
     @Column(nullable = false, length = 3)
     private String currency;
 
+    /** Moyen PayDunya ({@code wave-senegal}…) ; nul avant le paiement sur notre page. */
+    @Column(length = 30)
+    private String method;
+
+    /** Numéro qui paie, chiffré ({@code PaymentDataCipher}). */
+    @Column(name = "phone_encrypted")
+    private String phoneEncrypted;
+
+    @Column(name = "phone_masked", length = 30)
+    private String phoneMasked;
+
     @Column(name = "receipt_url")
     private String receiptUrl;
 
@@ -68,13 +79,17 @@ public class ActivityMobilePayment {
     @Column(name = "completed_at")
     private Instant completedAt;
 
-    public ActivityMobilePayment(ActivityBooking booking, String invoiceToken, BigDecimal amount, String currency) {
+    public ActivityMobilePayment(ActivityBooking booking, String invoiceToken, BigDecimal amount, String currency, String method,
+                                     String phoneEncrypted, String phoneMasked) {
         this.booking = booking;
         this.provider = "paydunya";
         this.invoiceToken = invoiceToken;
         this.status = PENDING;
         this.amount = amount;
         this.currency = currency;
+        this.method = method;
+        this.phoneEncrypted = phoneEncrypted;
+        this.phoneMasked = phoneMasked;
     }
 
     public boolean isPending() {

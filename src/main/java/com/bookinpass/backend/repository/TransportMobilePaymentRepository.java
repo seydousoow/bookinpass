@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.time.Instant;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
@@ -14,6 +15,9 @@ import java.util.Optional;
 public interface TransportMobilePaymentRepository extends JpaRepository<TransportMobilePayment, Integer> {
 
     Optional<TransportMobilePayment> findByInvoiceToken(String invoiceToken);
+
+    /** Tentatives de paiement récentes d'une réservation (limite de fréquence). */
+    long countByBookingIdAndCreatedAtAfter(Integer bookingId, Instant after);
 
     /** Dernière facture de la réservation (celle que le client vient de payer ou d'abandonner). */
     Optional<TransportMobilePayment> findFirstByBookingReferenceOrderByIdDesc(String reference);

@@ -5,6 +5,10 @@ import com.bookinpass.backend.client.PayDunyaClient;
 import com.bookinpass.backend.client.StripeClient;
 import com.bookinpass.backend.config.AnthropicProperties;
 import com.bookinpass.backend.config.PayDunyaProperties;
+import com.bookinpass.backend.config.PaymentDataProperties;
+import com.bookinpass.backend.dto.request.MobilePaymentRequest;
+import com.bookinpass.backend.service.payment.PayDunyaCheckout;
+import com.bookinpass.backend.service.payment.PaymentDataCipher;
 import com.bookinpass.backend.config.StripeProperties;
 import com.bookinpass.backend.dto.request.ActivityBookingRequest;
 import com.bookinpass.backend.dto.request.ActivityReviewRequest;
@@ -76,7 +80,7 @@ import static org.mockito.Mockito.verify;
 @Testcontainers
 @Import({ActivityContent.class, ActivityCatalogService.class, ActivityBookingService.class, ActivityRefundService.class,
         ActivityMobilePaymentService.class, ActivityAdminService.class, ReviewService.class, ReviewModerator.class, ActivitySettings.class,
-        BookingRecorder.class, ActivitySaleTest.Config.class})
+        BookingRecorder.class, PayDunyaCheckout.class, PaymentDataCipher.class, ActivitySaleTest.Config.class})
 class ActivitySaleTest {
 
     @Container
@@ -103,7 +107,12 @@ class ActivitySaleTest {
         @Bean
         PayDunyaProperties payDunyaProperties() {
             return new PayDunyaProperties("https://app.paydunya.com/sandbox-api/v1", "master", "private", "token",
-                    List.of("wave-senegal"), "https://api.example.com/api/transport/payments/paydunya", "Book In Pass");
+                    List.of(), "https://api.example.com/api/webhooks/paydunya", "Book In Pass");
+        }
+
+        @Bean
+        PaymentDataProperties paymentDataProperties() {
+            return new PaymentDataProperties("k1:" + java.util.Base64.getEncoder().encodeToString(new byte[32]));
         }
 
         @Bean
@@ -168,6 +177,8 @@ class ActivitySaleTest {
     @BeforeEach
     void publishedActivityWithSlots() {
         clock.set(NOW);
+        given(paydunya.softpay(any(), anyString(), any(), anyString(), any()))
+                .willReturn(new PayDunyaClient.Softpay("https://pay.wave.com/c/test", null, null));
         jdbc.update("DELETE FROM activity_review");
         jdbc.update("DELETE FROM activity_refund");
         jdbc.update("DELETE FROM activity_mobile_payment");
@@ -345,6 +356,11 @@ class ActivitySaleTest {
                 .isInstanceOfSatisfying(ActivityException.class, e -> assertThat(e.code()).isEqualTo("slot-closed"));
     }
 
+    /** Wave Sénégal depuis notre page, numéro national. */
+    private static MobilePaymentRequest wave(String returnPath) {
+        return new MobilePaymentRequest("wave-senegal", "77 123 45 67", null, returnPath);
+    }
+
     @Test
     @DisplayName("Mobile money payé après la libération des places : remboursement à la main, noté au back-office")
     void lateMobilePaymentOpensAManualRefund() {
@@ -353,7 +369,7 @@ class ActivitySaleTest {
         given(paydunya.createInvoice(anyLong(), anyString(), anyString(), any(), anyMap(), anyString(), anyString(), anyString(), any()))
                 .willReturn(new PayDunyaClient.Invoice("tok_late", "https://paydunya.example/pay"));
         given(stripe.retrieveCheckoutSession("cs_" + late.reference())).willReturn(json.readTree("{\"status\":\"open\"}"));
-        mobile.start(late.reference(), "/activities/book");
+        mobile.start(late.reference(), wave("/activities/book"));
         clock.set(NOW.plus(Duration.ofMinutes(40)));
         sale.releaseExpired();
         booked(1, 0);
