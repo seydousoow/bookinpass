@@ -70,6 +70,13 @@ services:
         sync: false
       - key: BOOTSTRAP_ADMIN_PASSWORD
         sync: false
+      # Cookie de session du back-office : Lax si le back-office est sur le même site que l'API, sinon None.
+      # Valeur conseillée : Lax
+      - key: STAFF_COOKIE_SAME_SITE
+        sync: false
+      # Valeur conseillée : true (HTTPS)
+      - key: STAFF_COOKIE_SECURE
+        sync: false
 
       # Valeur conseillée : https://api.duffel.com
       - key: DUFFEL_BASE_URL
@@ -96,7 +103,7 @@ services:
       - key: STRIPE_WEBHOOK_SECRET
         sync: false
 
-      # PayDunya : billets de car payés par Wave / Orange Money / Free Money. Clés vides = moyen masqué.
+      # PayDunya : billets de car et activités payés par Wave / Orange Money / Free Money. Clés vides = moyen masqué.
       # Valeur conseillée : https://app.paydunya.com/sandbox-api/v1 (test), puis https://app.paydunya.com/api/v1
       - key: PAYDUNYA_BASE_URL
         sync: false
@@ -108,6 +115,27 @@ services:
         sync: false
       # Valeur conseillée : https://bip-back.dicortex.com/api/transport/payments/paydunya
       - key: PAYDUNYA_CALLBACK_URL
+        sync: false
+      # Moyens proposés sur la page PayDunya ; vide = tous ceux du compte.
+      # Valeur conseillée : wave-senegal,orange-money-senegal,free-money-senegal
+      - key: PAYDUNYA_CHANNELS
+        sync: false
+
+      # Claude : modération des avis d'activités et résumé des avis. Clé vide = avis modérés à la main seulement.
+      # Clé de compte de service limitée à un espace de travail dédié, avec expiration et limite de dépense.
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      # Valeur conseillée : claude-haiku-5-5 (le moins cher)
+      - key: ANTHROPIC_MODEL
+        sync: false
+      # Réflexion du modèle (plus de jetons). Valeur conseillée : false
+      - key: ANTHROPIC_THINKING
+        sync: false
+      # Repli côté serveur quand le modèle décline (pas pour Haiku). Valeur conseillée : false
+      - key: ANTHROPIC_FALLBACKS
+        sync: false
+      # Intervalle de la modération des avis (durée ISO-8601). Valeur conseillée : PT5H
+      - key: REVIEW_MODERATION_INTERVAL
         sync: false
 
       # E-mails aux voyageurs par AWS SES : true pour les envoyer (identifiants AWS et expéditeur vérifié dans SES

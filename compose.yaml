@@ -83,8 +83,33 @@ services:
 
       EXPEDIA_BASE_URL: ${EXPEDIA_BASE_URL:-https://test.ean.com/v3}
       EXPEDIA_API_KEY: ${EXPEDIA_API_KEY:-}
-      EXPEDIA_SHARED_SECRET: ${EXPEDIA_SHARED_SECRET:-}
+      EXPEDIA_SECRET: ${EXPEDIA_SECRET:-}
       EXPEDIA_LOG_LEVEL: ${EXPEDIA_LOG_LEVEL:-info}
+
+      # PayDunya : Wave, Orange Money, Free Money (car et activités). Clés vides = moyen masqué.
+      PAYDUNYA_BASE_URL: ${PAYDUNYA_BASE_URL:-https://app.paydunya.com/sandbox-api/v1}
+      PAYDUNYA_MASTER_KEY: ${PAYDUNYA_MASTER_KEY:-}
+      PAYDUNYA_PRIVATE_KEY: ${PAYDUNYA_PRIVATE_KEY:-}
+      PAYDUNYA_TOKEN: ${PAYDUNYA_TOKEN:-}
+      PAYDUNYA_CHANNELS: ${PAYDUNYA_CHANNELS:-wave-senegal,orange-money-senegal,free-money-senegal}
+      PAYDUNYA_CALLBACK_URL: ${PAYDUNYA_CALLBACK_URL:-}
+
+      # Back-office du personnel : origine, cookie de session, premier administrateur.
+      BACKOFFICE_URL: ${BACKOFFICE_URL:-http://localhost:4300}
+      STAFF_COOKIE_SAME_SITE: ${STAFF_COOKIE_SAME_SITE:-Lax}
+      STAFF_COOKIE_SECURE: ${STAFF_COOKIE_SECURE:-true}
+      BOOTSTRAP_ADMIN_USERNAME: ${BOOTSTRAP_ADMIN_USERNAME:-}
+      BOOTSTRAP_ADMIN_PASSWORD: ${BOOTSTRAP_ADMIN_PASSWORD:-}
+
+      # Claude : modération et résumé des avis d'activités. Clé vide = avis modérés à la main seulement.
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      ANTHROPIC_MODEL: ${ANTHROPIC_MODEL:-claude-haiku-5-5}
+      ANTHROPIC_THINKING: ${ANTHROPIC_THINKING:-false}
+      ANTHROPIC_FALLBACKS: ${ANTHROPIC_FALLBACKS:-false}
+      REVIEW_MODERATION_INTERVAL: ${REVIEW_MODERATION_INTERVAL:-PT5H}
+
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      API_DOCS_ENABLED: ${API_DOCS_ENABLED:-true}
 
     volumes:
       # Réponses de démo, hors de l'image : elles ne servent qu'en l'absence de jeton.

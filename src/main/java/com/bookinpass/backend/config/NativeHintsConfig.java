@@ -1,5 +1,7 @@
 package com.bookinpass.backend.config;
 
+import com.bookinpass.backend.mail.resources.ActivityCancellationMailProperties;
+import com.bookinpass.backend.mail.resources.ActivityVoucherMailProperties;
 import com.bookinpass.backend.mail.resources.BaseMailProperties;
 import com.bookinpass.backend.mail.resources.BookingCancellationMailProperties;
 import com.bookinpass.backend.mail.resources.BusTicketMailProperties;
@@ -42,7 +44,8 @@ class NativeHintsConfig {
                     FlightItinerary.Trip.class, FlightItinerary.Leg.class, FlightItinerary.Stop.class, FlightItinerary.Traveller.class,
                     FlightItinerary.TravellerTrip.class, FlightItinerary.LegExtras.class, FlightItinerary.Conditions.class,
                     FlightItinerary.Condition.class, FlightItinerary.Prices.class, FlightItinerary.Buyer.class,
-                    BusTicketMailProperties.class, BusTicketMailProperties.Ticket.class);
+                    BusTicketMailProperties.class, BusTicketMailProperties.Ticket.class,
+                    ActivityVoucherMailProperties.class, ActivityCancellationMailProperties.class);
             hints.resources().registerPattern("templates/mail/*.html");
             for (String helper : new String[]{"org.thymeleaf.expression.Lists", "org.thymeleaf.expression.Strings",
                     "org.thymeleaf.expression.Messages"}) {

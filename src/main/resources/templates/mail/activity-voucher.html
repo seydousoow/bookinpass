@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<!--/* Bon d'échange d'une activité payée : activité, option, date, lieu de rendez-vous, QR code de la référence. */-->
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout :: mail(~{::content})}">
+<body>
+<th:block th:fragment="content">
+    <tr><td style="padding-top:28px;font-size:20px;font-weight:bold;color:#15803d;" th:text="|#{mail.activity.title} ✓|">Votre activité est réservée</td></tr>
+    <tr><td style="padding-top:16px;" th:text="#{mail.activity.intro(${name})}">Bonjour Amina, …</td></tr>
+
+    <tr><td style="padding-top:20px;">
+        <table role="presentation" width="100%" border="0" cellpadding="0" cellspacing="0" style="border:1px solid #e4e4e7;border-radius:6px;">
+            <tr>
+                <td style="padding:18px;">
+                    <div style="font-size:13px;color:#71717a;" th:text="#{mail.activity.reference}">Référence</div>
+                    <div style="font-family:'Courier New',monospace;font-size:18px;font-weight:bold;letter-spacing:2px;color:#5125d7;" th:text="${pnr}">K7MPQ2</div>
+                    <div style="padding-top:12px;font-size:17px;font-weight:bold;" th:text="${activity}">Île de Gorée</div>
+                    <div style="padding-top:2px;" th:text="${option}">Visite guidée en français</div>
+                    <div style="padding-top:8px;" th:text="${startsAt}">samedi 7 novembre 2026 à 09:30</div>
+                    <div style="padding-top:4px;" th:text="${participants}">2 adultes</div>
+                    <div style="padding-top:12px;font-size:13px;color:#71717a;" th:text="#{mail.activity.meeting}">Rendez-vous</div>
+                    <div th:text="${meetingPoint}">Embarcadère de Dakar</div>
+                    <div style="padding-top:8px;font-size:12px;color:#71717a;" th:text="|#{mail.activity.provider} : ${provider}|">Prestataire</div>
+                </td>
+                <td align="right" valign="top" style="padding:12px;">
+                    <img th:src="'cid:' + ${qr}" th:alt="${pnr}" width="130" height="130" style="display:block;border:0;background:#ffffff;" src="cid:qr" alt="QR"/>
+                </td>
+            </tr>
+        </table>
+    </td></tr>
+    <tr><td style="padding-top:12px;font-size:12px;color:#71717a;" th:text="#{mail.activity.present}">Présentez ce bon…</td></tr>
+
+    <tr><td style="padding-top:20px;" th:text="|#{mail.prices.total} : ${amount}|">Prix total : 30 000 F CFA</td></tr>
+    <tr><td style="padding-top:4px;font-size:12px;color:#71717a;"
+            th:text="${cancellableUntil != null} ? #{mail.activity.free-cancellation(${cancellableUntil})} : #{mail.activity.non-refundable}">Annulation gratuite jusqu'au…</td></tr>
+    <tr><td style="padding-top:24px;">
+        <a th:href="@{${baseUrl + '/activities/booking'}(n=${pnr},l=${lastName})}" th:text="#{mail.activity.view}"
+           style="display:inline-block;background:#5125d7;color:#ffffff;font-weight:bold;font-size:14px;text-decoration:none;padding:10px 20px;border-radius:999px;">Voir ma réservation</a>
+    </td></tr>
+</th:block>
+</body>
+</html>

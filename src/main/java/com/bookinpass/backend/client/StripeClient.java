@@ -119,6 +119,22 @@ public class StripeClient {
         return post("/v1/payment_intents/" + paymentIntentId + "/cancel", form, idempotencyKey, "cancellation");
     }
 
+    /**
+     * {@code POST /v1/refunds} — rembourse tout ou partie d'un paiement encaissé. La réponse donne {@code id} et
+     * {@code status} ({@code succeeded}, {@code pending}, {@code failed}…) ; le webhook {@code charge.refunded} met
+     * ensuite le paiement à jour.
+     *
+     * @param amount en plus petite unité de la devise
+     */
+    public JsonNode createRefund(String paymentIntentId, long amount, Map<String, String> metadata, String idempotencyKey) {
+        MultiValueMap<String, String> form = new LinkedMultiValueMap<>();
+        form.add("payment_intent", paymentIntentId);
+        form.add("amount", Long.toString(amount));
+        form.add("reason", "requested_by_customer");
+        metadata.forEach((key, value) -> form.add("metadata[" + key + "]", value));
+        return post("/v1/refunds", form, idempotencyKey, "refund");
+    }
+
     private JsonNode post(String path, MultiValueMap<String, String> form, String idempotencyKey, String what) {
         String body = client.post()
                 .uri(path)

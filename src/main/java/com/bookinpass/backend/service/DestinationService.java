@@ -43,7 +43,7 @@ public class DestinationService {
      * Sans accents, en minuscules, toute ponctuation ramenée à une espace : « Saint-Louis » → {@code saint louis}.
      * Doit rester identique à {@code normalize} de {@code scripts/generate_cities_migration.py}.
      */
-    static String normalize(String value) {
+    public static String normalize(String value) {
         String decomposed = COMBINING_MARKS.matcher(Normalizer.normalize(value, Normalizer.Form.NFKD)).replaceAll("");
         return NON_ALPHANUMERIC.matcher(decomposed.toLowerCase(Locale.ROOT)).replaceAll(" ").strip();
     }

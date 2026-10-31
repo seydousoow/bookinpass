@@ -24,4 +24,7 @@ public interface StripePaymentRepository extends JpaRepository<StripePayment, In
 
     /** Paiement par carte d'une réservation de car. */
     Optional<StripePayment> findFirstByTransportBookingIdOrderByIdDesc(Integer transportBookingId);
+
+    /** Paiement par carte d'une réservation d'activité. */
+    Optional<StripePayment> findFirstByActivityBookingIdOrderByIdDesc(Integer activityBookingId);
 }

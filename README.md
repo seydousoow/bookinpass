@@ -94,6 +94,27 @@ passagers, historique (`flight_order_event`) et paiement Stripe (`stripe_payment
 `stripe_payment_event`). Le titulaire de l'e-mail (premier adulte) reçoit un client Duffel (`icu_…`, un seul par
 e-mail chez Duffel), rattaché à la commande. Un échec d'enregistrement ne fait jamais échouer une réservation.
 
+**Activités touristiques.** Fiches gérées au back-office (`/staff/activities`, admin et manager) : contenu, photos
+(adresses HTTPS), itinéraire, options (prix adulte, enfant, prix barré), créneaux datés ouverts par jours de la semaine
+et heures locales (fuseau de la ville GeoNames), mise en vente. Le site lit `GET /activities`, `/activities/{slug}`,
+`/{slug}/dates`, `/{slug}/availability` et `/{slug}/reviews`. La vente suit celle des billets de car : places bloquées
+36 min, Stripe Checkout en autorisation seule (`kind=activity`) ou PayDunya (XOF), capture, bon d'échange par e-mail.
+Annulation gratuite par le client jusqu'à `free_cancellation_hours` avant le début ; annulation et remboursements
+(partiels, gestes commerciaux, créneau annulé) par un responsable. Carte : `POST /v1/refunds` chez Stripe ; mobile
+money : remboursement à la main, noté au back-office (`/staff/activity-refunds`). L'IPN PayDunya reste
+`/transport/payments/paydunya` : la facture dit si elle paie une activité ou des billets de car.
+
+**Avis et Claude.** Un avis par réservation payée, après le créneau ; en attente jusqu'à modération. Toutes les 2 heures
+(`REVIEW_MODERATION_INTERVAL`, durée ISO-8601, `PT2H` par défaut), les avis en attente partent chez Claude en un seul
+appel (20 au plus) ; pour chacun, il rend `approve`, `reject` ou `review` (réponse imposée par un schéma JSON). En
+modération automatique (réglage du back-office, `app_setting.reviews.auto_moderation`), `approve` publie et `reject`
+rejette ; `review` attend toujours un responsable. Le résumé « Ce qu'en disent les voyageurs » (100 derniers avis,
+français et anglais) est écrit à la demande, depuis la fiche de l'activité. Coût réduit au minimum : modèle
+`claude-haiku-5-5` (`ANTHROPIC_MODEL`), réflexion coupée (`ANTHROPIC_THINKING=false`), effort `low`, réponse plafonnée.
+
+Clé : `ANTHROPIC_API_KEY` (vide = tous les avis attendent un responsable). Une clé de compte de service limitée à un
+espace de travail dédié, avec expiration, et une limite de dépense mensuelle sur cet espace.
+
 **Hébergements.** Duffel Stays cherche autour de coordonnées : `l` est l'identifiant GeoNames d'une ville
 (`2253354` = Dakar), dont les coordonnées viennent de la table `city` ; rayon `stays-radius-km` (10 km).
 `GET /stays/destinations?q=dak` propose les villes (nom ou variante en alphabet latin, sans accents ni casse, les plus

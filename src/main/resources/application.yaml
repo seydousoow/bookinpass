@@ -151,6 +151,21 @@ bookinpass:
     # Adresse publique de l'IPN (PayDunya l'appelle depuis Internet).
     callback-url: ${PAYDUNYA_CALLBACK_URL:}
     store-name: Book In Pass
+  # Claude : modération des avis d'activités et résumé des avis. Clé vide = avis modérés à la main seulement.
+  anthropic:
+    base-url: https://api.anthropic.com
+    # Clé de compte de service limitée à un espace de travail, avec expiration et limite de dépense sur cet espace.
+    api-key: ${ANTHROPIC_API_KEY:}
+    # Le modèle le moins cher ; réflexion coupée : classer et résumer n'en ont pas besoin.
+    model: ${ANTHROPIC_MODEL:claude-haiku-5-5}
+    thinking: ${ANTHROPIC_THINKING:false}
+    api-version: 2026-10-21
+    # Repli côté serveur quand le modèle décline : Opus 5.5, Opus 5, Fable, Sonnet 5.5 seulement (pas Haiku).
+    fallbacks: ${ANTHROPIC_FALLBACKS:false}
+    read-timeout: 60s
+  # Modération des avis par Claude : un lot d'avis en attente à chaque passage (durée ISO-8601, ex. PT5H = 5 heures).
+  reviews:
+    moderation-interval: ${REVIEW_MODERATION_INTERVAL:PT5H}
   # Back-office du personnel (application séparée). Cookie de session HttpOnly, SameSite=Lax : le back-office doit
   # être servi depuis le même site que l'API (ex. bip-admin.dicortex.com et bip-back.dicortex.com).
   staff:

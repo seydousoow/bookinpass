@@ -22,6 +22,7 @@ public class OpenApiConfig {
     public static final String TAG_PAYMENTS = "Paiements";
     public static final String TAG_TRANSPORT = "Transport";
     public static final String TAG_STAFF = "Back-office";
+    public static final String TAG_ACTIVITIES = "Activités";
 
     @Bean
     OpenAPI bookInPassOpenApi() {
@@ -39,6 +40,7 @@ public class OpenApiConfig {
                         new Tag().name(TAG_STAYS).description("Recherche, tarifs, devis et avis d'hébergement, relayés depuis Duffel Stays"),
                         new Tag().name(TAG_REFERENCE).description("Données de référence servies depuis PostgreSQL, en cache Redis"),
                         new Tag().name(TAG_STAFF).description("Personnel des gares : connexion (cookie de session), comptes, lignes, départs, contrôle des billets, bagages, incidents"),
+                        new Tag().name(TAG_ACTIVITIES).description("Activités touristiques : recherche, disponibilités, réservation payée par Stripe ou mobile money, annulation, avis"),
                         new Tag().name(TAG_TRANSPORT).description("Billets de car : lignes Dem Dikk, départs et places, réservation payée par Stripe"),
                         new Tag().name(TAG_PAYMENTS).description("Paiement Stripe Checkout au prix de vente, puis réservation ; les données de carte ne passent jamais par ce serveur")));
     }

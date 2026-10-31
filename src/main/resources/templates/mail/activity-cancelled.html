@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<!--/* Réservation d'activité annulée : motif, remboursement (Stripe ou à la main pour le mobile money). */-->
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout :: mail(~{::content})}">
+<body>
+<th:block th:fragment="content">
+    <tr><td style="padding-top:28px;font-size:20px;font-weight:bold;" th:text="#{mail.activity.cancelled.title}">Votre réservation est annulée</td></tr>
+    <tr><td style="padding-top:16px;" th:text="#{mail.activity.cancelled.intro(${name}, ${activity}, ${startsAt}, ${pnr})}">Bonjour …</td></tr>
+    <tr th:if="${reason != null}"><td style="padding-top:12px;" th:text="|#{mail.activity.cancelled.reason} : ${reason}|">Motif : …</td></tr>
+    <tr th:if="${refund != null}"><td style="padding-top:12px;font-weight:bold;"
+        th:text="${manualRefund} ? #{mail.activity.cancelled.refund-manual(${refund})} : #{mail.activity.cancelled.refund-card(${refund})}">Remboursement</td></tr>
+    <tr th:if="${refund == null}"><td style="padding-top:12px;" th:text="#{mail.activity.cancelled.no-refund}">Pas de remboursement</td></tr>
+</th:block>
+</body>
+</html>

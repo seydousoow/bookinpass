@@ -1,5 +1,6 @@
 package com.bookinpass.backend.config;
 
+import com.bookinpass.backend.client.ClaudeClient;
 import com.bookinpass.backend.client.DuffelClient;
 import com.bookinpass.backend.client.ExpediaClient;
 import com.bookinpass.backend.client.FixtureDuffelClient;
@@ -134,6 +135,25 @@ public class HttpClientConfig {
                 .defaultHeader("PAYDUNYA-TOKEN", nullToEmpty(properties.token()))
                 .build();
         return new PayDunyaClient(client, json);
+    }
+
+    /** Claude : clé en en-tête, version d'API figée ; corps non journalisés (textes des voyageurs). */
+    @Bean
+    ClaudeClient claudeClient(AnthropicProperties properties, RestClient.Builder builder, JsonMapper json) {
+        if (!properties.enabled()) {
+            log.info("ANTHROPIC_API_KEY is not set: reviews wait for a manager, no review summaries");
+        }
+        HttpClientSettings settings = HttpClientSettings.defaults()
+                .withConnectTimeout(Duration.ofSeconds(5))
+                .withReadTimeout(properties.readTimeout());
+        RestClient client = builder.clone()
+                .baseUrl(properties.baseUrl())
+                .requestFactory(ClientHttpRequestFactoryBuilder.jdk().build(settings))
+                .defaultHeader("x-api-key", nullToEmpty(properties.apiKey()))
+                .defaultHeader("anthropic-version", properties.apiVersion())
+                .defaultHeader(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE)
+                .build();
+        return new ClaudeClient(client, json, properties.model(), properties.fallbacks(), properties.thinking());
     }
 
     private static String nullToEmpty(String value) {

@@ -12,6 +12,7 @@ import com.bookinpass.backend.dto.response.TransportMobilePaymentResponse;
 import com.bookinpass.backend.dto.response.TransportPaymentMethodsResponse;
 import com.bookinpass.backend.dto.response.TransportPlaceResponse;
 import com.bookinpass.backend.service.transport.TransportBookingService;
+import com.bookinpass.backend.service.activity.ActivityMobilePaymentService;
 import com.bookinpass.backend.service.transport.TransportMobilePaymentService;
 import com.bookinpass.backend.service.transport.TransportSearchService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -66,6 +67,7 @@ public class TransportController {
     private final TransportSearchService search;
     private final TransportBookingService bookings;
     private final TransportMobilePaymentService mobile;
+    private final ActivityMobilePaymentService activityMobile;
     private final StripeProperties stripe;
 
     @GetMapping("payment-methods")
@@ -94,7 +96,13 @@ public class TransportController {
     @PostMapping(path = "payments/paydunya", consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
     @Operation(summary = "IPN PayDunya", description = "Appelé par PayDunya uniquement. Le contenu n'est pas cru : la facture est relue chez PayDunya.")
     public ResponseEntity<Void> payDunyaNotification(@RequestParam MultiValueMap<String, String> form) {
-        mobile.notified(form.getFirst("data[invoice][token]"));
+        // Une seule adresse d'IPN pour le compte PayDunya : la facture dit si elle paie une activité ou des billets de car.
+        String token = form.getFirst("data[invoice][token]");
+        if (activityMobile.owns(token)) {
+            activityMobile.notified(token);
+        } else {
+            mobile.notified(token);
+        }
         return ResponseEntity.ok().build();
     }
 
