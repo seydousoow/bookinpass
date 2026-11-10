@@ -34,13 +34,13 @@ public record FlightSearchRequest(@Parameter(name = "t", description = "Type de 
                                   @Parameter(name = "to", description = "Date de retour — obligatoire si t=round", example = "2026-10-31")
                                   @BindParam("to") LocalDate returnDate,
                                   @Parameter(name = "adt", description = "Adultes (12 ans et plus)",
-                                          schema = @Schema(type = "integer", minimum = "1", maximum = "9", defaultValue = "1"))
+                                          schema = @Schema(types = "integer", minimum = "1", maximum = "9", defaultValue = "1"))
                                   @BindParam("adt") @Min(1) @Max(9) Integer adults,
                                   @Parameter(name = "chd", description = "Enfants (2 à 11 ans)",
-                                          schema = @Schema(type = "integer", minimum = "0", maximum = "8", defaultValue = "0"))
+                                          schema = @Schema(types = "integer", minimum = "0", maximum = "8", defaultValue = "0"))
                                   @BindParam("chd") @Min(0) @Max(8) Integer children,
                                   @Parameter(name = "inf", description = "Bébés sans siège — au plus un par adulte",
-                                          schema = @Schema(type = "integer", minimum = "0", maximum = "9", defaultValue = "0"))
+                                          schema = @Schema(types = "integer", minimum = "0", maximum = "9", defaultValue = "0"))
                                   @BindParam("inf") @Min(0) @Max(9) Integer infants,
                                   @Parameter(name = "cabin", description = "Classe de cabine",
                                           schema = @Schema(implementation = CabinClass.class, defaultValue = "economy"))

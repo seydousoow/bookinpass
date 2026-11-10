@@ -19,6 +19,6 @@ import java.util.List;
  */
 public record StaffScheduleRequest(
         @Schema(example = "[1,2,3,4,5]") @NotEmpty List<@NotNull @Min(1) @Max(7) Integer> days,
-        @JsonProperty("departs_at") @Schema(example = "07:00", type = "string") @NotNull LocalTime departsAt,
-        @JsonProperty("last_departure") @Schema(example = "19:00", type = "string") LocalTime lastDeparture) {
+        @JsonProperty("departs_at") @Schema(example = "07:00", types = "string") @NotNull LocalTime departsAt,
+        @JsonProperty("last_departure") @Schema(example = "19:00", types = "string") LocalTime lastDeparture) {
 }
