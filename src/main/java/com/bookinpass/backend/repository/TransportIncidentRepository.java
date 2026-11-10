@@ -1,6 +1,7 @@
 package com.bookinpass.backend.repository;
 
 import com.bookinpass.backend.entity.TransportIncident;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -22,4 +23,14 @@ public interface TransportIncidentRepository extends JpaRepository<TransportInci
             where (:station is null or o.id = :station or t.id = :station) and (:openOnly = false or i.resolvedAt is null)
             order by i.reportedAt desc""")
     List<TransportIncident> findForStation(@Param("station") Integer station, @Param("openOnly") boolean openOnly);
+
+    /**
+     * Incidents clos des lignes de la gare ({@code station} nul : toutes), les plus récents d'abord.
+     */
+    @Query("""
+            select i from TransportIncident i join fetch i.route r join fetch r.origin o join fetch r.destination t
+            left join fetch i.departure join fetch i.reportedBy
+            where (:station is null or o.id = :station or t.id = :station) and i.resolvedAt is not null
+            order by i.resolvedAt desc""")
+    List<TransportIncident> findResolved(@Param("station") Integer station, Pageable page);
 }

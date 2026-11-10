@@ -154,7 +154,7 @@ public class ReviewService {
 
     public StaffActivitySettingsResponse settings() {
         return new StaffActivitySettingsResponse(settings.autoModeration(), anthropic.enabled(), anthropic.model(),
-                reviews.countByStatus(ActivityReview.PENDING));
+                reviews.countByStatus(ActivityReview.PENDING), reviews.countAutoApproved());
     }
 
     public StaffActivitySettingsResponse settings(boolean autoModeration, StaffPrincipal by) {

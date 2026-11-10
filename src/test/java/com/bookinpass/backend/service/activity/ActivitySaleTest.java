@@ -575,7 +575,10 @@ class ActivitySaleTest {
         code(() -> admin.slots(option, from, from.minusDays(1)), "invalid-period");
         code(() -> admin.slots(option, from, from.plusDays(93)), "invalid-period");
         assertThat(admin.slots(option, from, from.plusDays(92))).hasSize(4);
-        code(() -> admin.openSlots(option, new StaffActivitySlotsRequest(from, from.plusDays(367), List.of(1), List.of("09:30"), null), manager), "invalid-period");
+        // Jusqu'à deux ans à l'avance (le 25 octobre 2028), pas au-delà.
+        code(() -> admin.openSlots(option, new StaffActivitySlotsRequest(from, from.plusYears(2).plusDays(1), List.of(1), List.of("09:30"), null), manager), "invalid-period");
+        code(() -> admin.openSlots(option, new StaffActivitySlotsRequest(from.plusDays(1), from, List.of(1), List.of("09:30"), null), manager), "invalid-period");
+        assertThat(admin.openSlots(option, new StaffActivitySlotsRequest(from.plusYears(2), from.plusYears(2), List.of(3), List.of("09:30"), null), manager)).isEqualTo(1);
         // Le passé (9 h, avant midi) est ignoré ; 10 h et 20 h sont ouverts avec la capacité demandée.
         assertThat(admin.openSlots(option, new StaffActivitySlotsRequest(from, from, List.of(7), List.of("09:00", "20:00", "20:00"), 5), manager)).isEqualTo(1);
 

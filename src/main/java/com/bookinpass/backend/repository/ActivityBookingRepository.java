@@ -33,6 +33,14 @@ public interface ActivityBookingRepository extends JpaRepository<ActivityBooking
      * Réservation verrouillée jusqu'à la fin de la transaction : navigateur, webhook et back-office passent l'un après l'autre.
      */
     @Lock(LockModeType.PESSIMISTIC_WRITE)
+    /**
+     * Réservations d'un statut sur des créneaux à venir, par activité : {@code [activityId, count]}.
+     */
+    @Query("""
+            select o.activity.id, count(b) from ActivityBooking b join b.slot s join s.option o
+            where b.status = :status and s.startsAt >= :now group by o.activity.id""")
+    List<Object[]> countUpcoming(@Param("status") ActivityBookingStatus status, @Param("now") Instant now);
+
     @Query("select b from ActivityBooking b where b.reference = :reference")
     Optional<ActivityBooking> lockByReference(@Param("reference") String reference);
 

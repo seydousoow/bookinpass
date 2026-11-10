@@ -52,6 +52,13 @@ public class StaffIncidentController {
         return operations.incidents(staff, open, stationId);
     }
 
+    @GetMapping("resolved")
+    @Operation(summary = "Derniers incidents clos", description = "Les plus récemment clos (10 par défaut, 50 au plus), même périmètre de gares.")
+    public List<StaffIncidentResponse> resolved(StaffPrincipal staff, @RequestParam(defaultValue = "10") int limit,
+                                                @RequestParam(name = "station_id", required = false) Integer stationId) {
+        return operations.resolvedIncidents(staff, Math.clamp(limit, 1, 50), stationId);
+    }
+
     @PostMapping(path = "{id}/resolve", consumes = MediaType.APPLICATION_JSON_VALUE)
     @StaffAccess({StaffRole.ADMIN, StaffRole.MANAGER, StaffRole.STATION_CHIEF})
     @Operation(summary = "Clore un incident")
