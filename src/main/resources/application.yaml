@@ -1,6 +1,6 @@
 spring:
   application:
-    name: bookinpass-backend
+    name: book-in-pass
   threads:
     virtual:
       enabled: true
