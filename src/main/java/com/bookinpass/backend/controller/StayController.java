@@ -47,7 +47,7 @@ public class StayController {
 
     @GetMapping("/search")
     @Operation(summary = "Rechercher un hébergement", description = "Établissements autour de la ville (ou de la ville de l'aéroport), avec leur tarif le moins cher. En cache 10 minutes par combinaison de critères.")
-    @ApiResponse(responseCode = "200", description = "Résultats Duffel (`data.results[]`), format Duffel, sans chambres", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(type = "object", externalDocs = @ExternalDocumentation(url = "https://duffel.com/docs/api/v2/search/search-for-accommodation"))))
+    @ApiResponse(responseCode = "200", description = "Résultats Duffel (`data.results[]`), format Duffel, sans chambres", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(types = "object", externalDocs = @ExternalDocumentation(url = "https://duffel.com/docs/api/v2/search/search-for-accommodation"))))
     @ApiResponse(responseCode = "400", description = "Critères invalides ou lieu inconnu — `errors` liste chaque problème", content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE, schema = @Schema(implementation = ProblemDetail.class)))
     @ApiResponse(responseCode = "502", description = "Duffel indisponible, ou Stays non activé sur le compte", content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE, schema = @Schema(implementation = ProblemDetail.class)))
     @ApiResponse(responseCode = "503", description = "Quota Duffel atteint ou panne passagère — voir `Retry-After`", content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE, schema = @Schema(implementation = ProblemDetail.class)))
@@ -57,7 +57,7 @@ public class StayController {
 
     @GetMapping("/results/{searchResultId}/rates")
     @Operation(summary = "Chambres et tarifs", description = "Toutes les chambres et tous les tarifs d'un résultat de recherche. En cache 5 minutes au plus, jamais au-delà de son échéance.")
-    @ApiResponse(responseCode = "200", description = "Résultat Duffel complet (`data.accommodation.rooms[].rates[]`), format Duffel", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(type = "object", externalDocs = @ExternalDocumentation(url = "https://duffel.com/docs/api/v2/search-results/fetch-all-rates"))))
+    @ApiResponse(responseCode = "200", description = "Résultat Duffel complet (`data.accommodation.rooms[].rates[]`), format Duffel", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(types = "object", externalDocs = @ExternalDocumentation(url = "https://duffel.com/docs/api/v2/search-results/fetch-all-rates"))))
     @ApiResponse(responseCode = "400", description = "Identifiant mal formé", content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE, schema = @Schema(implementation = ProblemDetail.class)))
     @ApiResponse(responseCode = "422", description = "Résultat expiré : nouvelle recherche à faire", content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE, schema = @Schema(implementation = ProblemDetail.class)))
     public String rates(@Parameter(description = "Identifiant de résultat Duffel", example = "srr_0000ASVBuJVLdmqtZDJ4ca") @PathVariable @Pattern(regexp = RESULT_ID) String searchResultId) {
@@ -67,7 +67,7 @@ public class StayController {
     @PostMapping(path = "/quotes", consumes = MediaType.APPLICATION_JSON_VALUE)
     @ResponseStatus(HttpStatus.CREATED)
     @Operation(summary = "Vérifier un tarif", description = "Devis Duffel : disponibilité et prix final du tarif (acompte éventuel compris). Jamais mis en cache.")
-    @ApiResponse(responseCode = "201", description = "Devis Duffel (`data`), format Duffel", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(type = "object", externalDocs = @ExternalDocumentation(url = "https://duffel.com/docs/api/v2/quotes/create-quote"))))
+    @ApiResponse(responseCode = "201", description = "Devis Duffel (`data`), format Duffel", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(types = "object", externalDocs = @ExternalDocumentation(url = "https://duffel.com/docs/api/v2/quotes/create-quote"))))
     @ApiResponse(responseCode = "400", description = "Identifiant de tarif mal formé", content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE, schema = @Schema(implementation = ProblemDetail.class)))
     @ApiResponse(responseCode = "422", description = "Tarif plus disponible (`rate_unavailable`)", content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE, schema = @Schema(implementation = ProblemDetail.class)))
     public String quote(@Valid @RequestBody QuoteRequest request) {
@@ -76,7 +76,7 @@ public class StayController {
 
     @GetMapping("/quotes/{quoteId}")
     @Operation(summary = "Relire un devis", description = "Devis créé plus tôt. Jamais mis en cache.")
-    @ApiResponse(responseCode = "200", description = "Devis Duffel (`data`), format Duffel", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(type = "object", externalDocs = @ExternalDocumentation(url = "https://duffel.com/docs/api/v2/quotes/get-quote"))))
+    @ApiResponse(responseCode = "200", description = "Devis Duffel (`data`), format Duffel", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(types = "object", externalDocs = @ExternalDocumentation(url = "https://duffel.com/docs/api/v2/quotes/get-quote"))))
     @ApiResponse(responseCode = "404", description = "Devis inconnu", content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE, schema = @Schema(implementation = ProblemDetail.class)))
     public String getQuote(@Parameter(description = "Identifiant de devis Duffel", example = "quo_0000AS0NZdKjjnnHZmSUbI") @PathVariable @Pattern(regexp = QUOTE_ID) String quoteId) {
         return stays.getQuote(quoteId);
@@ -84,7 +84,7 @@ public class StayController {
 
     @GetMapping("/accommodations/{accommodationId}/reviews")
     @Operation(summary = "Avis clients", description = "Avis d'un établissement, paginés : passer `after` (= `meta.after` de la page précédente). En cache 24 heures.")
-    @ApiResponse(responseCode = "200", description = "Avis Duffel (`data.reviews[]`, `meta.after`), format Duffel", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(type = "object", externalDocs = @ExternalDocumentation(url = "https://duffel.com/docs/api/v2/accommodation-reviews/get-accommodation-reviews"))))
+    @ApiResponse(responseCode = "200", description = "Avis Duffel (`data.reviews[]`, `meta.after`), format Duffel", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(types = "object", externalDocs = @ExternalDocumentation(url = "https://duffel.com/docs/api/v2/accommodation-reviews/get-accommodation-reviews"))))
     @ApiResponse(responseCode = "404", description = "Établissement inconnu", content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE, schema = @Schema(implementation = ProblemDetail.class)))
     public String reviews(@Parameter(description = "Identifiant d'établissement Duffel", example = "acc_0000AWr2VsUNIF1Vl91xg0") @PathVariable @Pattern(regexp = ACCOMMODATION_ID) String accommodationId,
                           @Parameter(description = "Curseur de la page suivante") @RequestParam(required = false) @Pattern(regexp = "[A-Za-z0-9_=+/-]{1,512}") String after,

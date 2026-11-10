@@ -34,12 +34,12 @@ public record StaySearchRequest(
         @Parameter(name = "out", description = "Date de départ, après l'arrivée", required = true, example = "2026-11-23")
         @BindParam("out") @NotNull LocalDate checkOut,
         @Parameter(name = "adt", description = "Adultes",
-                schema = @Schema(type = "integer", minimum = "1", maximum = "16", defaultValue = "2"))
+                schema = @Schema(types = "integer", minimum = "1", maximum = "16", defaultValue = "2"))
         @BindParam("adt") @Min(1) @Max(16) Integer adults,
         @Parameter(name = "chd", description = "Âge de chaque enfant, séparés par des virgules", example = "7,4")
         @BindParam("chd") @Size(max = 8) List<@NotNull @Min(0) @Max(17) Integer> childAges,
         @Parameter(name = "rooms", description = "Chambres",
-                schema = @Schema(type = "integer", minimum = "1", maximum = "8", defaultValue = "1"))
+                schema = @Schema(types = "integer", minimum = "1", maximum = "8", defaultValue = "1"))
         @BindParam("rooms") @Min(1) @Max(8) Integer rooms) {
 
     public static final int MAX_NIGHTS = 99;
