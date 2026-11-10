@@ -2,6 +2,7 @@ package com.bookinpass.backend.controller;
 
 import com.bookinpass.backend.config.OpenApiConfig;
 import com.bookinpass.backend.dto.request.StaffActivityCancelRequest;
+import com.bookinpass.backend.dto.request.StaffActivityImageRequest;
 import com.bookinpass.backend.dto.request.StaffActivityOptionRequest;
 import com.bookinpass.backend.dto.request.StaffActivityRefundRequest;
 import com.bookinpass.backend.dto.request.StaffActivityRequest;
@@ -21,8 +22,10 @@ import com.bookinpass.backend.dto.response.StaffActivityReviewResponse;
 import com.bookinpass.backend.dto.response.StaffActivitySettingsResponse;
 import com.bookinpass.backend.dto.response.StaffActivitySlotResponse;
 import com.bookinpass.backend.dto.response.StaffCityResponse;
+import com.bookinpass.backend.dto.response.StaffImageResponse;
 import com.bookinpass.backend.entity.StaffRole;
 import com.bookinpass.backend.service.activity.ActivityAdminService;
+import com.bookinpass.backend.service.activity.ActivityImageService;
 import com.bookinpass.backend.service.activity.ActivityRefundService;
 import com.bookinpass.backend.service.activity.ReviewService;
 import com.bookinpass.backend.staff.StaffAccess;
@@ -49,7 +52,11 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.IOException;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -65,7 +72,7 @@ import java.util.Map;
 @StaffAccess({StaffRole.ADMIN, StaffRole.MANAGER})
 @RegisterReflection(classes = {StaffActivityRequest.class, StaffActivityStatusRequest.class, StaffActivityOptionRequest.class,
         StaffActivitySlotsRequest.class, StaffActivitySlotRequest.class, StaffReasonRequest.class, StaffActivityCancelRequest.class,
-        StaffActivityRefundRequest.class, StaffActivitySettingsRequest.class},
+        StaffActivityRefundRequest.class, StaffActivitySettingsRequest.class, StaffActivityImageRequest.class},
         memberCategories = {MemberCategory.INVOKE_DECLARED_CONSTRUCTORS, MemberCategory.INVOKE_DECLARED_METHODS, MemberCategory.ACCESS_DECLARED_FIELDS})
 @RequestMapping(path = "staff", produces = MediaType.APPLICATION_JSON_VALUE)
 public class StaffActivityController {
@@ -73,6 +80,7 @@ public class StaffActivityController {
     private final ActivityAdminService admin;
     private final ActivityRefundService refunds;
     private final ReviewService reviews;
+    private final ActivityImageService images;
 
     @GetMapping("cities")
     @Operation(summary = "Chercher une ville", description = "Villes GeoNames (2 lettres au moins), pour placer une activité.")
@@ -120,6 +128,19 @@ public class StaffActivityController {
     @Operation(summary = "Modifier une option", description = "Prix et places pour les réservations suivantes ; `active: false` retire l'option de la vente.")
     public StaffActivityDetailResponse updateOption(@PathVariable Integer id, @Valid @RequestBody StaffActivityOptionRequest request) {
         return admin.updateOption(id, request);
+    }
+
+    @PostMapping(path = "activity-images", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @Operation(summary = "Déposer une photo (fichier)", description = "JPEG, PNG, WebP, GIF ou AVIF ; déposée dans S3, rend son adresse sur le CDN.")
+    public StaffImageResponse uploadImage(@RequestPart("file") MultipartFile file) throws IOException {
+        return new StaffImageResponse(images.upload(file.getBytes()));
+    }
+
+    @PostMapping(path = "activity-images", consumes = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Déposer une photo (base64 ou adresse)",
+            description = "`data` en base64, ou `url` HTTPS publique téléchargée par le serveur ; déposée dans S3, rend son adresse sur le CDN.")
+    public StaffImageResponse importImage(@Valid @RequestBody StaffActivityImageRequest request) {
+        return new StaffImageResponse(request.url() == null || request.url().isBlank() ? images.fromBase64(request.data()) : images.fromUrl(request.url()));
     }
 
     @GetMapping("activity-options/{id}/slots")
