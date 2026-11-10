@@ -140,7 +140,7 @@ class ActivitySaleTest {
     private static StaffActivityRequest content(String title, List<ActivityImage> images) {
         return new StaffActivityRequest(title, "", DAKAR, "tour", "Gorée Tours", "Traversée et visite de l'île.",
                 "La Maison des Esclaves, le Castel, les ruelles colorées.", List.of("Maison des Esclaves"), List.of("Traversée en chaloupe"),
-                List.of(), List.of("Animaux"), List.of("Prévoir de l'eau"),
+                List.of(), List.of("Animaux"), List.of("Chapeau"), List.of("Prévoir de l'eau"),
                 List.of(new ActivityItineraryStop("Maison des Esclaves", "visit", 45, false, null)), images, "Embarcadère de Dakar",
                 14.67, -17.42, 180, null, 24, "XOF");
     }
@@ -158,7 +158,7 @@ class ActivitySaleTest {
 
     private static StaffActivityRequest request(StaffActivityRequest base, String slug, int city, Integer max, Double latitude, Double longitude) {
         return new StaffActivityRequest(base.title(), slug, city, base.category(), base.providerName(), base.summary(), base.description(), base.highlights(),
-                base.includes(), base.excludes(), base.notAllowed(), base.knowBefore(), base.itinerary(), base.images(), base.meetingPoint(), latitude, longitude,
+                base.includes(), base.excludes(), base.notAllowed(), base.toBring(), base.knowBefore(), base.itinerary(), base.images(), base.meetingPoint(), latitude, longitude,
                 180, max, base.freeCancellationHours(), base.currency());
     }
 
