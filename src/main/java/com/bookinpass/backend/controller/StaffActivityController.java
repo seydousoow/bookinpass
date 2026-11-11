@@ -132,15 +132,24 @@ public class StaffActivityController {
 
     @PostMapping(path = "activity-images", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(summary = "Déposer une photo (fichier)", description = "JPEG, PNG, WebP, GIF ou AVIF ; déposée dans S3, rend son adresse sur le CDN.")
-    public StaffImageResponse uploadImage(@RequestPart("file") MultipartFile file) throws IOException {
-        return new StaffImageResponse(images.upload(file.getBytes()));
+    public StaffImageResponse uploadImage(StaffPrincipal staff, @RequestPart("file") MultipartFile file) throws IOException {
+        return new StaffImageResponse(images.upload(file.getBytes(), staff.username()));
     }
 
     @PostMapping(path = "activity-images", consumes = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Déposer une photo (base64 ou adresse)",
             description = "`data` en base64, ou `url` HTTPS publique téléchargée par le serveur ; déposée dans S3, rend son adresse sur le CDN.")
-    public StaffImageResponse importImage(@Valid @RequestBody StaffActivityImageRequest request) {
-        return new StaffImageResponse(request.url() == null || request.url().isBlank() ? images.fromBase64(request.data()) : images.fromUrl(request.url()));
+    public StaffImageResponse importImage(StaffPrincipal staff, @Valid @RequestBody StaffActivityImageRequest request) {
+        return new StaffImageResponse(request.url() == null || request.url().isBlank()
+                ? images.fromBase64(request.data(), staff.username()) : images.fromUrl(request.url(), staff.username()));
+    }
+
+    @DeleteMapping("activity-images")
+    @Operation(summary = "Supprimer une photo inemployée",
+            description = "Photo déposée puis retirée avant d'enregistrer la fiche : supprimée de S3. Sans effet si une fiche l'emploie.")
+    public ResponseEntity<Void> deleteImage(@RequestParam("url") @Size(max = 2000) String url) {
+        images.delete(url);
+        return ResponseEntity.noContent().build();
     }
 
     @GetMapping("activity-options/{id}/slots")

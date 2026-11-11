@@ -49,9 +49,9 @@ class StaffActivityControllerTest extends StaffControllerTestSupport {
 
     @Test
     void photoIsUploadedAsFileBase64OrAddress() {
-        given(images.upload(any())).willReturn("https://cdn.example.com/activities/2026/11/a.jpg");
-        given(images.fromBase64("aGVsbG8=")).willReturn("https://cdn.example.com/activities/2026/11/b.png");
-        given(images.fromUrl("https://example.com/c.webp")).willReturn("https://cdn.example.com/activities/2026/11/c.webp");
+        given(images.upload(any(), eq("manager"))).willReturn("https://cdn.example.com/activities/2026/11/a.jpg");
+        given(images.fromBase64("aGVsbG8=", "manager")).willReturn("https://cdn.example.com/activities/2026/11/b.png");
+        given(images.fromUrl("https://example.com/c.webp", "manager")).willReturn("https://cdn.example.com/activities/2026/11/c.webp");
         MockMultipartFile file = new MockMultipartFile("file", "a.jpg", "image/jpeg", new byte[]{(byte) 0xFF, (byte) 0xD8, (byte) 0xFF});
 
         assertThat(post("/staff/activity-images").multipart().file(file))
@@ -60,7 +60,9 @@ class StaffActivityControllerTest extends StaffControllerTestSupport {
                 .bodyJson().extractingPath("$.url").isEqualTo("https://cdn.example.com/activities/2026/11/b.png");
         assertThat(post("/staff/activity-images", "{\"url\":\"https://example.com/c.webp\"}")).hasStatusOk()
                 .bodyJson().extractingPath("$.url").isEqualTo("https://cdn.example.com/activities/2026/11/c.webp");
-        verify(images).upload(new byte[]{(byte) 0xFF, (byte) 0xD8, (byte) 0xFF});
+        verify(images).upload(new byte[]{(byte) 0xFF, (byte) 0xD8, (byte) 0xFF}, "manager");
+        assertThat(delete("/staff/activity-images?url=https://cdn.example.com/activities/2026/11/a.jpg")).hasStatus(HttpStatus.NO_CONTENT);
+        verify(images).delete("https://cdn.example.com/activities/2026/11/a.jpg");
     }
 
     @Test

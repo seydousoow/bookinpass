@@ -1,13 +1,17 @@
 package com.bookinpass.backend.service.activity;
 
 import com.bookinpass.backend.config.ImageProperties;
+import com.bookinpass.backend.entity.ActivityImageUpload;
 import com.bookinpass.backend.exception.ActivityException;
+import com.bookinpass.backend.repository.ActivityImageUploadRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import software.amazon.awssdk.core.exception.SdkException;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 
 import java.io.IOException;
@@ -21,18 +25,25 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.Clock;
+import java.time.Duration;
 import java.time.LocalDate;
 import java.time.ZoneOffset;
 import java.util.Arrays;
 import java.util.Base64;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
 /**
  * Photos des activités : fichier envoyé, base64 ou adresse téléchargée par le serveur, toujours déposées dans le bucket
  * S3 et servies par le CDN. Le contenu est vérifié (JPEG, PNG, WebP, GIF ou AVIF d'après ses premiers octets) et la
  * taille bornée. Une adresse doit être HTTPS et publique : les adresses du réseau interne sont refusées.
+ *
+ * <p>Chaque dépôt est noté. Une photo qu'aucune fiche n'emploie est supprimée du bucket : tout de suite si elle est
+ * retirée avant d'avoir été enregistrée ({@link #delete}), sinon par une tâche planifiée après {@link #GRACE} (fiche
+ * jamais enregistrée, photo retirée d'une fiche, page quittée).
  */
 @Slf4j
 @Service
@@ -40,15 +51,22 @@ public class ActivityImageService {
 
     private static final Pattern DATA_URL = Pattern.compile("^data:[^,]{0,100};base64,", Pattern.CASE_INSENSITIVE);
     private static final Pattern WHITESPACE = Pattern.compile("\\s+");
+    /**
+     * Délai avant de supprimer une photo inemployée : le temps de finir la fiche en cours.
+     */
+    static final Duration GRACE = Duration.ofHours(24);
+    private static final int PURGE_BATCH = 100;
 
     private final ImageProperties properties;
     private final S3Client s3;
+    private final ActivityImageUploadRepository uploads;
     private final Clock clock;
     private final HttpClient http;
 
-    public ActivityImageService(ImageProperties properties, S3Client imageS3Client, Clock clock) {
+    public ActivityImageService(ImageProperties properties, S3Client imageS3Client, ActivityImageUploadRepository uploads, Clock clock) {
         this.properties = properties;
         this.s3 = imageS3Client;
+        this.uploads = uploads;
         this.clock = clock;
         this.http = HttpClient.newBuilder().connectTimeout(properties.downloadTimeout()).followRedirects(HttpClient.Redirect.NEVER).build();
     }
@@ -81,14 +99,14 @@ public class ActivityImageService {
     /**
      * Fichier envoyé par le formulaire.
      */
-    public String upload(byte[] bytes) {
-        return store(bytes);
+    public String upload(byte[] bytes, String by) {
+        return store(bytes, by);
     }
 
     /**
      * Base64, avec ou sans en-tête {@code data:image/...;base64,}.
      */
-    public String fromBase64(String data) {
+    public String fromBase64(String data, String by) {
         available();
         String encoded = WHITESPACE.matcher(DATA_URL.matcher(data.trim()).replaceFirst("")).replaceAll("");
         byte[] bytes;
@@ -97,13 +115,13 @@ public class ActivityImageService {
         } catch (IllegalArgumentException e) {
             throw invalid("invalid-image", "The base64 data cannot be decoded.");
         }
-        return store(bytes);
+        return store(bytes, by);
     }
 
     /**
      * Adresse HTTPS publique : la photo est téléchargée puis déposée. Une photo déjà sur le CDN est gardée telle quelle.
      */
-    public String fromUrl(String url) {
+    public String fromUrl(String url, String by) {
         available();
         String trimmed = url.trim();
         if (trimmed.startsWith(properties.cdn() + "/")) {
@@ -119,7 +137,7 @@ public class ActivityImageService {
             throw invalid("invalid-image-url", "Only public HTTPS addresses are accepted.");
         }
         checkPublic(uri.getHost());
-        return store(download(uri));
+        return store(download(uri), by);
     }
 
     private void checkPublic(String host) {
@@ -156,7 +174,7 @@ public class ActivityImageService {
         }
     }
 
-    private String store(byte[] bytes) {
+    private String store(byte[] bytes, String by) {
         available();
         tooLarge(bytes);
         ImageType type = ImageType.of(bytes).orElseThrow(() -> invalid("invalid-image", "Not a JPEG, PNG, WebP, GIF or AVIF image."));
@@ -170,7 +188,42 @@ public class ActivityImageService {
             log.error("S3 upload failed for {}", key, e);
             throw new ActivityException(HttpStatus.BAD_GATEWAY, "image-upload-failed", "The photo could not be stored.");
         }
-        return properties.cdn() + "/" + key;
+        String url = properties.cdn() + "/" + key;
+        uploads.save(new ActivityImageUpload(key, url, by, clock.instant()));
+        return url;
+    }
+
+    /**
+     * Photo retirée de la fiche avant d'avoir été enregistrée : supprimée du bucket si aucune fiche ne l'emploie. Une
+     * photo d'une fiche enregistrée, ou qui n'a pas été déposée par le back-office, n'est pas touchée.
+     */
+    public void delete(String url) {
+        uploads.findByUrl(url.trim()).filter(upload -> !uploads.isUsed(upload.getUrl())).ifPresent(this::remove);
+    }
+
+    /**
+     * Photos inemployées depuis plus de {@link #GRACE} : supprimées du bucket, par lots.
+     */
+    @Scheduled(fixedDelay = 1, initialDelay = 10, timeUnit = TimeUnit.MINUTES)
+    public void purgeUnused() {
+        if (!properties.enabled()) {
+            return;
+        }
+        List<ActivityImageUpload> unused = uploads.findUnused(clock.instant().minus(GRACE), PURGE_BATCH);
+        unused.forEach(this::remove);
+        if (!unused.isEmpty()) {
+            log.info("Deleted {} unused activity photos from S3", unused.size());
+        }
+    }
+
+    private void remove(ActivityImageUpload upload) {
+        try {
+            s3.deleteObject(DeleteObjectRequest.builder().bucket(properties.bucket()).key(upload.getObjectKey()).build());
+            uploads.delete(upload);
+        } catch (SdkException e) {
+            // Gardée : la tâche planifiée réessaiera.
+            log.warn("S3 delete failed for {}: {}", upload.getObjectKey(), e.getMessage());
+        }
     }
 
     private void available() {
