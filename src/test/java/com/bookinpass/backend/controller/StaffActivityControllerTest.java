@@ -4,12 +4,14 @@ import com.bookinpass.backend.dto.request.StaffActivityOptionRequest;
 import com.bookinpass.backend.dto.request.StaffActivityRequest;
 import com.bookinpass.backend.dto.request.StaffActivitySlotsRequest;
 import com.bookinpass.backend.service.activity.ActivityAdminService;
+import com.bookinpass.backend.service.activity.ActivityImageService;
 import com.bookinpass.backend.service.activity.ActivityRefundService;
 import com.bookinpass.backend.service.activity.ReviewService;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpStatus;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import java.math.BigDecimal;
@@ -41,6 +43,32 @@ class StaffActivityControllerTest extends StaffControllerTestSupport {
 
     @MockitoBean
     ReviewService reviews;
+
+    @MockitoBean
+    ActivityImageService images;
+
+    @Test
+    void photoIsUploadedAsFileBase64OrAddress() {
+        given(images.upload(any())).willReturn("https://cdn.example.com/activities/2026/11/a.jpg");
+        given(images.fromBase64("aGVsbG8=")).willReturn("https://cdn.example.com/activities/2026/11/b.png");
+        given(images.fromUrl("https://example.com/c.webp")).willReturn("https://cdn.example.com/activities/2026/11/c.webp");
+        MockMultipartFile file = new MockMultipartFile("file", "a.jpg", "image/jpeg", new byte[]{(byte) 0xFF, (byte) 0xD8, (byte) 0xFF});
+
+        assertThat(post("/staff/activity-images").multipart().file(file))
+                .hasStatusOk().bodyJson().extractingPath("$.url").isEqualTo("https://cdn.example.com/activities/2026/11/a.jpg");
+        assertThat(post("/staff/activity-images", "{\"data\":\"aGVsbG8=\"}")).hasStatusOk()
+                .bodyJson().extractingPath("$.url").isEqualTo("https://cdn.example.com/activities/2026/11/b.png");
+        assertThat(post("/staff/activity-images", "{\"url\":\"https://example.com/c.webp\"}")).hasStatusOk()
+                .bodyJson().extractingPath("$.url").isEqualTo("https://cdn.example.com/activities/2026/11/c.webp");
+        verify(images).upload(new byte[]{(byte) 0xFF, (byte) 0xD8, (byte) 0xFF});
+    }
+
+    @Test
+    void photoNeedsExactlyOneSource() {
+        assertThat(post("/staff/activity-images", "{}")).hasStatus(HttpStatus.BAD_REQUEST);
+        assertThat(post("/staff/activity-images", "{\"data\":\"aGVsbG8=\",\"url\":\"https://example.com/c.webp\"}")).hasStatus(HttpStatus.BAD_REQUEST);
+        verifyNoInteractions(images);
+    }
 
     @Test
     void anInspectorHasNoAccessToActivities() {
