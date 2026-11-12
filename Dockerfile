@@ -66,7 +66,7 @@ EXPOSE 8080
 HEALTHCHECK --interval=10s --timeout=3s --start-period=20s --retries=5 \
   CMD curl -fsS http://localhost:8080/api/actuator/health/readiness || exit 1
 # Options JVM remplaçables par l'hébergeur (ex. profil petite mémoire sur Render, voir render.yaml).
-ENV JAVA_TOOL_OPTIONS="-XX:MaxRAMPercentage=75 -H:+UnlockExperimentalVMOptions -H:+UnlockExperimentalVMOptions"
+ENV JAVA_TOOL_OPTIONS="-XX:MaxRAMPercentage=90 -H:+UnlockExperimentalVMOptions"
 ENTRYPOINT ["java", "org.springframework.boot.loader.launch.JarLauncher"]
 
 # ---------------------------------------------------------------------------

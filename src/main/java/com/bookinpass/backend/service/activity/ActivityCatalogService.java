@@ -133,7 +133,7 @@ public class ActivityCatalogService {
         return new ActivityDetailResponse(activity.getId(), activity.getSlug(), activity.getTitle(), ActivityContent.city(activity.getCity()),
                 activity.getCategory(), activity.getProviderName(), activity.getSummary(), activity.getDescription(),
                 content.strings(activity.getHighlights()), content.strings(activity.getIncludes()), content.strings(activity.getExcludes()),
-                content.strings(activity.getNotAllowed()), content.strings(activity.getKnowBefore()),
+                content.strings(activity.getNotAllowed()), content.strings(activity.getToBring()), content.strings(activity.getKnowBefore()),
                 content.itinerary(activity.getItinerary()), content.images(activity.getImages()), activity.getMeetingPoint(),
                 activity.getLatitude(), activity.getLongitude(), activity.getDurationMinMinutes(), toInteger(activity.getDurationMaxMinutes()),
                 toInteger(activity.getFreeCancellationHours()), activity.getCurrency(),

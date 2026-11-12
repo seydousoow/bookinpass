@@ -35,6 +35,7 @@ public record StaffActivityRequest(
         @NotNull @Size(max = 30) List<@NotBlank @Size(max = 300) String> includes,
         @NotNull @Size(max = 30) List<@NotBlank @Size(max = 300) String> excludes,
         @JsonProperty("not_allowed") @NotNull @Size(max = 30) List<@NotBlank @Size(max = 300) String> notAllowed,
+        @JsonProperty("to_bring") @Size(max = 30) List<@NotBlank @Size(max = 300) String> toBring,
         @JsonProperty("know_before") @NotNull @Size(max = 30) List<@NotBlank @Size(max = 500) String> knowBefore,
         @NotNull @Size(max = 30) List<@Valid @NotNull ActivityItineraryStop> itinerary,
         @NotNull @Size(max = 20) List<@Valid @NotNull ActivityImage> images,

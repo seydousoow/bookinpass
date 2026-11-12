@@ -126,8 +126,8 @@ principale, puis facture relue chez PayDunya.
 
 **Webhooks.** Tous dans `WebhookController` : `/webhooks/stripe`, `/webhooks/duffel`, `/webhooks/paydunya`.
 
-**Avis et Claude.** Un avis par réservation payée, après le créneau ; en attente jusqu'à modération. Toutes les 2 heures
-(`REVIEW_MODERATION_INTERVAL`, durée ISO-8601, `PT2H` par défaut), les avis en attente partent chez Claude en un seul
+**Avis et Claude.** Un avis par réservation payée, après le créneau ; en attente jusqu'à modération. Toutes les 5 heures
+(`REVIEW_MODERATION_INTERVAL`, durée ISO-8601, `PT5H` par défaut), les avis en attente partent chez Claude en un seul
 appel (20 au plus) ; pour chacun, il rend `approve`, `reject` ou `review` (réponse imposée par un schéma JSON). En
 modération automatique (réglage du back-office, `app_setting.reviews.auto_moderation`), `approve` publie et `reject`
 rejette ; `review` attend toujours un responsable. Le résumé « Ce qu'en disent les voyageurs » (100 derniers avis,
@@ -136,6 +136,23 @@ français et anglais) est écrit à la demande, depuis la fiche de l'activité. 
 
 Clé : `ANTHROPIC_API_KEY` (vide = tous les avis attendent un responsable). Une clé de compte de service limitée à un
 espace de travail dédié, avec expiration, et une limite de dépense mensuelle sur cet espace.
+
+**Photos des activités.** Le back-office dépose une photo par `POST /api/staff/activity-images` (fichier, base64 ou
+adresse HTTPS publique que le serveur télécharge) ; elle part dans un bucket S3 public et l'API rend son adresse sur le
+CDN : `<IMAGES_CDN_BASE_URL>/activities/aaaa/mm/<uuid>.<ext>`. Le format est reconnu aux premiers octets (JPEG, PNG,
+WebP, GIF, AVIF), 10 Mo au plus ; les adresses du réseau interne sont refusées. Chaque dépôt est noté : une photo
+retirée avant l'enregistrement de la fiche est supprimée tout de suite (`DELETE /api/staff/activity-images`), une photo
+qu'aucune fiche n'emploie est purgée après 24 h par une tâche planifiée.
+
+| Variable              | Rôle                                                                  |
+|-----------------------|-----------------------------------------------------------------------|
+| `IMAGES_S3_BUCKET`    | Bucket S3 (vide = dépôt indisponible, les adresses saisies restent)   |
+| `IMAGES_CDN_BASE_URL` | Adresse du CDN devant le bucket, sans `/` final (vide = indisponible) |
+| `IMAGES_S3_REGION`    | Région du bucket ; absente = `AWS_REGION`                             |
+
+Identifiants : chaîne AWS par défaut, donc `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` (les mêmes que SES ; l'utilisateur
+IAM doit avoir `s3:PutObject` et `s3:DeleteObject` sur le bucket). Avec le profil `dev` (`ENV_PROFILE=dev`, ou
+`--spring.profiles.active=dev`), le client S3 lit le profil local `bookinpass` de `~/.aws/credentials`.
 
 **Hébergements.** Duffel Stays cherche autour de coordonnées : `l` est l'identifiant GeoNames d'une ville
 (`2253354` = Dakar), dont les coordonnées viennent de la table `city` ; rayon `stays-radius-km` (10 km).
@@ -166,6 +183,19 @@ Erreurs Duffel (lues dans `errors[0].type/code`, journalisées avec `request_id`
 | 422 `unsupported_action` (montées en gamme), `seat_map_unavailable`                                                      | 200 `{"data":[]}`                       | —                      |
 
 Le corps de chaque erreur porte aussi `providerRequestId` (le `x-request-id` Duffel).
+
+## Déploiement (Render)
+
+`render.yaml` est un Blueprint : l'image (jvm ou native) est construite par GitHub Actions et publiée sur GHCR, Render
+ne fait que la tirer. La base et le cache sont reliés automatiquement ; toutes les autres variables sont en
+`sync: false` et se règlent dans le tableau de bord.
+
+**Une variable ajoutée à `render.yaml` après la création du Blueprint n'est pas créée par Render** : l'ajouter à la main
+(service → Environment → Add). À chaque nouvelle variable, mettre à jour ensemble `application.yaml`, `render.yaml`,
+`compose.yaml` et `.env.example`.
+
+`ENV_PROFILE` choisit le profil Spring (`default` si absente). Sur Render : `default`, jamais `dev` (base locale et
+profil AWS local `bookinpass`).
 
 ## Organisation
 

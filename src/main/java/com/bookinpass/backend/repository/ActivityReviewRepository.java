@@ -68,6 +68,12 @@ public interface ActivityReviewRepository extends JpaRepository<ActivityReview, 
     long countByStatus(String status);
 
     /**
+     * Avis publiés par la modération automatique (Claude), sans décision d'un responsable.
+     */
+    @Query("select count(r) from ActivityReview r where r.status = 'approved' and r.moderatedBy is null")
+    long countAutoApproved();
+
+    /**
      * Avis en attente que Claude n'a pas encore lus (au plus {@code maxAttempts} essais).
      */
     @Query("""

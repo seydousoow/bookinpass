@@ -55,6 +55,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * Activités au back-office (admin, manager) : fiches, options et prix, créneaux, mise en vente ; liste et détail des
@@ -69,7 +70,11 @@ public class ActivityAdminService {
     /**
      * Créneaux ouverts en une fois au plus (garde-fou contre une saisie erronée).
      */
-    private static final int MAX_NEW_SLOTS = 2000;
+    private static final int MAX_NEW_SLOTS = 6000;
+    /**
+     * Créneaux ouverts jusqu'à deux ans à l'avance.
+     */
+    private static final int MAX_YEARS_AHEAD = 2;
     private static final int MAX_PAGE_SIZE = 100;
     /**
      * Adresses prises par l'API ({@code /activities/bookings}…).
@@ -123,11 +128,15 @@ public class ActivityAdminService {
     public List<StaffActivityResponse> list() {
         List<Activity> all = activities.findAllForStaff();
         Map<Integer, ActivityContent.Ratings> ratings = content.ratings(all.stream().map(Activity::getId).toList());
+        Map<Integer, Instant> lastSlots = slots.lastOpenSlots().stream().collect(Collectors.toMap(row -> (Integer) row[0], row -> (Instant) row[1]));
+        Map<Integer, Long> upcoming = bookings.countUpcoming(ActivityBookingStatus.CONFIRMED, clock.instant()).stream()
+                .collect(Collectors.toMap(row -> (Integer) row[0], row -> (Long) row[1]));
         return all.stream().map(a -> {
             ActivityContent.Ratings rating = ratings.get(a.getId());
             return new StaffActivityResponse(a.getId(), a.getSlug(), a.getStatus().dbValue(), a.getTitle(), ActivityContent.city(a.getCity()),
                     a.getCategory(), content.cover(a), a.getOptions().size(), rating == null ? null : rating.average(),
-                    rating == null ? 0 : rating.count(), ActivityContent.text(a.getPublishedAt()), a.getUpdatedAt().toString());
+                    rating == null ? 0 : rating.count(), ActivityContent.text(a.getPublishedAt()), a.getUpdatedAt().toString(),
+                    ActivityContent.text(lastSlots.get(a.getId())), upcoming.getOrDefault(a.getId(), 0L));
         }).toList();
     }
 
@@ -201,8 +210,9 @@ public class ActivityAdminService {
     public int openSlots(Integer optionId, StaffActivitySlotsRequest request, StaffPrincipal by) {
         ActivityOption option = option(optionId);
         ZoneId zone = ActivityContent.zone(option.getActivity());
-        if (request.to().isBefore(request.from()) || ChronoUnit.DAYS.between(request.from(), request.to()) > 366) {
-            throw new ActivityException(HttpStatus.BAD_REQUEST, "invalid-period", "Choose a period of at most one year.");
+        LocalDate horizon = LocalDate.now(clock.withZone(zone)).plusYears(MAX_YEARS_AHEAD);
+        if (request.to().isBefore(request.from()) || request.to().isAfter(horizon)) {
+            throw new ActivityException(HttpStatus.BAD_REQUEST, "invalid-period", "Time slots can be opened up to two years ahead.");
         }
         int capacity = request.capacity() == null ? option.getCapacity() : request.capacity();
         List<LocalTime> times = request.times().stream().distinct().map(LocalTime::parse).toList();
@@ -219,7 +229,7 @@ public class ActivityAdminService {
                     continue;
                 }
                 if (++considered > MAX_NEW_SLOTS) {
-                    throw new ActivityException(HttpStatus.BAD_REQUEST, "too-many-slots", "At most 2000 time slots at once.");
+                    throw new ActivityException(HttpStatus.BAD_REQUEST, "too-many-slots", "At most " + MAX_NEW_SLOTS + " time slots at once.");
                 }
                 created += slots.createIfAbsent(optionId, startsAt, capacity);
             }
@@ -311,7 +321,8 @@ public class ActivityAdminService {
         return new StaffActivityDetailResponse(activity.getId(), activity.getSlug(), activity.getStatus().dbValue(), activity.getTitle(),
                 ActivityContent.city(activity.getCity()), activity.getCategory(), activity.getProviderName(), activity.getSummary(),
                 activity.getDescription(), content.strings(activity.getHighlights()), content.strings(activity.getIncludes()),
-                content.strings(activity.getExcludes()), content.strings(activity.getNotAllowed()), content.strings(activity.getKnowBefore()),
+                content.strings(activity.getExcludes()), content.strings(activity.getNotAllowed()), content.strings(activity.getToBring()),
+                content.strings(activity.getKnowBefore()),
                 content.itinerary(activity.getItinerary()), content.images(activity.getImages()), activity.getMeetingPoint(),
                 activity.getLatitude(), activity.getLongitude(), activity.getDurationMinMinutes(),
                 activity.getDurationMaxMinutes() == null ? null : activity.getDurationMaxMinutes().intValue(),
@@ -335,7 +346,8 @@ public class ActivityAdminService {
         return new Activity.Content(request.title().trim(), city, request.category(), request.providerName().trim(), request.summary().trim(),
                 request.description().trim(), content.write(trimmed(request.highlights())), content.write(trimmed(request.includes())),
                 content.write(trimmed(request.excludes())), content.write(trimmed(request.notAllowed())),
-                content.write(trimmed(request.knowBefore())), content.write(request.itinerary()), content.write(request.images()),
+                content.write(request.toBring() == null ? List.of() : trimmed(request.toBring())), content.write(trimmed(request.knowBefore())),
+                content.write(request.itinerary()), content.write(request.images()),
                 request.meetingPoint().trim(), request.latitude(), request.longitude(), request.durationMinMinutes().shortValue(),
                 request.durationMaxMinutes() == null ? null : request.durationMaxMinutes().shortValue(),
                 request.freeCancellationHours() == null ? null : request.freeCancellationHours().shortValue(), request.currency());

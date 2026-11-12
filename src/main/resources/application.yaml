@@ -1,6 +1,9 @@
 spring:
   application:
     name: book-in-pass
+  profiles:
+    active:
+      - ${ENV_PROFILE:default}
   threads:
     virtual:
       enabled: true
@@ -33,6 +36,12 @@ spring:
 
   cache:
     type: redis
+
+  # Photos des activités envoyées au back-office (bookinpass.images.max-size) : un peu de marge pour l'enveloppe.
+  servlet:
+    multipart:
+      max-file-size: 11MB
+      max-request-size: 11MB
 
   # Sujets des e-mails (i18n/mail_fr.properties, i18n/mail_en.properties).
   messages:
@@ -174,6 +183,15 @@ bookinpass:
   # Modération des avis par Claude : un lot d'avis en attente à chaque passage (durée ISO-8601, ex. PT5H = 5 heures).
   reviews:
     moderation-interval: ${REVIEW_MODERATION_INTERVAL:PT5H}
+  # Photos des activités : bucket S3 public, servi par le CDN (la photo est à <cdn-base-url>/<prefix>/aaaa/mm/<uuid>.jpg).
+  # Bucket ou CDN vide = dépôt indisponible (les adresses déjà saisies restent valables). Identifiants : chaîne AWS.
+  images:
+    bucket: ${IMAGES_S3_BUCKET:}
+    region: ${IMAGES_S3_REGION:${AWS_REGION:us-east-2}}
+    cdn-base-url: ${IMAGES_CDN_BASE_URL:}
+    prefix: activities
+    max-size: 10MB
+    download-timeout: 15s
   # Back-office du personnel (application séparée). Cookie de session HttpOnly, SameSite=Lax : le back-office doit
   # être servi depuis le même site que l'API (ex. bip-admin.dicortex.com et bip-back.dicortex.com).
   staff:

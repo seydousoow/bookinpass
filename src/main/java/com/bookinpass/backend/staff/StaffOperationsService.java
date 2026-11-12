@@ -28,6 +28,7 @@ import com.bookinpass.backend.service.transport.TransportSearchService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
@@ -314,6 +315,12 @@ public class StaffOperationsService {
     public List<StaffIncidentResponse> incidents(StaffPrincipal by, boolean openOnly, Integer stationId) {
         Integer station = by.allStations() ? stationId : by.stationId();
         return incidents.findForStation(station, openOnly).stream().map(StaffOperationsService::incident).toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<StaffIncidentResponse> resolvedIncidents(StaffPrincipal by, int limit, Integer stationId) {
+        Integer station = by.allStations() ? stationId : by.stationId();
+        return incidents.findResolved(station, PageRequest.of(0, limit)).stream().map(StaffOperationsService::incident).toList();
     }
 
     /**

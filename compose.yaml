@@ -27,7 +27,10 @@ services:
   redis:
     image: redis:8-alpine
     networks:
+      - bip-egress
       - bip-internal
+    ports:
+      - "6379:6379"
     command:
       - redis-server
       - --save
@@ -79,6 +82,10 @@ services:
       AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY:-}
       AWS_SES_SENDER: ${AWS_SES_SENDER:-reservations@bookinpass.com}
       AWS_SES_ALIAS: ${AWS_SES_ALIAS:-Book In Pass}
+      # Photos des activités (S3 + CDN). Bucket ou CDN vide = dépôt indisponible.
+      IMAGES_S3_BUCKET: ${IMAGES_S3_BUCKET:-}
+      IMAGES_S3_REGION: ${IMAGES_S3_REGION:-${AWS_REGION:-us-east-2}}
+      IMAGES_CDN_BASE_URL: ${IMAGES_CDN_BASE_URL:-}
       STAYS_LOG_LEVEL: ${STAYS_LOG_LEVEL:-info}
 
       EXPEDIA_BASE_URL: ${EXPEDIA_BASE_URL:-https://test.ean.com/v3}

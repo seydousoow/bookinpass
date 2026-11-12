@@ -76,6 +76,15 @@ public class Activity {
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "not_allowed", nullable = false)
     private String notAllowed;
+    /**
+     * JSON : « À emporter ».
+     */
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "to_bring", nullable = false)
+    private String toBring;
+    /**
+     * JSON : « Bon à savoir ».
+     */
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "know_before", nullable = false)
     private String knowBefore;
@@ -140,6 +149,7 @@ public class Activity {
         this.includes = content.includes();
         this.excludes = content.excludes();
         this.notAllowed = content.notAllowed();
+        this.toBring = content.toBring();
         this.knowBefore = content.knowBefore();
         this.itinerary = content.itinerary();
         this.images = content.images();
@@ -186,7 +196,8 @@ public class Activity {
      * @param durationMaxMinutes nul : durée fixe ({@code durationMinMinutes})
      */
     public record Content(String title, City city, String category, String providerName, String summary, String description,
-                          String highlights, String includes, String excludes, String notAllowed, String knowBefore,
+                          String highlights, String includes, String excludes, String notAllowed, String toBring,
+                          String knowBefore,
                           String itinerary, String images, String meetingPoint, Double latitude, Double longitude,
                           short durationMinMinutes, Short durationMaxMinutes, Short freeCancellationHours, String currency) {
     }

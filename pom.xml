@@ -60,6 +60,17 @@
             <groupId>io.awspring.cloud</groupId>
             <artifactId>spring-cloud-aws-ses</artifactId>
         </dependency>
+        <!-- Photos des activités : déposées dans un bucket S3 public, servies par le CDN. -->
+        <dependency>
+            <groupId>software.amazon.awssdk</groupId>
+            <artifactId>s3</artifactId>
+            <exclusions>
+                <exclusion>
+                    <groupId>software.amazon.awssdk</groupId>
+                    <artifactId>netty-nio-client</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
         <dependency>
             <groupId>org.thymeleaf</groupId>
             <artifactId>thymeleaf-spring6</artifactId>

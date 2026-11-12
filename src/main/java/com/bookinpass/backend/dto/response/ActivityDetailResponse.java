@@ -16,6 +16,7 @@ public record ActivityDetailResponse(Integer id, String slug, String title, Acti
                                      @JsonProperty("provider_name") String providerName, String summary, String description,
                                      List<String> highlights, List<String> includes, List<String> excludes,
                                      @JsonProperty("not_allowed") List<String> notAllowed,
+                                     @JsonProperty("to_bring") List<String> toBring,
                                      @JsonProperty("know_before") List<String> knowBefore,
                                      List<ActivityItineraryStop> itinerary, List<ActivityImage> images,
                                      @JsonProperty("meeting_point") String meetingPoint, Double latitude, Double longitude,

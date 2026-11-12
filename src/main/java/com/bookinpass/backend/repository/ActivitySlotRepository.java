@@ -32,6 +32,12 @@ public interface ActivitySlotRepository extends JpaRepository<ActivitySlot, Inte
     List<ActivitySlot> findOpen(@Param("activityId") Integer activityId, @Param("from") Instant from, @Param("to") Instant to);
 
     /**
+     * Début du dernier créneau ouvert de chaque activité (options en vente) : {@code [activityId, startsAt]}.
+     */
+    @Query("select o.activity.id, max(s.startsAt) from ActivitySlot s join s.option o where o.active = true and s.cancelledAt is null group by o.activity.id")
+    List<Object[]> lastOpenSlots();
+
+    /**
      * Créneaux d'une option sur une période (back-office), annulés compris.
      */
     @Query("select s from ActivitySlot s where s.option.id = :optionId and s.startsAt >= :from and s.startsAt < :to order by s.startsAt")

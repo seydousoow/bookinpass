@@ -140,7 +140,7 @@ class ActivitySaleTest {
     private static StaffActivityRequest content(String title, List<ActivityImage> images) {
         return new StaffActivityRequest(title, "", DAKAR, "tour", "Gorée Tours", "Traversée et visite de l'île.",
                 "La Maison des Esclaves, le Castel, les ruelles colorées.", List.of("Maison des Esclaves"), List.of("Traversée en chaloupe"),
-                List.of(), List.of("Animaux"), List.of("Prévoir de l'eau"),
+                List.of(), List.of("Animaux"), List.of("Chapeau"), List.of("Prévoir de l'eau"),
                 List.of(new ActivityItineraryStop("Maison des Esclaves", "visit", 45, false, null)), images, "Embarcadère de Dakar",
                 14.67, -17.42, 180, null, 24, "XOF");
     }
@@ -158,7 +158,7 @@ class ActivitySaleTest {
 
     private static StaffActivityRequest request(StaffActivityRequest base, String slug, int city, Integer max, Double latitude, Double longitude) {
         return new StaffActivityRequest(base.title(), slug, city, base.category(), base.providerName(), base.summary(), base.description(), base.highlights(),
-                base.includes(), base.excludes(), base.notAllowed(), base.knowBefore(), base.itinerary(), base.images(), base.meetingPoint(), latitude, longitude,
+                base.includes(), base.excludes(), base.notAllowed(), base.toBring(), base.knowBefore(), base.itinerary(), base.images(), base.meetingPoint(), latitude, longitude,
                 180, max, base.freeCancellationHours(), base.currency());
     }
 
@@ -575,7 +575,10 @@ class ActivitySaleTest {
         code(() -> admin.slots(option, from, from.minusDays(1)), "invalid-period");
         code(() -> admin.slots(option, from, from.plusDays(93)), "invalid-period");
         assertThat(admin.slots(option, from, from.plusDays(92))).hasSize(4);
-        code(() -> admin.openSlots(option, new StaffActivitySlotsRequest(from, from.plusDays(367), List.of(1), List.of("09:30"), null), manager), "invalid-period");
+        // Jusqu'à deux ans à l'avance (le 25 octobre 2028), pas au-delà.
+        code(() -> admin.openSlots(option, new StaffActivitySlotsRequest(from, from.plusYears(2).plusDays(1), List.of(1), List.of("09:30"), null), manager), "invalid-period");
+        code(() -> admin.openSlots(option, new StaffActivitySlotsRequest(from.plusDays(1), from, List.of(1), List.of("09:30"), null), manager), "invalid-period");
+        assertThat(admin.openSlots(option, new StaffActivitySlotsRequest(from.plusYears(2), from.plusYears(2), List.of(3), List.of("09:30"), null), manager)).isEqualTo(1);
         // Le passé (9 h, avant midi) est ignoré ; 10 h et 20 h sont ouverts avec la capacité demandée.
         assertThat(admin.openSlots(option, new StaffActivitySlotsRequest(from, from, List.of(7), List.of("09:00", "20:00", "20:00"), 5), manager)).isEqualTo(1);
 
