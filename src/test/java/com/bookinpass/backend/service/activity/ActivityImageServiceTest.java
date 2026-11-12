@@ -7,6 +7,7 @@ import com.bookinpass.backend.repository.ActivityImageUploadRepository;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.util.unit.DataSize;
+import software.amazon.awssdk.core.exception.SdkClientException;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
@@ -24,12 +25,14 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.when;
 
 class ActivityImageServiceTest {
 
@@ -155,5 +158,89 @@ class ActivityImageServiceTest {
         for (String address : new String[]{"8.8.8.8", "41.82.1.1", "2001:4860:4860::8888"}) {
             assertThat(ActivityImageService.internal(InetAddress.getByName(address))).as(address).isFalse();
         }
+    }
+
+    private static byte[] bytes(Object... values) {
+        byte[] out = new byte[values.length];
+        for (int i = 0; i < values.length; i++) {
+            out[i] = values[i] instanceof Character c ? (byte) c.charValue() : ((Integer) values[i]).byteValue();
+        }
+        return out;
+    }
+
+    @Test
+    void recognisesEachFormatByItsFirstBytes() {
+        assertThat(ActivityImageService.ImageType.of(JPEG)).contains(ActivityImageService.ImageType.JPEG);
+        assertThat(ActivityImageService.ImageType.of(PNG)).contains(ActivityImageService.ImageType.PNG);
+        assertThat(ActivityImageService.ImageType.of(bytes('R', 'I', 'F', 'F', 0, 0, 0, 0, 'W', 'E', 'B', 'P'))).contains(ActivityImageService.ImageType.WEBP);
+        assertThat(ActivityImageService.ImageType.of(bytes('G', 'I', 'F', '8', '9', 'a'))).contains(ActivityImageService.ImageType.GIF);
+        assertThat(ActivityImageService.ImageType.of(bytes(0, 0, 0, 0x1C, 'f', 't', 'y', 'p', 'a', 'v', 'i', 'f'))).contains(ActivityImageService.ImageType.AVIF);
+        assertThat(ActivityImageService.ImageType.of(bytes(0, 0, 0, 0x1C, 'f', 't', 'y', 'p', 'a', 'v', 'i', 's'))).contains(ActivityImageService.ImageType.AVIF);
+    }
+
+    @Test
+    void refusesLookalikesAndTruncatedHeaders() {
+        // RIFF sans WEBP (WAV), ftyp sans avif/avis (MP4), en-têtes coupés.
+        assertThat(ActivityImageService.ImageType.of(bytes('R', 'I', 'F', 'F', 0, 0, 0, 0, 'W', 'A', 'V', 'E'))).isEmpty();
+        assertThat(ActivityImageService.ImageType.of(bytes(0, 0, 0, 0x1C, 'f', 't', 'y', 'p', 'm', 'p', '4', '2'))).isEmpty();
+        assertThat(ActivityImageService.ImageType.of(bytes('R', 'I', 'F', 'F'))).isEmpty();
+        assertThat(ActivityImageService.ImageType.of(bytes(0xFF, 0xD8))).isEmpty();
+        assertThat(ActivityImageService.ImageType.of(bytes(0, 0, 0, 0x1C, 'f', 't', 'y', 'p'))).isEmpty();
+    }
+
+    @Test
+    void storesEachFormatWithItsExtensionAndType() {
+        assertThat(service.upload(bytes('G', 'I', 'F', '8', '9', 'a'), "admin")).endsWith(".gif");
+        assertThat(service.upload(bytes(0, 0, 0, 0x1C, 'f', 't', 'y', 'p', 'a', 'v', 'i', 'f'), "admin")).endsWith(".avif");
+        assertThat(service.upload(bytes('R', 'I', 'F', 'F', 0, 0, 0, 0, 'W', 'E', 'B', 'P'), "admin")).endsWith(".webp");
+    }
+
+    @Test
+    void s3UploadFailureIsReportedAndNothingIsRecorded() {
+        when(s3.putObject(any(PutObjectRequest.class), any(RequestBody.class))).thenThrow(SdkClientException.create("down"));
+
+        code(() -> service.upload(PNG, "admin"), "image-upload-failed");
+        verifyNoInteractions(uploads);
+    }
+
+    @Test
+    void s3DeleteFailureKeepsTheRecordForTheNextPurge() {
+        ActivityImageUpload old = new ActivityImageUpload("activities/2026/11/old.png", "https://cdn.example.com/activities/2026/11/old.png", "awa",
+                CLOCK.instant().minus(ActivityImageService.GRACE).minusSeconds(1));
+        given(uploads.findUnused(CLOCK.instant().minus(ActivityImageService.GRACE), 100)).willReturn(List.of(old));
+        when(s3.deleteObject(any(DeleteObjectRequest.class))).thenThrow(SdkClientException.create("down"));
+
+        service.purgeUnused();
+
+        verify(uploads, never()).delete(any(ActivityImageUpload.class));
+    }
+
+    @Test
+    void purgeDoesNothingWhenStorageIsOffOrNothingIsUnused() {
+        service("", "").purgeUnused();
+        verifyNoInteractions(uploads, s3);
+
+        given(uploads.findUnused(any(Instant.class), anyInt())).willReturn(List.of());
+        service.purgeUnused();
+        verifyNoInteractions(s3);
+    }
+
+    @Test
+    void refusesMalformedAndUnresolvableAddresses() {
+        code(() -> service.fromUrl("https://exa mple.com/a.jpg", "admin"), "invalid-image-url");
+        code(() -> service.fromUrl("example.com/a.jpg", "admin"), "invalid-image-url");
+        code(() -> service.fromUrl("https:///a.jpg", "admin"), "invalid-image-url");
+        // .invalid : domaine réservé, jamais résolu (RFC 2606).
+        code(() -> service.fromUrl("https://photos.bookinpass.invalid/a.jpg", "admin"), "image-download-failed");
+        verifyNoInteractions(s3);
+    }
+
+    @Test
+    void propertiesNormaliseTheCdnAddress() {
+        assertThat(new ImageProperties("b", "r", "https://cdn.example.com///", "p", DataSize.ofBytes(1), Duration.ZERO).cdn()).isEqualTo("https://cdn.example.com");
+        assertThat(new ImageProperties("b", "r", null, "p", DataSize.ofBytes(1), Duration.ZERO).cdn()).isEmpty();
+        assertThat(new ImageProperties(null, "r", "https://cdn", "p", DataSize.ofBytes(1), Duration.ZERO).enabled()).isFalse();
+        assertThat(new ImageProperties("b", "r", null, "p", DataSize.ofBytes(1), Duration.ZERO).enabled()).isFalse();
+        assertThat(new ImageProperties("b", "r", " ", "p", DataSize.ofBytes(1), Duration.ZERO).enabled()).isFalse();
     }
 }
