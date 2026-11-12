@@ -26,6 +26,11 @@ services:
       # Valeur conseillée : -XX:MaxRAMPercentage=45 -XX:+UseSerialGC -XX:TieredStopAtLevel=1 -Xss512k -XX:ReservedCodeCacheSize=48m -XX:MaxMetaspaceSize=180m
       - key: JAVA_TOOL_OPTIONS
         sync: false
+      # Profil Spring actif (spring.profiles.active). Le profil dev attend une base locale et le profil AWS local
+      # « bookinpass » : à ne jamais utiliser ici.
+      # Valeur conseillée : default
+      - key: ENV_PROFILE
+        sync: false
       - key: DATABASE_HOST
         fromDatabase: { name: bookinpass-db, property: host }
       - key: DATABASE_PORT
@@ -164,6 +169,18 @@ services:
         sync: false
       # Valeur conseillée : Book In Pass
       - key: AWS_SES_ALIAS
+        sync: false
+
+      # Photos des activités : déposées dans un bucket S3 public, servies par le CDN. Bucket ou CDN vide = dépôt
+      # indisponible (les adresses déjà saisies restent valables). Mêmes identifiants AWS que SES : l'utilisateur IAM
+      # doit aussi avoir s3:PutObject et s3:DeleteObject sur le bucket.
+      - key: IMAGES_S3_BUCKET
+        sync: false
+      # Région du bucket. Ne pas créer la variable si c'est celle d'AWS_REGION (une valeur vide n'est pas un repli).
+      - key: IMAGES_S3_REGION
+        sync: false
+      # Adresse du CDN devant le bucket, sans / final (photo à <cdn>/activities/aaaa/mm/<uuid>.<ext>).
+      - key: IMAGES_CDN_BASE_URL
         sync: false
 
   # Cache (compatible Redis), joignable seulement depuis les services Render.
