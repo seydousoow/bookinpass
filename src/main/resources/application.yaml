@@ -1,6 +1,9 @@
 spring:
   application:
     name: book-in-pass
+  profiles:
+    active:
+      - ${ENV_PROFILE:default}
   threads:
     virtual:
       enabled: true
