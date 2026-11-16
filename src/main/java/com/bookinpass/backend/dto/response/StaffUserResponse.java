@@ -1,5 +1,6 @@
 package com.bookinpass.backend.dto.response;
 
+import com.bookinpass.backend.config.ids.PublicId;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
@@ -7,7 +8,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  *
  * @param station gare de travail ; {@code null} pour admin et manager
  */
-public record StaffUserResponse(Integer id,
+public record StaffUserResponse(@PublicId Integer id,
                                 String username,
                                 @JsonProperty("full_name") String fullName,
                                 String phone,

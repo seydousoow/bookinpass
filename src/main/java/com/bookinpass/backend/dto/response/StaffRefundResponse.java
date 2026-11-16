@@ -1,5 +1,6 @@
 package com.bookinpass.backend.dto.response;
 
+import com.bookinpass.backend.config.ids.PublicId;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
@@ -8,7 +9,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  * @param passengers « Prénom Nom » des passagers, séparés par des virgules
  * @param receiptUrl reçu PayDunya
  */
-public record StaffRefundResponse(Integer id,
+public record StaffRefundResponse(@PublicId Integer id,
                                   String reference,
                                   String passengers,
                                   String email,

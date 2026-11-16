@@ -1,5 +1,6 @@
 package com.bookinpass.backend.controller;
 
+import com.bookinpass.backend.config.ids.PublicId;
 import com.bookinpass.backend.config.OpenApiConfig;
 import com.bookinpass.backend.dto.request.StaffResetPasswordRequest;
 import com.bookinpass.backend.dto.request.StaffUserRequest;
@@ -53,13 +54,13 @@ public class StaffUserController {
 
     @PatchMapping(path = "{id}", consumes = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Modifier un compte", description = "Nom, téléphone, rôle, gare, actif. Désactivation ou changement de rôle : sessions fermées.")
-    public StaffUserResponse update(StaffPrincipal staff, @PathVariable Integer id, @Valid @RequestBody StaffUserRequest request) {
+    public StaffUserResponse update(StaffPrincipal staff, @PathVariable @PublicId Integer id, @Valid @RequestBody StaffUserRequest request) {
         return users.update(staff, id, request);
     }
 
     @PostMapping(path = "{id}/password", consumes = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Donner un mot de passe provisoire", description = "Sessions fermées, blocage levé ; à changer à la connexion.")
-    public StaffUserResponse resetPassword(StaffPrincipal staff, @PathVariable Integer id, @Valid @RequestBody StaffResetPasswordRequest request) {
+    public StaffUserResponse resetPassword(StaffPrincipal staff, @PathVariable @PublicId Integer id, @Valid @RequestBody StaffResetPasswordRequest request) {
         return users.resetPassword(staff, id, request.temporaryPassword());
     }
 }

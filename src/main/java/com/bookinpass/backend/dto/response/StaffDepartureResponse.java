@@ -1,5 +1,6 @@
 package com.bookinpass.backend.dto.response;
 
+import com.bookinpass.backend.config.ids.PublicId;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
@@ -8,8 +9,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  * @param capacity   {@code null} : service continu, places non comptées
  * @param passengers billets confirmés ; {@code scanned} : déjà contrôlés
  */
-public record StaffDepartureResponse(Integer id,
-                                     @JsonProperty("route_id") Integer routeId,
+public record StaffDepartureResponse(@PublicId Integer id,
+                                     @JsonProperty("route_id") @PublicId Integer routeId,
                                      @JsonProperty("route_code") String routeCode,
                                      StaffStationResponse origin,
                                      StaffStationResponse destination,

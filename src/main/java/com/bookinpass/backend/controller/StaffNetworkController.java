@@ -1,5 +1,6 @@
 package com.bookinpass.backend.controller;
 
+import com.bookinpass.backend.config.ids.PublicId;
 import com.bookinpass.backend.config.OpenApiConfig;
 import com.bookinpass.backend.dto.request.StaffRouteRequest;
 import com.bookinpass.backend.dto.request.StaffScheduleRequest;
@@ -56,7 +57,7 @@ public class StaffNetworkController {
 
     @PatchMapping(path = "stations/{id}", consumes = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Modifier une gare", description = "Nom, adresse, téléphone.")
-    public StaffStationResponse updateStation(@PathVariable Integer id, @Valid @RequestBody StaffStationRequest request) {
+    public StaffStationResponse updateStation(@PathVariable @PublicId Integer id, @Valid @RequestBody StaffStationRequest request) {
         return network.updateStation(id, request);
     }
 
@@ -74,19 +75,19 @@ public class StaffNetworkController {
 
     @PatchMapping(path = "routes/{id}", consumes = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Modifier une ligne", description = "Prix (réservations suivantes), places (départs pas encore ouverts), mise en vente.")
-    public StaffRouteResponse updateRoute(@PathVariable Integer id, @Valid @RequestBody StaffRouteRequest request) {
+    public StaffRouteResponse updateRoute(@PathVariable @PublicId Integer id, @Valid @RequestBody StaffRouteRequest request) {
         return network.updateRoute(id, request);
     }
 
     @PostMapping(path = "routes/{id}/schedules", consumes = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Ajouter un horaire", description = "Une heure (de Dakar) pour plusieurs jours ; service continu avec `last_departure`.")
-    public StaffRouteResponse addSchedule(@PathVariable Integer id, @Valid @RequestBody StaffScheduleRequest request) {
+    public StaffRouteResponse addSchedule(@PathVariable @PublicId Integer id, @Valid @RequestBody StaffScheduleRequest request) {
         return network.addSchedule(id, request);
     }
 
     @DeleteMapping("schedules/{id}")
     @Operation(summary = "Retirer un horaire", description = "Plus de nouveaux départs ; les billets déjà vendus restent valables.")
-    public StaffRouteResponse deleteSchedule(@PathVariable Integer id) {
+    public StaffRouteResponse deleteSchedule(@PathVariable @PublicId Integer id) {
         return network.deleteSchedule(id);
     }
 }

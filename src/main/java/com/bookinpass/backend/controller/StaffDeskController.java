@@ -1,5 +1,6 @@
 package com.bookinpass.backend.controller;
 
+import com.bookinpass.backend.config.ids.PublicId;
 import com.bookinpass.backend.config.OpenApiConfig;
 import com.bookinpass.backend.dto.request.StaffRefundRequest;
 import com.bookinpass.backend.dto.response.StaffBookingResponse;
@@ -64,7 +65,7 @@ public class StaffDeskController {
     @PostMapping(path = "refunds/{id}/refunded", consumes = MediaType.APPLICATION_JSON_VALUE)
     @StaffAccess({StaffRole.ADMIN, StaffRole.MANAGER})
     @Operation(summary = "Remboursement fait", description = "Note comment le client a été remboursé (opérateur, référence de la transaction).")
-    public StaffRefundResponse refunded(StaffPrincipal staff, @PathVariable Integer id, @Valid @RequestBody StaffRefundRequest request) {
+    public StaffRefundResponse refunded(StaffPrincipal staff, @PathVariable @PublicId Integer id, @Valid @RequestBody StaffRefundRequest request) {
         return desk.markRefunded(staff, id, request.note());
     }
 }

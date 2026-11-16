@@ -102,6 +102,12 @@
             <artifactId>dnsjava</artifactId>
             <version>${dnsjava.version}</version>
         </dependency>
+        <!-- Identifiants publics (clés techniques encodées, 12 caractères). -->
+        <dependency>
+            <groupId>org.sqids</groupId>
+            <artifactId>sqids</artifactId>
+            <version>0.1.0</version>
+        </dependency>
         <!-- Écart volontaire avec le pom Initializr : Jedis plutôt que Lettuce. Client bloquant, adapté aux threads
              virtuels, et sans Netty : l'analyse native-image a nettement moins de code à parcourir. -->
         <dependency>

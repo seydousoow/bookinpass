@@ -1,5 +1,6 @@
 package com.bookinpass.backend.controller;
 
+import com.bookinpass.backend.config.ids.PublicId;
 import com.bookinpass.backend.config.OpenApiConfig;
 import com.bookinpass.backend.dto.request.StaffIncidentRequest;
 import com.bookinpass.backend.dto.request.StaffResolveRequest;
@@ -48,21 +49,21 @@ public class StaffIncidentController {
     @GetMapping
     @Operation(summary = "Incidents", description = "Des lignes de sa gare (admin, manager : celle choisie, sinon toutes) ; ouverts seulement par défaut.")
     public List<StaffIncidentResponse> list(StaffPrincipal staff, @RequestParam(defaultValue = "true") boolean open,
-                                            @RequestParam(name = "station_id", required = false) Integer stationId) {
+                                            @RequestParam(name = "station_id", required = false) @PublicId Integer stationId) {
         return operations.incidents(staff, open, stationId);
     }
 
     @GetMapping("resolved")
     @Operation(summary = "Derniers incidents clos", description = "Les plus récemment clos (10 par défaut, 50 au plus), même périmètre de gares.")
     public List<StaffIncidentResponse> resolved(StaffPrincipal staff, @RequestParam(defaultValue = "10") int limit,
-                                                @RequestParam(name = "station_id", required = false) Integer stationId) {
+                                                @RequestParam(name = "station_id", required = false) @PublicId Integer stationId) {
         return operations.resolvedIncidents(staff, Math.clamp(limit, 1, 50), stationId);
     }
 
     @PostMapping(path = "{id}/resolve", consumes = MediaType.APPLICATION_JSON_VALUE)
     @StaffAccess({StaffRole.ADMIN, StaffRole.MANAGER, StaffRole.STATION_CHIEF})
     @Operation(summary = "Clore un incident")
-    public StaffIncidentResponse resolve(StaffPrincipal staff, @PathVariable Integer id, @Valid @RequestBody StaffResolveRequest request) {
+    public StaffIncidentResponse resolve(StaffPrincipal staff, @PathVariable @PublicId Integer id, @Valid @RequestBody StaffResolveRequest request) {
         return operations.resolveIncident(staff, id, request.resolution());
     }
 }

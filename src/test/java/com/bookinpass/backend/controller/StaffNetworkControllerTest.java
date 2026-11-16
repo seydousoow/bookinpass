@@ -1,5 +1,6 @@
 package com.bookinpass.backend.controller;
 
+import com.bookinpass.backend.config.ids.PublicIds;
 import com.bookinpass.backend.dto.request.StaffRouteRequest;
 import com.bookinpass.backend.dto.request.StaffStationRequest;
 import com.bookinpass.backend.staff.StaffNetworkService;
@@ -24,7 +25,7 @@ import static org.mockito.Mockito.verifyNoInteractions;
 class StaffNetworkControllerTest extends StaffControllerTestSupport {
 
     private static final String STATION = "{\"code\":\"DKR-1\",\"name\":\"Dakar\",\"city_id\":2253354}";
-    private static final String ROUTE = "{\"origin_station_id\":1,\"destination_station_id\":2,\"network\":\"interurban\",\"price\":3000,\"capacity\":40}";
+    private static final String ROUTE = "{\"origin_station_id\":\"" + PublicIds.encode(1) + "\",\"destination_station_id\":\"" + PublicIds.encode(2) + "\",\"network\":\"interurban\",\"price\":3000,\"capacity\":40}";
 
     @MockitoBean
     StaffNetworkService network;
@@ -42,7 +43,7 @@ class StaffNetworkControllerTest extends StaffControllerTestSupport {
     @Test
     void stationsAreCreatedAndUpdated() {
         assertThat(post("/staff/stations", STATION)).hasStatusOk();
-        assertThat(patch("/staff/stations/1", STATION)).hasStatusOk();
+        assertThat(patch("/staff/stations/" + PublicIds.encode(1), STATION)).hasStatusOk();
 
         verify(network).createStation(argThat((StaffStationRequest r) -> r.code().equals("DKR-1")));
         verify(network).updateStation(eq(1), any());
@@ -58,7 +59,7 @@ class StaffNetworkControllerTest extends StaffControllerTestSupport {
     void routesAreListedCreatedAndUpdated() {
         assertThat(get("/staff/routes")).hasStatusOk();
         assertThat(post("/staff/routes", ROUTE)).hasStatusOk();
-        assertThat(patch("/staff/routes/7", "{\"price\":4500,\"capacity\":55}")).hasStatusOk();
+        assertThat(patch("/staff/routes/" + PublicIds.encode(7), "{\"price\":4500,\"capacity\":55}")).hasStatusOk();
 
         verify(network).routes();
         verify(network).createRoute(argThat((StaffRouteRequest r) -> r.network().equals("interurban")));
@@ -67,8 +68,8 @@ class StaffNetworkControllerTest extends StaffControllerTestSupport {
 
     @Test
     void schedulesAreAddedAndRemoved() {
-        assertThat(post("/staff/routes/7/schedules", "{\"days\":[1,3],\"departs_at\":\"08:00\"}")).hasStatusOk();
-        assertThat(delete("/staff/schedules/5")).hasStatusOk();
+        assertThat(post("/staff/routes/" + PublicIds.encode(7) + "/schedules", "{\"days\":[1,3],\"departs_at\":\"08:00\"}")).hasStatusOk();
+        assertThat(delete("/staff/schedules/" + PublicIds.encode(5))).hasStatusOk();
 
         verify(network).addSchedule(eq(7), any());
         verify(network).deleteSchedule(5);
@@ -76,7 +77,7 @@ class StaffNetworkControllerTest extends StaffControllerTestSupport {
 
     @Test
     void luggageIsListedFoundAndDelivered() {
-        assertThat(get("/staff/luggage?date=2026-11-02&station_id=3")).hasStatusOk();
+        assertThat(get("/staff/luggage?date=2026-11-02&station_id=" + PublicIds.encode(3))).hasStatusOk();
         assertThat(get("/staff/luggage/BAG123")).hasStatusOk();
         assertThat(post("/staff/luggage/BAG123/delivered")).hasStatusOk();
 
