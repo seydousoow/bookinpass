@@ -76,9 +76,11 @@ public class ClaudeClient {
                 .retrieve()
                 .onStatus(HttpStatusCode::isError, (_, res) -> {
                     JsonNode error = json.readTree(res.getBody()).path("error");
-                    log.warn("Claude request failed with HTTP {} ({}), request_id={}", res.getStatusCode().value(),
-                            error.path("type").asString(""), res.getHeaders().getFirst("request-id"));
-                    throw new IllegalStateException("Claude request failed with HTTP " + res.getStatusCode().value());
+                    // Le message de l'API décrit le paramètre refusé (pas les textes envoyés) ; tronqué par prudence.
+                    String detail = abbreviate(error.path("message").asString(""), 300);
+                    log.warn("Claude request failed with HTTP {} ({}: {}), request_id={}", res.getStatusCode().value(),
+                            error.path("type").asString(""), detail, res.getHeaders().getFirst("request-id"));
+                    throw new IllegalStateException("Claude request failed with HTTP " + res.getStatusCode().value() + ": " + detail);
                 })
                 .body(String.class);
         JsonNode response = json.readTree(raw);
@@ -95,6 +97,10 @@ public class ClaudeClient {
             }
         }
         throw new IllegalStateException("Claude returned no text");
+    }
+
+    private static String abbreviate(String text, int max) {
+        return text.length() <= max ? text : text.substring(0, max) + "…";
     }
 
     /**
