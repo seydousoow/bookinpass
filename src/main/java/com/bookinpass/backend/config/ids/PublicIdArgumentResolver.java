@@ -1,5 +1,6 @@
 package com.bookinpass.backend.config.ids;
 
+import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 import org.springframework.core.MethodParameter;
@@ -21,6 +22,7 @@ import java.util.Map;
  * devient la clé technique. Placé avant les résolveurs de Spring ({@link PublicIdConfig}) : leur conversion retomberait
  * sur l'éditeur des entiers et accepterait une clé technique en clair. Invalide : 400.
  */
+@Slf4j
 class PublicIdArgumentResolver implements HandlerMethodArgumentResolver {
 
     @Override
@@ -33,24 +35,30 @@ class PublicIdArgumentResolver implements HandlerMethodArgumentResolver {
     public @Nullable Object resolveArgument(@NonNull MethodParameter parameter, @Nullable ModelAndViewContainer mavContainer,
                                             @NonNull NativeWebRequest request, @Nullable WebDataBinderFactory binderFactory) {
         PathVariable path = parameter.getParameterAnnotation(PathVariable.class);
+        RequestParam param = path == null ? parameter.getParameterAnnotation(RequestParam.class) : null;
+
+        String annotated = path != null ? path.name() : param != null ? param.name() : null;
+        String name = StringUtils.hasText(annotated) ? annotated : parameter.getParameterName();
+        if (name == null) {
+            log.warn("Cannot determine parameter name for {}. Specify it in @PathVariable/@RequestParam "
+                    + "or compile with '-parameters'. Resolving to null.", parameter);
+            return null;
+        }
+
         String raw;
-        String name;
         if (path != null) {
-            name = StringUtils.hasText(path.name()) ? path.name() : parameter.getParameterName();
             @SuppressWarnings("unchecked")
-            Map<String, String> variables = (Map<String, String>) request.getAttribute(HandlerMapping.URI_TEMPLATE_VARIABLES_ATTRIBUTE,
-                    RequestAttributes.SCOPE_REQUEST);
+            Map<String, String> variables = (Map<String, String>) request.getAttribute(
+                    HandlerMapping.URI_TEMPLATE_VARIABLES_ATTRIBUTE, RequestAttributes.SCOPE_REQUEST);
             raw = variables == null ? null : variables.get(name);
         } else {
-            RequestParam param = parameter.getParameterAnnotation(RequestParam.class);
-            name = param != null && StringUtils.hasText(param.name()) ? param.name() : parameter.getParameterName();
             raw = request.getParameter(name);
         }
+
         if (!StringUtils.hasText(raw)) {
             return null;
         }
-        String value = raw;
-        return PublicIds.decode(value).orElseThrow(() -> new MethodArgumentTypeMismatchException(value, Integer.class, name, parameter,
-                new IllegalArgumentException("Invalid identifier.")));
+        return PublicIds.decode(raw).orElseThrow(() -> new MethodArgumentTypeMismatchException(
+                raw, Integer.class, name, parameter, new IllegalArgumentException("Invalid identifier.")));
     }
 }
