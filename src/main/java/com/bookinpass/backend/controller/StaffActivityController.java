@@ -1,8 +1,10 @@
 package com.bookinpass.backend.controller;
 
+import com.bookinpass.backend.config.ids.PublicId;
 import com.bookinpass.backend.config.OpenApiConfig;
 import com.bookinpass.backend.dto.request.StaffActivityCancelRequest;
 import com.bookinpass.backend.dto.request.StaffActivityImageRequest;
+import com.bookinpass.backend.dto.request.ActivityTranslationContent;
 import com.bookinpass.backend.dto.request.StaffActivityOptionRequest;
 import com.bookinpass.backend.dto.request.StaffActivityRefundRequest;
 import com.bookinpass.backend.dto.request.StaffActivityRequest;
@@ -21,11 +23,13 @@ import com.bookinpass.backend.dto.response.StaffActivityResponse;
 import com.bookinpass.backend.dto.response.StaffActivityReviewResponse;
 import com.bookinpass.backend.dto.response.StaffActivitySettingsResponse;
 import com.bookinpass.backend.dto.response.StaffActivitySlotResponse;
+import com.bookinpass.backend.dto.response.StaffActivityTranslationResponse;
 import com.bookinpass.backend.dto.response.StaffCityResponse;
 import com.bookinpass.backend.dto.response.StaffImageResponse;
 import com.bookinpass.backend.entity.StaffRole;
 import com.bookinpass.backend.service.activity.ActivityAdminService;
 import com.bookinpass.backend.service.activity.ActivityImageService;
+import com.bookinpass.backend.service.activity.ActivityTranslationService;
 import com.bookinpass.backend.service.activity.ActivityRefundService;
 import com.bookinpass.backend.service.activity.ReviewService;
 import com.bookinpass.backend.staff.StaffAccess;
@@ -72,15 +76,19 @@ import java.util.Map;
 @StaffAccess({StaffRole.ADMIN, StaffRole.MANAGER})
 @RegisterReflection(classes = {StaffActivityRequest.class, StaffActivityStatusRequest.class, StaffActivityOptionRequest.class,
         StaffActivitySlotsRequest.class, StaffActivitySlotRequest.class, StaffReasonRequest.class, StaffActivityCancelRequest.class,
-        StaffActivityRefundRequest.class, StaffActivitySettingsRequest.class, StaffActivityImageRequest.class},
+        StaffActivityRefundRequest.class, StaffActivitySettingsRequest.class, StaffActivityImageRequest.class, ActivityTranslationContent.class,
+        ActivityTranslationContent.Stop.class, ActivityTranslationContent.Option.class},
         memberCategories = {MemberCategory.INVOKE_DECLARED_CONSTRUCTORS, MemberCategory.INVOKE_DECLARED_METHODS, MemberCategory.ACCESS_DECLARED_FIELDS})
 @RequestMapping(path = "staff", produces = MediaType.APPLICATION_JSON_VALUE)
 public class StaffActivityController {
+
+    private static final String REF = "[A-Za-z0-9]{8}";
 
     private final ActivityAdminService admin;
     private final ActivityRefundService refunds;
     private final ReviewService reviews;
     private final ActivityImageService images;
+    private final ActivityTranslationService translations;
 
     @GetMapping("cities")
     @Operation(summary = "Chercher une ville", description = "Villes GeoNames (2 lettres au moins), pour placer une activité.")
@@ -100,33 +108,33 @@ public class StaffActivityController {
         return admin.create(request, staff);
     }
 
-    @GetMapping("activities/{id}")
+    @GetMapping("activities/{ref}")
     @Operation(summary = "Fiche d'une activité")
-    public StaffActivityDetailResponse activity(@PathVariable Integer id) {
-        return admin.detail(id);
+    public StaffActivityDetailResponse activity(@PathVariable @Pattern(regexp = REF) String ref) {
+        return admin.detail(ref);
     }
 
-    @PutMapping(path = "activities/{id}", consumes = MediaType.APPLICATION_JSON_VALUE)
+    @PutMapping(path = "activities/{ref}", consumes = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Modifier une activité", description = "Tout le contenu de la fiche ; les réservations faites ne changent pas.")
-    public StaffActivityDetailResponse update(StaffPrincipal staff, @PathVariable Integer id, @Valid @RequestBody StaffActivityRequest request) {
-        return admin.update(id, request, staff);
+    public StaffActivityDetailResponse update(StaffPrincipal staff, @PathVariable @Pattern(regexp = REF) String ref, @Valid @RequestBody StaffActivityRequest request) {
+        return admin.update(ref, request, staff);
     }
 
-    @PostMapping(path = "activities/{id}/status", consumes = MediaType.APPLICATION_JSON_VALUE)
+    @PostMapping(path = "activities/{ref}/status", consumes = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Publier, dépublier, archiver", description = "Publier demande une photo et une option en vente (`activity-incomplete`).")
-    public StaffActivityDetailResponse status(StaffPrincipal staff, @PathVariable Integer id, @Valid @RequestBody StaffActivityStatusRequest request) {
-        return admin.status(id, request.status(), staff);
+    public StaffActivityDetailResponse status(StaffPrincipal staff, @PathVariable @Pattern(regexp = REF) String ref, @Valid @RequestBody StaffActivityStatusRequest request) {
+        return admin.status(ref, request.status(), staff);
     }
 
-    @PostMapping(path = "activities/{id}/options", consumes = MediaType.APPLICATION_JSON_VALUE)
+    @PostMapping(path = "activities/{ref}/options", consumes = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Ajouter une option")
-    public StaffActivityDetailResponse addOption(@PathVariable Integer id, @Valid @RequestBody StaffActivityOptionRequest request) {
-        return admin.addOption(id, request);
+    public StaffActivityDetailResponse addOption(@PathVariable @Pattern(regexp = REF) String ref, @Valid @RequestBody StaffActivityOptionRequest request) {
+        return admin.addOption(ref, request);
     }
 
     @PutMapping(path = "activity-options/{id}", consumes = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Modifier une option", description = "Prix et places pour les réservations suivantes ; `active: false` retire l'option de la vente.")
-    public StaffActivityDetailResponse updateOption(@PathVariable Integer id, @Valid @RequestBody StaffActivityOptionRequest request) {
+    public StaffActivityDetailResponse updateOption(@PathVariable @PublicId Integer id, @Valid @RequestBody StaffActivityOptionRequest request) {
         return admin.updateOption(id, request);
     }
 
@@ -154,7 +162,7 @@ public class StaffActivityController {
 
     @GetMapping("activity-options/{id}/slots")
     @Operation(summary = "Créneaux d'une option", description = "Sur une période de trois mois au plus, annulés compris.")
-    public List<StaffActivitySlotResponse> slots(@PathVariable Integer id,
+    public List<StaffActivitySlotResponse> slots(@PathVariable @PublicId Integer id,
                                                  @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
                                                  @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to) {
         return admin.slots(id, from, to);
@@ -162,34 +170,54 @@ public class StaffActivityController {
 
     @PostMapping(path = "activity-options/{id}/slots", consumes = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Ouvrir des créneaux", description = "Jours de la semaine et heures (locales) sur une période ; les créneaux existants sont gardés.")
-    public Map<String, Integer> openSlots(StaffPrincipal staff, @PathVariable Integer id, @Valid @RequestBody StaffActivitySlotsRequest request) {
+    public Map<String, Integer> openSlots(StaffPrincipal staff, @PathVariable @PublicId Integer id, @Valid @RequestBody StaffActivitySlotsRequest request) {
         return Map.of("created", admin.openSlots(id, request, staff));
     }
 
     @PatchMapping(path = "activity-slots/{id}", consumes = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Changer les places d'un créneau", description = "Pas moins que les places vendues ou bloquées (`capacity-too-low`).")
-    public StaffActivitySlotResponse resizeSlot(@PathVariable Integer id, @Valid @RequestBody StaffActivitySlotRequest request) {
+    public StaffActivitySlotResponse resizeSlot(@PathVariable @PublicId Integer id, @Valid @RequestBody StaffActivitySlotRequest request) {
         return admin.resizeSlot(id, request.capacity());
     }
 
     @DeleteMapping("activity-slots/{id}")
     @Operation(summary = "Supprimer un créneau", description = "Seulement sans réservation (`slot-in-use` : l'annuler).")
-    public ResponseEntity<Void> deleteSlot(@PathVariable Integer id) {
+    public ResponseEntity<Void> deleteSlot(@PathVariable @PublicId Integer id) {
         admin.deleteSlot(id);
         return ResponseEntity.noContent().build();
     }
 
     @PostMapping(path = "activity-slots/{id}/cancel", consumes = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Annuler un créneau", description = "Plus de ventes ; chaque réservation payée est annulée et remboursée en entier, le client prévenu.")
-    public Map<String, Integer> cancelSlot(StaffPrincipal staff, @PathVariable Integer id, @Valid @RequestBody StaffReasonRequest request) {
+    public Map<String, Integer> cancelSlot(StaffPrincipal staff, @PathVariable @PublicId Integer id, @Valid @RequestBody StaffReasonRequest request) {
         return Map.of("cancelled", refunds.cancelSlot(id, staff, request.reason().trim()));
     }
 
-    @PostMapping("activities/{id}/review-summary")
+    @PostMapping("activities/{ref}/review-summary")
     @Operation(summary = "Résumer les avis", description = "Claude écrit « Ce qu'en disent les voyageurs » à partir des avis publiés (3 au moins).")
-    public StaffActivityDetailResponse summarize(StaffPrincipal staff, @PathVariable Integer id) {
-        reviews.summarize(id, staff);
-        return admin.detail(id);
+    public StaffActivityDetailResponse summarize(StaffPrincipal staff, @PathVariable @Pattern(regexp = REF) String ref) {
+        reviews.summarize(admin.idOf(ref), staff);
+        return admin.detail(ref);
+    }
+
+    @GetMapping("activities/{ref}/translations/{lang}")
+    @Operation(summary = "Traduction d'une fiche", description = "Traduction appliquée et proposition de Claude dans une langue, la source en regard.")
+    public StaffActivityTranslationResponse translation(@PathVariable @Pattern(regexp = REF) String ref, @PathVariable @Pattern(regexp = "fr|en") String lang) {
+        return translations.view(ref, lang);
+    }
+
+    @PostMapping("activities/{ref}/translations/{lang}/proposal")
+    @Operation(summary = "Faire traduire par Claude", description = "Nouvelle proposition tout de suite (sinon demandée à chaque modification de la fiche).")
+    public StaffActivityTranslationResponse propose(@PathVariable @Pattern(regexp = REF) String ref, @PathVariable @Pattern(regexp = "fr|en") String lang) {
+        return translations.propose(ref, lang);
+    }
+
+    @PutMapping(path = "activities/{ref}/translations/{lang}", consumes = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Appliquer une traduction", description = "Traduction relue : montrée sur le site aux visiteurs de cette langue.")
+    public StaffActivityTranslationResponse applyTranslation(StaffPrincipal staff, @PathVariable @Pattern(regexp = REF) String ref,
+                                                             @PathVariable @Pattern(regexp = "fr|en") String lang,
+                                                             @Valid @RequestBody ActivityTranslationContent request) {
+        return translations.apply(ref, lang, request, staff);
     }
 
     @GetMapping("activity-bookings")
@@ -197,12 +225,12 @@ public class StaffActivityController {
     public PageResponse<StaffActivityBookingResponse> bookings(
             @RequestParam(name = "q", required = false) @Size(max = 100) String query,
             @RequestParam(required = false) @Pattern(regexp = "|held|confirmed|released|cancelled") String status,
-            @RequestParam(name = "activity_id", required = false) Integer activityId,
+            @RequestParam(name = "activity_ref", required = false) @Pattern(regexp = "|" + REF) String activityRef,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
             @RequestParam(defaultValue = "0") @Min(0) int page,
             @RequestParam(defaultValue = "25") @Min(1) @Max(100) int size) {
-        return admin.bookings(query, status, activityId, from, to, page, size);
+        return admin.bookings(query, status, admin.idOf(activityRef), from, to, page, size);
     }
 
     @GetMapping("activity-bookings/{reference}")
@@ -235,13 +263,13 @@ public class StaffActivityController {
 
     @PostMapping(path = "activity-refunds/{id}/refunded", consumes = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Remboursement fait", description = "Mobile money : comment le client a été remboursé (opérateur, référence de la transaction).")
-    public StaffActivityRefundResponse refunded(StaffPrincipal staff, @PathVariable Integer id, @Valid @RequestBody StaffRefundRequest request) {
+    public StaffActivityRefundResponse refunded(StaffPrincipal staff, @PathVariable @PublicId Integer id, @Valid @RequestBody StaffRefundRequest request) {
         return refunds.markRefunded(staff, id, request.note());
     }
 
     @PostMapping("activity-refunds/{id}/retry")
     @Operation(summary = "Retenter un remboursement par carte", description = "Après un échec chez Stripe.")
-    public ResponseEntity<Void> retry(StaffPrincipal staff, @PathVariable Integer id) {
+    public ResponseEntity<Void> retry(StaffPrincipal staff, @PathVariable @PublicId Integer id) {
         refunds.retry(staff, id);
         return ResponseEntity.noContent().build();
     }
@@ -250,27 +278,27 @@ public class StaffActivityController {
     @Operation(summary = "Avis à modérer", description = "Statut (`pending`, `approved`, `rejected`, vide = tous), activité ; avec l'avis de Claude.")
     public PageResponse<StaffActivityReviewResponse> reviewList(
             @RequestParam(required = false) @Pattern(regexp = "|pending|approved|rejected") String status,
-            @RequestParam(name = "activity_id", required = false) Integer activityId,
+            @RequestParam(name = "activity_ref", required = false) @Pattern(regexp = "|" + REF) String activityRef,
             @RequestParam(defaultValue = "0") @Min(0) int page,
             @RequestParam(defaultValue = "20") @Min(1) @Max(50) int size) {
-        return reviews.list(status, activityId, page, size);
+        return reviews.list(status, admin.idOf(activityRef), page, size);
     }
 
     @PostMapping("activity-reviews/{id}/approve")
     @Operation(summary = "Publier un avis")
-    public StaffActivityReviewResponse approve(StaffPrincipal staff, @PathVariable Integer id) {
+    public StaffActivityReviewResponse approve(StaffPrincipal staff, @PathVariable @PublicId Integer id) {
         return reviews.approve(id, staff);
     }
 
     @PostMapping(path = "activity-reviews/{id}/reject", consumes = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Rejeter un avis", description = "Motif gardé pour l'historique (jamais montré sur le site).")
-    public StaffActivityReviewResponse reject(StaffPrincipal staff, @PathVariable Integer id, @Valid @RequestBody StaffReasonRequest request) {
+    public StaffActivityReviewResponse reject(StaffPrincipal staff, @PathVariable @PublicId Integer id, @Valid @RequestBody StaffReasonRequest request) {
         return reviews.reject(id, staff, request.reason());
     }
 
     @PostMapping("activity-reviews/{id}/moderate")
     @Operation(summary = "Redemander l'avis de Claude", description = "Sur un avis en attente (`ai-unavailable` sans clé configurée).")
-    public StaffActivityReviewResponse moderate(@PathVariable Integer id) {
+    public StaffActivityReviewResponse moderate(@PathVariable @PublicId Integer id) {
         return reviews.remoderate(id);
     }
 

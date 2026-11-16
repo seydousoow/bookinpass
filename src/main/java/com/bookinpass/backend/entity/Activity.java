@@ -42,12 +42,22 @@ public class Activity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
     /**
+     * Référence montrée au back-office et employée dans les adresses de l'API : 8 majuscules et chiffres, fixe.
+     */
+    @Column(nullable = false, length = 8, updatable = false)
+    private String ref;
+    /**
      * Adresse de la page sur le site ({@code /activities/<slug>}).
      */
     @Column(nullable = false, length = 120)
     private String slug;
     @Column(nullable = false, length = 20)
     private ActivityStatus status;
+    /**
+     * Langue de saisie de la fiche ({@code fr}, {@code en}) : les autres langues sont des traductions.
+     */
+    @Column(nullable = false, length = 2)
+    private String lang = "fr";
     @Column(nullable = false)
     private String title;
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
@@ -102,8 +112,10 @@ public class Activity {
     private String images;
     @Column(name = "meeting_point", nullable = false)
     private String meetingPoint;
-    private Double latitude;
-    private Double longitude;
+    @Column(nullable = false)
+    private double latitude;
+    @Column(nullable = false)
+    private double longitude;
     @Column(name = "duration_min_minutes", nullable = false)
     private short durationMinMinutes;
     @Column(name = "duration_max_minutes")
@@ -132,7 +144,8 @@ public class Activity {
     @Column(name = "updated_at", nullable = false)
     private Instant updatedAt;
 
-    public Activity(String slug, Content content) {
+    public Activity(String ref, String slug, Content content) {
+        this.ref = ref;
         this.slug = slug;
         this.status = ActivityStatus.DRAFT;
         edit(content);
@@ -160,6 +173,10 @@ public class Activity {
         this.durationMaxMinutes = content.durationMaxMinutes();
         this.freeCancellationHours = content.freeCancellationHours();
         this.currency = content.currency();
+    }
+
+    public void changeLang(String lang) {
+        this.lang = lang;
     }
 
     public void changeSlug(String slug) {
@@ -198,7 +215,7 @@ public class Activity {
     public record Content(String title, City city, String category, String providerName, String summary, String description,
                           String highlights, String includes, String excludes, String notAllowed, String toBring,
                           String knowBefore,
-                          String itinerary, String images, String meetingPoint, Double latitude, Double longitude,
+                          String itinerary, String images, String meetingPoint, double latitude, double longitude,
                           short durationMinMinutes, Short durationMaxMinutes, Short freeCancellationHours, String currency) {
     }
 }

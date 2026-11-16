@@ -1,5 +1,6 @@
 package com.bookinpass.backend.controller;
 
+import com.bookinpass.backend.config.ids.PublicId;
 import com.bookinpass.backend.config.OpenApiConfig;
 import com.bookinpass.backend.config.StripeProperties;
 import com.bookinpass.backend.dto.request.ActivityBookingRequest;
@@ -12,6 +13,7 @@ import com.bookinpass.backend.dto.response.ActivityCardResponse;
 import com.bookinpass.backend.dto.response.ActivityDestinationResponse;
 import com.bookinpass.backend.dto.response.ActivityDetailResponse;
 import com.bookinpass.backend.dto.response.ActivityHoldResponse;
+import com.bookinpass.backend.dto.response.ActivityPlaceResponse;
 import com.bookinpass.backend.dto.response.ActivityReviewResponse;
 import com.bookinpass.backend.dto.response.ActivitySlotResponse;
 import com.bookinpass.backend.dto.response.MobilePaymentResponse;
@@ -83,15 +85,23 @@ public class ActivityController {
         return catalog.destinations();
     }
 
+    @GetMapping("places")
+    @Operation(summary = "Lieux pour la recherche", description = "Pays et villes qui correspondent à la saisie (2 caractères au moins) et ont des activités en vente ; une ville compte celles à moins de 100 km.")
+    public List<ActivityPlaceResponse> places(@RequestParam("q") @Size(max = 100) String query) {
+        return catalog.places(query);
+    }
+
     @GetMapping
-    @Operation(summary = "Rechercher des activités", description = "Activités en vente, filtrées par ville, catégorie et texte ; les plus récentes d'abord.")
+    @Operation(summary = "Rechercher des activités",
+            description = "Activités en vente. Ville : les siennes puis celles à moins de 100 km, les plus proches d'abord (`distance_km`) ; sinon les plus récentes d'abord. Pays, catégorie et texte en plus.")
     public PageResponse<ActivityCardResponse> search(
             @Parameter(description = "Ville (GeoNames)", example = "2253354") @RequestParam(name = "city_id", required = false) Integer cityId,
+            @Parameter(description = "Pays (ISO 3166-1 alpha-2)", example = "SN") @RequestParam(required = false) @Pattern(regexp = "[A-Za-z]{2}") String country,
             @Parameter(example = "tour") @RequestParam(required = false) @Pattern(regexp = "tour|cruise|excursion|museum|outdoor|food|culture|water|other") String category,
             @Parameter(description = "Texte cherché dans le titre, le résumé et la ville") @RequestParam(name = "q", required = false) @Size(max = 100) String query,
             @RequestParam(defaultValue = "0") @Min(0) int page,
             @RequestParam(defaultValue = "20") @Min(1) @Max(50) int size) {
-        return catalog.search(cityId, category, query, page, size);
+        return catalog.search(cityId, country, category, query, page, size);
     }
 
     @GetMapping("payment-methods")
@@ -136,7 +146,7 @@ public class ActivityController {
 
     @PostMapping("reviews/{id}/helpful")
     @Operation(summary = "Avis utile", description = "Un clic « Cet avis vous a été utile ».")
-    public ResponseEntity<Void> helpful(@PathVariable Integer id) {
+    public ResponseEntity<Void> helpful(@PathVariable @PublicId Integer id) {
         reviews.markHelpful(id);
         return ResponseEntity.noContent().build();
     }

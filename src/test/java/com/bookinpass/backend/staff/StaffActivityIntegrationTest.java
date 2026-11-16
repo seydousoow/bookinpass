@@ -1,5 +1,6 @@
 package com.bookinpass.backend.staff;
 
+import com.bookinpass.backend.config.ids.PublicIds;
 import com.jayway.jsonpath.JsonPath;
 import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.BeforeAll;
@@ -72,7 +73,7 @@ class StaffActivityIntegrationTest {
         admin = signIn("admin", "FirstAdmin2026");
         int station = jdbc.queryForObject("SELECT id FROM transport_station WHERE code = 'DKR-LIB5'", Integer.class);
         mvc.perform(write(post("/staff/users").cookie(admin), """
-                        {"username":"controle","full_name":"Contrôle","role":"inspector","station_id":%d,"temporary_password":"Welcome2026"}""".formatted(station)))
+                        {"username":"controle","full_name":"Contrôle","role":"inspector","station_id":"%s","temporary_password":"Welcome2026"}""".formatted(PublicIds.encode(station))))
                 .andExpect(status().isOk());
         inspector = signIn("controle", "Welcome2026");
     }
@@ -95,13 +96,14 @@ class StaffActivityIntegrationTest {
                 .andExpect(jsonPath("$.status").value("draft"))
                 .andExpect(jsonPath("$.city.timezone").value("Africa/Dakar"))
                 .andReturn().getResponse().getContentAsString();
-        Integer id = JsonPath.read(created, "$.id");
+        String id = JsonPath.read(created, "$.ref");
+        org.assertj.core.api.Assertions.assertThat(id).matches("[A-HJ-NP-Z2-9]{8}");
 
         mvc.perform(get("/activities/lac-rose-balade-en-pirogue")).andExpect(status().isNotFound()).andExpect(jsonPath("$.code").value("activity-not-found"));
         mvc.perform(write(post("/staff/activities/" + id + "/status").cookie(admin), "{\"status\":\"published\"}"))
                 .andExpect(status().isConflict()).andExpect(jsonPath("$.code").value("activity-incomplete"));
 
-        Integer option = JsonPath.read(mvc.perform(write(post("/staff/activities/" + id + "/options").cookie(admin),
+        String option = JsonPath.read(mvc.perform(write(post("/staff/activities/" + id + "/options").cookie(admin),
                         "{\"title\":\"Balade\",\"price\":12000,\"original_price\":15000,\"capacity\":8}"))
                 .andExpect(status().isOk()).andExpect(jsonPath("$.options[0].original_price").value("15000"))
                 .andReturn().getResponse().getContentAsString(), "$.options[0].id");
@@ -125,6 +127,23 @@ class StaffActivityIntegrationTest {
         mvc.perform(get("/activities/lac-rose-balade-en-pirogue/availability").param("date", tomorrow.toString()).param("participants", "2"))
                 .andExpect(status().isOk()).andExpect(jsonPath("$.length()").value(2)).andExpect(jsonPath("$[0].remaining").value(8));
         mvc.perform(get("/activities/destinations")).andExpect(jsonPath("$[0].city.name").value("Dakar"));
+
+        // Lieux : pays (nom français ou anglais) et villes ayant des activités à moins de 100 km.
+        Integer thies = jdbc.queryForObject("SELECT id FROM city WHERE name = 'Thiès' AND country_code = 'SN'", Integer.class);
+        Integer saintLouis = jdbc.queryForObject("SELECT id FROM city WHERE name = 'Saint-Louis' AND country_code = 'SN'", Integer.class);
+        mvc.perform(get("/activities/places").param("q", "seneg"))
+                .andExpect(status().isOk()).andExpect(jsonPath("$[0].kind").value("country")).andExpect(jsonPath("$[0].country_code").value("SN"))
+                .andExpect(jsonPath("$[0].activities").value(1));
+        mvc.perform(get("/activities/places").param("q", "thies"))
+                .andExpect(status().isOk()).andExpect(jsonPath("$[0].kind").value("city")).andExpect(jsonPath("$[0].city.id").value(thies));
+        mvc.perform(get("/activities/places").param("q", "saint-louis")).andExpect(status().isOk()).andExpect(jsonPath("$.length()").value(0));
+        mvc.perform(get("/activities").param("city_id", String.valueOf(thies)))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.total").value(1)).andExpect(jsonPath("$.items[0].distance_km").isNumber());
+        mvc.perform(get("/activities").param("city_id", "2253354"))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.total").value(1)).andExpect(jsonPath("$.items[0].distance_km").doesNotExist());
+        mvc.perform(get("/activities").param("city_id", String.valueOf(saintLouis))).andExpect(jsonPath("$.total").value(0));
+        mvc.perform(get("/activities").param("country", "sn")).andExpect(jsonPath("$.total").value(1));
+        mvc.perform(get("/activities").param("country", "FR")).andExpect(jsonPath("$.total").value(0));
 
         mvc.perform(get("/staff/activity-bookings").cookie(admin)).andExpect(status().isOk()).andExpect(jsonPath("$.total").value(0));
         mvc.perform(get("/staff/activity-settings").cookie(admin))

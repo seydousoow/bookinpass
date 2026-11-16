@@ -8,11 +8,14 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  * @param priceFrom     prix adulte le plus bas des options en vente ; nul s'il n'y en a aucune
  * @param originalPrice prix barré de cette option ; nul sans réduction
  * @param rating        note moyenne des avis publiés (sur 5) ; nulle sans avis
+ * @param distanceKm    recherche par ville : distance (km, arrondie) depuis cette ville pour une activité d'une autre ville ;
+ *                      nulle sinon
  */
-public record ActivityCardResponse(Integer id, String slug, String title, ActivityCityResponse city, String category, ActivityImage image,
+public record ActivityCardResponse(String ref, String slug, String title, ActivityCityResponse city, String category, ActivityImage image,
                                    @JsonProperty("duration_min_minutes") int durationMinMinutes,
                                    @JsonProperty("duration_max_minutes") Integer durationMaxMinutes,
                                    Double rating, @JsonProperty("review_count") long reviewCount,
                                    @JsonProperty("price_from") String priceFrom, @JsonProperty("original_price") String originalPrice,
-                                   String currency, @JsonProperty("free_cancellation") boolean freeCancellation) {
+                                   String currency, @JsonProperty("free_cancellation") boolean freeCancellation,
+                                   @JsonProperty("distance_km") Integer distanceKm) {
 }

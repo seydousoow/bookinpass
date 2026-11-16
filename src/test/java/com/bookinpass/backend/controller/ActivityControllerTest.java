@@ -1,5 +1,6 @@
 package com.bookinpass.backend.controller;
 
+import com.bookinpass.backend.config.ids.PublicIds;
 import com.bookinpass.backend.config.StripeProperties;
 import com.bookinpass.backend.dto.request.ActivityBookingRequest;
 import com.bookinpass.backend.dto.request.ActivityReviewRequest;
@@ -74,7 +75,7 @@ class ActivityControllerTest {
     void searchHasDefaultPaging() {
         assertThat(mvc.get().uri("/activities")).hasStatusOk();
 
-        verify(catalog).search(null, null, null, 0, 20);
+        verify(catalog).search(null, null, null, null, 0, 20);
     }
 
     @Test
@@ -110,19 +111,19 @@ class ActivityControllerTest {
 
     @Test
     void helpfulAnswersNoContentOrNotFound() {
-        assertThat(mvc.post().uri("/activities/reviews/4/helpful")).hasStatus(HttpStatus.NO_CONTENT);
+        assertThat(mvc.post().uri("/activities/reviews/" + PublicIds.encode(4) + "/helpful")).hasStatus(HttpStatus.NO_CONTENT);
         verify(reviews).markHelpful(4);
 
         willThrow(new ActivityException(HttpStatus.NOT_FOUND, "review-not-found", "No review")).given(reviews).markHelpful(5);
-        assertThat(mvc.post().uri("/activities/reviews/5/helpful")).hasStatus(HttpStatus.NOT_FOUND)
+        assertThat(mvc.post().uri("/activities/reviews/" + PublicIds.encode(5) + "/helpful")).hasStatus(HttpStatus.NOT_FOUND)
                 .bodyJson().extractingPath("$.code").isEqualTo("review-not-found");
     }
 
     @Test
     void holdBindsTheBooking() {
         assertThat(post("/activities/bookings", """
-                {"request_id":"6f1c2b7e-5b1a-4c3e-9f1d-1a2b3c4d5e6f","slot_id":3,"adults":2,"children":1,"given_name":"Awa","family_name":"Sène",
-                 "email":"awa@example.com","phone":"+221771234567","return_path":"/activities/book","locale":"fr"}""")).hasStatusOk();
+                {"request_id":"6f1c2b7e-5b1a-4c3e-9f1d-1a2b3c4d5e6f","slot_id":"%s","adults":2,"children":1,"given_name":"Awa","family_name":"Sène",
+                 "email":"awa@example.com","phone":"+221771234567","return_path":"/activities/book","locale":"fr"}""".formatted(PublicIds.encode(3)))).hasStatusOk();
 
         verify(bookings).hold(argThat((ActivityBookingRequest r) -> r.slotId() == 3 && r.adults() == 2 && r.children() == 1));
     }

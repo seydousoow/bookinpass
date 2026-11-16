@@ -9,10 +9,13 @@ import com.bookinpass.backend.config.PaymentDataProperties;
 import com.bookinpass.backend.config.StripeProperties;
 import com.bookinpass.backend.dto.request.ActivityBookingRequest;
 import com.bookinpass.backend.dto.request.ActivityReviewRequest;
+import com.bookinpass.backend.dto.request.ActivityTranslationContent;
 import com.bookinpass.backend.dto.request.MobilePaymentRequest;
 import com.bookinpass.backend.dto.request.StaffActivityOptionRequest;
 import com.bookinpass.backend.dto.request.StaffActivityRequest;
 import com.bookinpass.backend.dto.request.StaffActivitySlotsRequest;
+import com.bookinpass.backend.dto.response.StaffActivityTranslationResponse;
+import com.bookinpass.backend.config.web.RequestLang;
 import com.bookinpass.backend.dto.response.ActivityBookingResponse;
 import com.bookinpass.backend.dto.response.ActivityCardResponse;
 import com.bookinpass.backend.dto.response.ActivityDetailResponse;
@@ -86,7 +89,7 @@ import static org.mockito.Mockito.verify;
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 @Transactional(propagation = Propagation.NOT_SUPPORTED)
 @Testcontainers
-@Import({ActivityContent.class, ActivityCatalogService.class, ActivityBookingService.class, ActivityRefundService.class,
+@Import({ActivityContent.class, ActivityTranslationService.class, ActivityCatalogService.class, ActivityBookingService.class, ActivityRefundService.class,
         ActivityMobilePaymentService.class, ActivityAdminService.class, ReviewService.class, ReviewModerator.class, ActivitySettings.class,
         BookingRecorder.class, PayDunyaCheckout.class, PaymentDataCipher.class, ActivitySaleTest.Config.class})
 class ActivitySaleTest {
@@ -123,6 +126,8 @@ class ActivitySaleTest {
     @Autowired
     ReviewService reviews;
     @Autowired
+    ActivityTranslationService translations;
+    @Autowired
     ReviewModerator moderator;
     @Autowired
     ActivitySettings settings;
@@ -142,7 +147,7 @@ class ActivitySaleTest {
                 "La Maison des Esclaves, le Castel, les ruelles colorées.", List.of("Maison des Esclaves"), List.of("Traversée en chaloupe"),
                 List.of(), List.of("Animaux"), List.of("Chapeau"), List.of("Prévoir de l'eau"),
                 List.of(new ActivityItineraryStop("Maison des Esclaves", "visit", 45, false, null)), images, "Embarcadère de Dakar",
-                14.67, -17.42, 180, null, 24, "XOF");
+                14.67, -17.42, 180, null, 24, "XOF", null);
     }
 
     /**
@@ -159,7 +164,7 @@ class ActivitySaleTest {
     private static StaffActivityRequest request(StaffActivityRequest base, String slug, int city, Integer max, Double latitude, Double longitude) {
         return new StaffActivityRequest(base.title(), slug, city, base.category(), base.providerName(), base.summary(), base.description(), base.highlights(),
                 base.includes(), base.excludes(), base.notAllowed(), base.toBring(), base.knowBefore(), base.itinerary(), base.images(), base.meetingPoint(), latitude, longitude,
-                180, max, base.freeCancellationHours(), base.currency());
+                180, max, base.freeCancellationHours(), base.currency(), null);
     }
 
     @SuppressWarnings("SqlWithoutWhere")
@@ -192,7 +197,7 @@ class ActivitySaleTest {
 
         StaffActivityDetailResponse draft = admin.create(content(List.of()), manager);
         slug = draft.slug();
-        StaffActivityDetailResponse withOption = admin.addOption(draft.id(),
+        StaffActivityDetailResponse withOption = admin.addOption(draft.ref(),
                 new StaffActivityOptionRequest("Visite guidée en français", null, new BigDecimal("15000"), new BigDecimal("20000"),
                         new BigDecimal("7500"), 10, true));
         Integer optionId = withOption.options().getFirst().id();
@@ -201,10 +206,10 @@ class ActivitySaleTest {
                 List.of(1, 3), List.of("09:30"), null), manager);
         assertThat(created).isEqualTo(4);
 
-        assertThatThrownBy(() -> admin.status(draft.id(), "published", manager))
+        assertThatThrownBy(() -> admin.status(draft.ref(), "published", manager))
                 .isInstanceOfSatisfying(ActivityException.class, e -> assertThat(e.code()).isEqualTo("activity-incomplete"));
-        admin.update(draft.id(), content(List.of(new ActivityImage("https://cdn.example.com/goree.jpg", "Gorée"))), manager);
-        admin.status(draft.id(), "published", manager);
+        admin.update(draft.ref(), content(List.of(new ActivityImage("https://cdn.example.com/goree.jpg", "Gorée"))), manager);
+        admin.status(draft.ref(), "published", manager);
     }
 
     private ActivityBookingRequest request(int slotId, int adults, int children) {
@@ -243,8 +248,8 @@ class ActivitySaleTest {
     @Test
     @DisplayName("Site : recherche, page de l'activité, dates et créneaux d'un jour dans le fuseau de la ville")
     void publishedActivityIsSearchableWithAvailability() {
-        assertThat(catalog.search(DAKAR, null, "gorée", 0, 20).items()).extracting(ActivityCardResponse::slug).containsExactly(slug);
-        assertThat(catalog.search(null, "cruise", null, 0, 20).items()).isEmpty();
+        assertThat(catalog.search(DAKAR, null, null, "gorée", 0, 20).items()).extracting(ActivityCardResponse::slug).containsExactly(slug);
+        assertThat(catalog.search(null, null, "cruise", null, 0, 20).items()).isEmpty();
 
         ActivityDetailResponse detail = catalog.detail(slug);
         assertThat(detail.priceFrom()).isEqualTo("15000");
@@ -446,8 +451,10 @@ class ActivitySaleTest {
     }
 
     private void withClaude(boolean enabled) {
-        org.springframework.test.util.ReflectionTestUtils.setField(reviews, "anthropic", new AnthropicProperties("https://api.anthropic.com",
-                enabled ? "sk-ant-test" : "", "claude-haiku-5-5", "2026-10-21", false, false, Duration.ofSeconds(30)));
+        AnthropicProperties properties = new AnthropicProperties("https://api.anthropic.com",
+                enabled ? "sk-ant-test" : "", "claude-haiku-5-5", "2026-10-21", false, false, Duration.ofSeconds(30));
+        org.springframework.test.util.ReflectionTestUtils.setField(reviews, "anthropic", properties);
+        org.springframework.test.util.ReflectionTestUtils.setField(translations, "anthropic", properties);
     }
 
     @Test
@@ -529,8 +536,56 @@ class ActivitySaleTest {
 
             reviews.summarize(activity, manager);
 
-            assertThat(admin.detail(activity).reviewSummaryCount()).isEqualTo(3);
+            assertThat(admin.detail(jdbc.queryForObject("SELECT ref FROM activity", String.class)).reviewSummaryCount()).isEqualTo(3);
         } finally {
+            withClaude(false);
+        }
+    }
+
+    @Test
+    @DisplayName("Langues : Claude propose, un responsable applique ; le site sert la langue du visiteur, la source à défaut")
+    void listingIsTranslated() {
+        String ref = jdbc.queryForObject("SELECT ref FROM activity", String.class);
+        assertThat(admin.detail(ref).lang()).isEqualTo("fr");
+        assertThat(admin.detail(ref).translations()).extracting(StaffActivityTranslationResponse.State::status).containsExactly("none");
+        code(() -> translations.view(ref, "fr"), "invalid-language");
+        withClaude(false);
+        code(() -> translations.propose(ref, "en"), "ai-unavailable");
+
+        ActivityTranslationContent source = translations.view(ref, "en").source();
+        ActivityTranslationContent.Option option = source.options().getFirst();
+        ActivityTranslationContent english = new ActivityTranslationContent("Gorée Island: guided tour", "Crossing and tour of the island.",
+                "The House of Slaves, the Castel, colourful lanes.", List.of("House of Slaves"), List.of("Ferry crossing"), List.of(),
+                List.of("Pets"), List.of("Hat"), List.of("Bring water"), List.of(new ActivityTranslationContent.Stop("House of Slaves", "")),
+                "Dakar ferry terminal", List.of("Gorée"), List.of(new ActivityTranslationContent.Option(option.id(), "Guided tour in French", "")));
+        given(claude.structured(anyString(), anyString(), any(), eq("low"), eq(16000))).willReturn(json.valueToTree(english));
+        withClaude(true);
+        try {
+            StaffActivityTranslationResponse proposed = translations.propose(ref, "en");
+            assertThat(proposed.status()).isEqualTo("proposed");
+            assertThat(proposed.proposal()).isEqualTo(english);
+            RequestLang.set("en");
+            assertThat(catalog.detail(slug).title()).isEqualTo(source.title());
+
+            assertThat(translations.apply(ref, "en", proposed.proposal(), manager).status()).isEqualTo("applied");
+            ActivityDetailResponse detail = catalog.detail(slug);
+            assertThat(detail.title()).isEqualTo("Gorée Island: guided tour");
+            assertThat(detail.options().getFirst().title()).isEqualTo("Guided tour in French");
+            assertThat(detail.itinerary().getFirst().name()).isEqualTo("House of Slaves");
+            assertThat(catalog.search(null, null, null, null, 0, 20).items().getFirst().title()).isEqualTo("Gorée Island: guided tour");
+            RequestLang.set("fr");
+            assertThat(catalog.detail(slug).title()).isEqualTo(source.title());
+
+            // Source modifiée : nouvelle proposition demandée ; sans Claude, la traduction appliquée est signalée périmée.
+            admin.update(ref, content("Île de Gorée : visite guidée (nouveau)", List.of(new ActivityImage("https://cdn.example.com/goree.jpg", "Gorée"))), manager);
+            assertThat(translations.view(ref, "en").status()).isEqualTo("pending");
+            withClaude(false);
+            jdbc.update("UPDATE activity_translation SET ai_pending = FALSE");
+            assertThat(translations.view(ref, "en").status()).isEqualTo("outdated");
+            RequestLang.set("en");
+            assertThat(catalog.detail(slug).title()).isEqualTo("Gorée Island: guided tour");
+        } finally {
+            RequestLang.clear();
             withClaude(false);
         }
     }
@@ -538,16 +593,16 @@ class ActivitySaleTest {
     @Test
     @DisplayName("Fiche : ville, durée et position contrôlées ; adresse réservée ou prise suffixée ; photo et option requises")
     void activityContentIsValidated() {
-        Integer id = jdbc.queryForObject("SELECT id FROM activity", Integer.class);
+        String id = jdbc.queryForObject("SELECT ref FROM activity", String.class);
         StaffActivityRequest valid = content(List.of());
 
         code(() -> admin.create(request(valid, "reserved", 999999, null, 14.67, -17.42), manager), "city-not-found");
         code(() -> admin.create(request(valid, "bad-duration", DAKAR, 60, 14.67, -17.42), manager), "invalid-duration");
         code(() -> admin.create(request(valid, "bad-location", DAKAR, null, 14.67, null), manager), "invalid-location");
-        code(() -> admin.detail(999999), "activity-not-found");
+        code(() -> admin.detail("ZZZZZZZZ"), "activity-not-found");
 
-        assertThat(admin.create(request(valid, "reviews", DAKAR, 240, null, null), manager).slug()).isEqualTo("reviews-2");
-        assertThat(admin.create(request(valid, slug, DAKAR, 240, null, null), manager).slug()).isEqualTo(slug + "-2");
+        assertThat(admin.create(request(valid, "reviews", DAKAR, 240, 14.67, -17.42), manager).slug()).isEqualTo("reviews-2");
+        assertThat(admin.create(request(valid, slug, DAKAR, 240, 14.67, -17.42), manager).slug()).isEqualTo(slug + "-2");
 
         assertThat(admin.update(id, request(valid, "ile-renommee", DAKAR, null, 14.67, -17.42), manager).slug()).isEqualTo("ile-renommee");
         assertThat(admin.update(id, request(valid, "", DAKAR, null, 14.67, -17.42), manager).slug()).isEqualTo("ile-renommee");
@@ -558,7 +613,7 @@ class ActivitySaleTest {
     @Test
     @DisplayName("Options et créneaux : prix barré, période, capacité ; un créneau vendu ne se supprime pas")
     void optionsAndSlotsAreValidated() {
-        Integer activity = jdbc.queryForObject("SELECT id FROM activity", Integer.class);
+        String activity = jdbc.queryForObject("SELECT ref FROM activity", String.class);
         Integer option = jdbc.queryForObject("SELECT id FROM activity_option", Integer.class);
         StaffActivityOptionRequest badPrice = new StaffActivityOptionRequest("Visite", null, new BigDecimal("15000"), new BigDecimal("15000"), null, 10, true);
         code(() -> admin.addOption(activity, badPrice), "invalid-original-price");

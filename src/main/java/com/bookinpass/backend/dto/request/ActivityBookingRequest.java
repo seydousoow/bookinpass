@@ -1,5 +1,6 @@
 package com.bookinpass.backend.dto.request;
 
+import com.bookinpass.backend.config.ids.PublicId;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Email;
@@ -23,7 +24,7 @@ import java.util.UUID;
  */
 public record ActivityBookingRequest(
         @JsonProperty("request_id") @Schema(example = "6f1c2b9e-1d4a-4c3e-9a51-0e6f3c2d1b7a") @NotNull UUID requestId,
-        @JsonProperty("slot_id") @Schema(example = "42") @NotNull Integer slotId,
+        @JsonProperty("slot_id") @NotNull @PublicId Integer slotId,
         @Schema(example = "2") @Min(0) @Max(20) int adults,
         @Schema(example = "0") @Min(0) @Max(20) int children,
         @JsonProperty("given_name") @Schema(example = "Amina") @NotBlank @Size(max = 50) @Pattern(regexp = PassengerUpdateRequest.NAME, message = PassengerUpdateRequest.NAME_MESSAGE) String givenName,

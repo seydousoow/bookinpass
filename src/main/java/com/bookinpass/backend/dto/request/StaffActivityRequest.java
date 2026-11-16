@@ -40,10 +40,11 @@ public record StaffActivityRequest(
         @NotNull @Size(max = 30) List<@Valid @NotNull ActivityItineraryStop> itinerary,
         @NotNull @Size(max = 20) List<@Valid @NotNull ActivityImage> images,
         @JsonProperty("meeting_point") @NotBlank @Size(max = 500) String meetingPoint,
-        @DecimalMin("-90") @DecimalMax("90") Double latitude,
-        @DecimalMin("-180") @DecimalMax("180") Double longitude,
+        @NotNull @DecimalMin("-90") @DecimalMax("90") Double latitude,
+        @NotNull @DecimalMin("-180") @DecimalMax("180") Double longitude,
         @JsonProperty("duration_min_minutes") @NotNull @Min(1) @Max(30000) Integer durationMinMinutes,
         @JsonProperty("duration_max_minutes") @Min(1) @Max(30000) Integer durationMaxMinutes,
         @JsonProperty("free_cancellation_hours") @Min(0) @Max(720) Integer freeCancellationHours,
-        @Schema(example = "XOF") @NotNull @Pattern(regexp = "[A-Z]{3}") String currency) {
+        @Schema(example = "XOF") @NotNull @Pattern(regexp = "[A-Z]{3}") String currency,
+        @Schema(description = "Langue de saisie ; nulle = inchangée (français à la création)", example = "fr") @Pattern(regexp = "fr|en") String lang) {
 }
