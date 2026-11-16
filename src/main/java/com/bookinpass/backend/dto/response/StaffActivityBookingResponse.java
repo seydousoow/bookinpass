@@ -8,7 +8,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  * @param paymentMethod {@code card}, {@code mobile_money}, ou nul : pas encore payée
  * @param refunded      montant remboursé ou en cours de remboursement ; « 0 » sinon
  */
-public record StaffActivityBookingResponse(String reference, String status, @JsonProperty("activity_id") Integer activityId,
+public record StaffActivityBookingResponse(String reference, String status, @JsonProperty("activity_ref") String activityRef,
                                            @JsonProperty("activity_title") String activityTitle,
                                            @JsonProperty("option_title") String optionTitle,
                                            @JsonProperty("starts_at") String startsAt, String timezone,

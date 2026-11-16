@@ -1,5 +1,6 @@
 package com.bookinpass.backend.dto.response;
 
+import com.bookinpass.backend.config.ids.PublicId;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.util.List;
@@ -16,7 +17,7 @@ public record StaffBookingResponse(String reference,
                                    String status,
                                    String origin,
                                    String destination,
-                                   @JsonProperty("departure_id") Integer departureId,
+                                   @JsonProperty("departure_id") @PublicId Integer departureId,
                                    @JsonProperty("departs_at") String departsAt,
                                    String email,
                                    String phone,

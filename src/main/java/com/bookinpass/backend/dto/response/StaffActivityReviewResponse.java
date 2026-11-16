@@ -1,5 +1,6 @@
 package com.bookinpass.backend.dto.response;
 
+import com.bookinpass.backend.config.ids.PublicId;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.util.List;
@@ -11,7 +12,7 @@ import java.util.List;
  * @param aiCategories problèmes relevés ({@code spam}, {@code abuse}, {@code personal_data}…)
  * @param moderatedBy  nul : décision automatique (ou pas encore de décision)
  */
-public record StaffActivityReviewResponse(Integer id, @JsonProperty("activity_id") Integer activityId,
+public record StaffActivityReviewResponse(@PublicId Integer id, @JsonProperty("activity_ref") String activityRef,
                                           @JsonProperty("activity_title") String activityTitle, String reference, int rating,
                                           @JsonProperty("value_rating") Integer valueRating,
                                           @JsonProperty("service_rating") Integer serviceRating,

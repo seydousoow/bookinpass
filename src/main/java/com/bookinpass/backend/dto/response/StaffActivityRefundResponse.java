@@ -1,5 +1,6 @@
 package com.bookinpass.backend.dto.response;
 
+import com.bookinpass.backend.config.ids.PublicId;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
@@ -9,7 +10,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  * @param status      {@code pending} (mobile money à rembourser), {@code refunded}, {@code failed}
  * @param requestedBy nul : demandé par le client (annulation gratuite)
  */
-public record StaffActivityRefundResponse(Integer id, String reference, @JsonProperty("activity_title") String activityTitle,
+public record StaffActivityRefundResponse(@PublicId Integer id, String reference, @JsonProperty("activity_title") String activityTitle,
                                           @JsonProperty("starts_at") String startsAt, String customer, String email, String phone,
                                           String method, String amount, String currency, String status, String reason,
                                           @JsonProperty("failure_reason") String failureReason,

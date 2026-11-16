@@ -1,5 +1,6 @@
 package com.bookinpass.backend.dto.request;
 
+import com.bookinpass.backend.config.ids.PublicId;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
@@ -20,7 +21,7 @@ public record StaffUserRequest(
         @JsonProperty("full_name") @Schema(example = "Awa Sène") @NotBlank @Size(max = 100) String fullName,
         @Schema(example = "+221771234567") @Pattern(regexp = "\\+[1-9][0-9]{6,14}") String phone,
         @Schema(example = "inspector") @NotNull @Pattern(regexp = "admin|manager|station_chief|inspector") String role,
-        @JsonProperty("station_id") Integer stationId,
+        @JsonProperty("station_id") @PublicId Integer stationId,
         @JsonProperty("temporary_password") @Size(max = 200) String temporaryPassword,
         Boolean active) {
 }

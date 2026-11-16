@@ -1,5 +1,6 @@
 package com.bookinpass.backend.dto.response;
 
+import com.bookinpass.backend.config.ids.PublicId;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
@@ -8,7 +9,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  * @param status {@code registered} ou {@code delivered}
  */
 public record StaffLuggageResponse(String code,
-                                   @JsonProperty("departure_id") Integer departureId,
+                                   @JsonProperty("departure_id") @PublicId Integer departureId,
                                    String origin,
                                    String destination,
                                    @JsonProperty("departs_at") String departsAt,

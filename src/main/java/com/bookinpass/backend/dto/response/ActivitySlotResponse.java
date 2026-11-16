@@ -1,5 +1,6 @@
 package com.bookinpass.backend.dto.response;
 
+import com.bookinpass.backend.config.ids.PublicId;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
@@ -7,6 +8,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  *
  * @param available assez de places pour les participants demandés, et pas trop tard pour réserver
  */
-public record ActivitySlotResponse(@JsonProperty("slot_id") Integer slotId, @JsonProperty("option_id") Integer optionId,
+public record ActivitySlotResponse(@JsonProperty("slot_id") @PublicId Integer slotId, @JsonProperty("option_id") @PublicId Integer optionId,
                                    @JsonProperty("starts_at") String startsAt, int remaining, boolean available) {
 }

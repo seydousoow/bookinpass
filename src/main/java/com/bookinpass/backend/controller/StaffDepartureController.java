@@ -1,5 +1,6 @@
 package com.bookinpass.backend.controller;
 
+import com.bookinpass.backend.config.ids.PublicId;
 import com.bookinpass.backend.config.OpenApiConfig;
 import com.bookinpass.backend.dto.request.StaffCapacityRequest;
 import com.bookinpass.backend.dto.response.StaffDepartureDetailResponse;
@@ -47,34 +48,34 @@ public class StaffDepartureController {
     @Operation(summary = "Départs d'un jour", description = "Au départ de sa gare (admin, manager : celle choisie, sinon toutes). Places vendues, passagers contrôlés, bagages, incidents ouverts.")
     public List<StaffDepartureResponse> departures(StaffPrincipal staff,
                                                    @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
-                                                   @RequestParam(name = "station_id", required = false) Integer stationId) {
+                                                   @RequestParam(name = "station_id", required = false) @PublicId Integer stationId) {
         return operations.departures(staff, date, stationId);
     }
 
     @GetMapping("departures/{id}")
     @Operation(summary = "Départ", description = "Passagers (billets confirmés, contrôlés ou non), bagages, incidents.")
-    public StaffDepartureDetailResponse departure(StaffPrincipal staff, @PathVariable Integer id) {
+    public StaffDepartureDetailResponse departure(StaffPrincipal staff, @PathVariable @PublicId Integer id) {
         return operations.departure(staff, id);
     }
 
     @PostMapping("departures/{id}/departed")
     @StaffAccess({StaffRole.ADMIN, StaffRole.MANAGER, StaffRole.STATION_CHIEF})
     @Operation(summary = "Car parti")
-    public StaffDepartureDetailResponse departed(StaffPrincipal staff, @PathVariable Integer id) {
+    public StaffDepartureDetailResponse departed(StaffPrincipal staff, @PathVariable @PublicId Integer id) {
         return operations.markDeparted(staff, id);
     }
 
     @PostMapping("departures/{id}/arrived")
     @StaffAccess({StaffRole.ADMIN, StaffRole.MANAGER, StaffRole.STATION_CHIEF})
     @Operation(summary = "Car arrivé")
-    public StaffDepartureDetailResponse arrived(StaffPrincipal staff, @PathVariable Integer id) {
+    public StaffDepartureDetailResponse arrived(StaffPrincipal staff, @PathVariable @PublicId Integer id) {
         return operations.markArrived(staff, id);
     }
 
     @PatchMapping(path = "departures/{id}", consumes = MediaType.APPLICATION_JSON_VALUE)
     @StaffAccess({StaffRole.ADMIN, StaffRole.MANAGER})
     @Operation(summary = "Places d'un départ", description = "Autre car : jamais moins que les places vendues ou bloquées (`capacity-too-low`).")
-    public StaffDepartureDetailResponse resize(StaffPrincipal staff, @PathVariable Integer id, @Valid @RequestBody StaffCapacityRequest request) {
+    public StaffDepartureDetailResponse resize(StaffPrincipal staff, @PathVariable @PublicId Integer id, @Valid @RequestBody StaffCapacityRequest request) {
         return operations.resize(staff, id, request.capacity());
     }
 

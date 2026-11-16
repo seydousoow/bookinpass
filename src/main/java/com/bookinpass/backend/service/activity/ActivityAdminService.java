@@ -31,6 +31,7 @@ import com.bookinpass.backend.repository.ActivitySlotRepository;
 import com.bookinpass.backend.repository.CityRepository;
 import com.bookinpass.backend.repository.StripePaymentRepository;
 import com.bookinpass.backend.service.DestinationService;
+import com.bookinpass.backend.service.transport.TransportCodes;
 import com.bookinpass.backend.staff.StaffPrincipal;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -79,7 +80,7 @@ public class ActivityAdminService {
     /**
      * Adresses prises par l'API ({@code /activities/bookings}…).
      */
-    private static final Set<String> RESERVED_SLUGS = Set.of("bookings", "destinations", "payment-methods", "reviews");
+    private static final Set<String> RESERVED_SLUGS = Set.of("bookings", "destinations", "payment-methods", "places", "reviews");
     private static final Instant EARLIEST = Instant.parse("2000-01-01T00:00:00Z");
     private static final Instant LATEST = Instant.parse("2100-01-01T00:00:00Z");
 
@@ -94,6 +95,7 @@ public class ActivityAdminService {
     private final CityRepository cities;
     private final ActivityContent content;
     private final ActivityRefundService refundService;
+    private final ActivityTranslationService translations;
     private final Clock clock;
 
     private static void checkPrices(StaffActivityOptionRequest request) {
@@ -133,7 +135,7 @@ public class ActivityAdminService {
                 .collect(Collectors.toMap(row -> (Integer) row[0], row -> (Long) row[1]));
         return all.stream().map(a -> {
             ActivityContent.Ratings rating = ratings.get(a.getId());
-            return new StaffActivityResponse(a.getId(), a.getSlug(), a.getStatus().dbValue(), a.getTitle(), ActivityContent.city(a.getCity()),
+            return new StaffActivityResponse(a.getRef(), a.getSlug(), a.getStatus().dbValue(), a.getTitle(), ActivityContent.city(a.getCity()),
                     a.getCategory(), content.cover(a), a.getOptions().size(), rating == null ? null : rating.average(),
                     rating == null ? 0 : rating.count(), ActivityContent.text(a.getPublishedAt()), a.getUpdatedAt().toString(),
                     ActivityContent.text(lastSlots.get(a.getId())), upcoming.getOrDefault(a.getId(), 0L));
@@ -141,47 +143,68 @@ public class ActivityAdminService {
     }
 
     @Transactional(readOnly = true)
-    public StaffActivityDetailResponse detail(Integer id) {
-        return detail(find(id));
+    public StaffActivityDetailResponse detail(String ref) {
+        return detail(find(ref));
+    }
+
+    /**
+     * Clé technique d'une activité, par sa référence (filtres des listes) ; nulle si la référence est vide.
+     */
+    @Transactional(readOnly = true)
+    public Integer idOf(String ref) {
+        if (ref == null || ref.isBlank()) {
+            return null;
+        }
+        return activities.findIdByRef(ref.trim().toUpperCase(Locale.ROOT))
+                .orElseThrow(() -> new ActivityException(HttpStatus.NOT_FOUND, "activity-not-found", "Unknown activity."));
     }
 
     public StaffActivityDetailResponse create(StaffActivityRequest request, StaffPrincipal by) {
-        Activity activity = activities.save(new Activity(uniqueSlug(request.slug(), request.title(), null), content(request)));
-        log.info("Staff {} created activity {} ({})", by.username(), activity.getId(), activity.getSlug());
+        Activity activity = activities.save(new Activity(uniqueRef(), uniqueSlug(request.slug(), request.title(), null), content(request)));
+        if (request.lang() != null) {
+            activity.changeLang(request.lang());
+        }
+        translations.sourceChanged(activity);
+        log.info("Staff {} created activity {} ({})", by.username(), activity.getRef(), activity.getSlug());
         return detail(activity);
     }
 
-    public StaffActivityDetailResponse update(Integer id, StaffActivityRequest request, StaffPrincipal by) {
-        Activity activity = find(id);
+    public StaffActivityDetailResponse update(String ref, StaffActivityRequest request, StaffPrincipal by) {
+        Activity activity = find(ref);
         activity.edit(content(request));
         if (request.slug() != null && !request.slug().isBlank() && !request.slug().equals(activity.getSlug())) {
             activity.changeSlug(uniqueSlug(request.slug(), request.title(), activity.getId()));
         }
-        log.info("Staff {} updated activity {}", by.username(), id);
+        if (request.lang() != null) {
+            activity.changeLang(request.lang());
+        }
+        translations.sourceChanged(activity);
+        log.info("Staff {} updated activity {}", by.username(), activity.getRef());
         return detail(activity);
     }
 
     /**
      * Mise en vente : il faut au moins une photo et une option en vente.
      */
-    public StaffActivityDetailResponse status(Integer id, String status, StaffPrincipal by) {
-        Activity activity = find(id);
+    public StaffActivityDetailResponse status(String ref, String status, StaffPrincipal by) {
+        Activity activity = find(ref);
         ActivityStatus next = ActivityStatus.of(status);
         if (next == ActivityStatus.PUBLISHED
                 && (content.images(activity.getImages()).isEmpty() || activity.getOptions().stream().noneMatch(ActivityOption::isActive))) {
             throw new ActivityException(HttpStatus.CONFLICT, "activity-incomplete", "Add at least one photo and one option on sale before publishing.");
         }
         activity.changeStatus(next, clock.instant());
-        log.info("Staff {} set activity {} to {}", by.username(), id, status);
+        log.info("Staff {} set activity {} to {}", by.username(), activity.getRef(), status);
         return detail(activity);
     }
 
-    public StaffActivityDetailResponse addOption(Integer activityId, StaffActivityOptionRequest request) {
-        Activity activity = find(activityId);
+    public StaffActivityDetailResponse addOption(String ref, StaffActivityOptionRequest request) {
+        Activity activity = find(ref);
         checkPrices(request);
         activity.addOption(request.title().trim(), blankToNull(request.description()), request.price(), request.originalPrice(),
                 request.childPrice(), request.capacity());
         activities.flush();
+        translations.sourceChanged(activity);
         return detail(activity);
     }
 
@@ -190,6 +213,7 @@ public class ActivityAdminService {
         checkPrices(request);
         option.edit(request.title().trim(), blankToNull(request.description()), request.price(), request.originalPrice(), request.childPrice(),
                 request.capacity(), request.active() == null || request.active());
+        translations.sourceChanged(option.getActivity());
         return detail(option.getActivity());
     }
 
@@ -310,7 +334,7 @@ public class ActivityAdminService {
         }
         BigDecimal refunded = refunds.findByBookingId(booking.getId()).stream()
                 .filter(ActivityRefund::counts).map(ActivityRefund::getAmount).reduce(BigDecimal.ZERO, BigDecimal::add);
-        return new StaffActivityBookingResponse(booking.getReference(), booking.getStatus().dbValue(), activity.getId(), activity.getTitle(),
+        return new StaffActivityBookingResponse(booking.getReference(), booking.getStatus().dbValue(), activity.getRef(), activity.getTitle(),
                 slot.getOption().getTitle(), slot.getStartsAt().toString(), activity.getCity().getTimezone(), booking.getGivenName(),
                 booking.getFamilyName(), booking.getEmail(), booking.getPhone(), booking.getAdults(), booking.getChildren(),
                 ActivityContent.plain(booking.getTotal()), booking.getCurrency(), method, paymentStatus, ActivityContent.plain(refunded),
@@ -318,7 +342,7 @@ public class ActivityAdminService {
     }
 
     private StaffActivityDetailResponse detail(Activity activity) {
-        return new StaffActivityDetailResponse(activity.getId(), activity.getSlug(), activity.getStatus().dbValue(), activity.getTitle(),
+        return new StaffActivityDetailResponse(activity.getRef(), activity.getSlug(), activity.getStatus().dbValue(), activity.getTitle(),
                 ActivityContent.city(activity.getCity()), activity.getCategory(), activity.getProviderName(), activity.getSummary(),
                 activity.getDescription(), content.strings(activity.getHighlights()), content.strings(activity.getIncludes()),
                 content.strings(activity.getExcludes()), content.strings(activity.getNotAllowed()), content.strings(activity.getToBring()),
@@ -331,7 +355,8 @@ public class ActivityAdminService {
                         ActivityContent.plain(o.getPrice()), ActivityContent.plain(o.getOriginalPrice()), ActivityContent.plain(o.getChildPrice()),
                         o.getCapacity(), o.isActive())).toList(),
                 activity.getId() == null ? null : content.rating(activity.getId()), content.summary(activity.getReviewSummary(), "fr"),
-                activity.getReviewSummaryCount(), ActivityContent.text(activity.getReviewSummaryAt()), ActivityContent.text(activity.getPublishedAt()));
+                activity.getReviewSummaryCount(), ActivityContent.text(activity.getReviewSummaryAt()), ActivityContent.text(activity.getPublishedAt()),
+                activity.getLang(), translations.states(activity));
     }
 
     private Activity.Content content(StaffActivityRequest request) {
@@ -340,8 +365,8 @@ public class ActivityAdminService {
         if (request.durationMaxMinutes() != null && request.durationMaxMinutes() < request.durationMinMinutes()) {
             throw new ActivityException(HttpStatus.BAD_REQUEST, "invalid-duration", "The longest duration is shorter than the shortest.");
         }
-        if ((request.latitude() == null) != (request.longitude() == null)) {
-            throw new ActivityException(HttpStatus.BAD_REQUEST, "invalid-location", "Give both latitude and longitude, or neither.");
+        if (request.latitude() == null || request.longitude() == null) {
+            throw new ActivityException(HttpStatus.BAD_REQUEST, "invalid-location", "Give the latitude and longitude of the activity.");
         }
         return new Activity.Content(request.title().trim(), city, request.category(), request.providerName().trim(), request.summary().trim(),
                 request.description().trim(), content.write(trimmed(request.highlights())), content.write(trimmed(request.includes())),
@@ -369,8 +394,20 @@ public class ActivityAdminService {
         return slug;
     }
 
-    private Activity find(Integer id) {
-        return activities.findWithCity(id).orElseThrow(() -> new ActivityException(HttpStatus.NOT_FOUND, "activity-not-found", "Unknown activity."));
+    /**
+     * Référence libre parmi les codes à 8 caractères (collision très improbable : on retire).
+     */
+    private String uniqueRef() {
+        String ref = TransportCodes.random(8);
+        while (activities.existsByRef(ref)) {
+            ref = TransportCodes.random(8);
+        }
+        return ref;
+    }
+
+    private Activity find(String ref) {
+        return activities.findByRef(ref.trim().toUpperCase(Locale.ROOT))
+                .orElseThrow(() -> new ActivityException(HttpStatus.NOT_FOUND, "activity-not-found", "Unknown activity."));
     }
 
     private ActivityOption option(Integer id) {

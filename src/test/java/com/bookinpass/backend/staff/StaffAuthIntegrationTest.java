@@ -1,5 +1,6 @@
 package com.bookinpass.backend.staff;
 
+import com.bookinpass.backend.config.ids.PublicIds;
 import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.MethodOrderer;
@@ -115,10 +116,10 @@ class StaffAuthIntegrationTest {
                         "{\"username\":\"other.manager\",\"full_name\":\"Autre\",\"role\":\"manager\",\"temporary_password\":\"Manager2026z\"}"))
                 .andExpect(status().isForbidden());
         mvc.perform(write(post("/staff/users").cookie(manager),
-                        "{\"username\":\"awa.sene\",\"full_name\":\"Awa Sène\",\"role\":\"inspector\",\"station_id\":1,\"temporary_password\":\"Inspector2026\"}"))
+                        "{\"username\":\"awa.sene\",\"full_name\":\"Awa Sène\",\"role\":\"inspector\",\"station_id\":\"" + PublicIds.encode(1) + "\",\"temporary_password\":\"Inspector2026\"}"))
                 .andExpect(status().isOk()).andExpect(jsonPath("$.station.code").value("DKR-LIB5"));
         mvc.perform(write(post("/staff/users").cookie(manager),
-                        "{\"username\":\"awa.sene\",\"full_name\":\"Doublon\",\"role\":\"inspector\",\"station_id\":1,\"temporary_password\":\"Inspector2026\"}"))
+                        "{\"username\":\"awa.sene\",\"full_name\":\"Doublon\",\"role\":\"inspector\",\"station_id\":\"" + PublicIds.encode(1) + "\",\"temporary_password\":\"Inspector2026\"}"))
                 .andExpect(status().isConflict()).andExpect(jsonPath("$.code").value("username-taken"));
 
         Cookie inspector = login("awa.sene", "Inspector2026");
@@ -138,7 +139,7 @@ class StaffAuthIntegrationTest {
         String adminId = com.jayway.jsonpath.JsonPath.read(mvc.perform(get("/staff/auth/me").cookie(admin)).andReturn().getResponse().getContentAsString(), "$.id").toString();
 
         mvc.perform(write(patch("/staff/users/" + id).cookie(admin),
-                        "{\"full_name\":\"Awa Sène\",\"role\":\"inspector\",\"station_id\":1,\"active\":false}"))
+                        "{\"full_name\":\"Awa Sène\",\"role\":\"inspector\",\"station_id\":\"" + PublicIds.encode(1) + "\",\"active\":false}"))
                 .andExpect(status().isOk()).andExpect(jsonPath("$.active").value(false));
 
         mvc.perform(get("/staff/auth/me").cookie(inspector))
@@ -162,7 +163,7 @@ class StaffAuthIntegrationTest {
 
         Cookie admin = admin();
         String users = mvc.perform(get("/staff/users").cookie(admin)).andReturn().getResponse().getContentAsString();
-        Integer id = com.jayway.jsonpath.JsonPath.<java.util.List<Integer>>read(users, "$[?(@.username=='moussa.manager')].id").getFirst();
+        String id = com.jayway.jsonpath.JsonPath.<java.util.List<String>>read(users, "$[?(@.username=='moussa.manager')].id").getFirst();
         mvc.perform(write(post("/staff/users/" + id + "/password").cookie(admin), "{\"temporary_password\":\"Unlocked2026\"}"))
                 .andExpect(status().isOk()).andExpect(jsonPath("$.must_change_password").value(true));
         login("moussa.manager", "Unlocked2026");

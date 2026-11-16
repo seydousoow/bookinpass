@@ -214,7 +214,7 @@ public class ReviewService {
         List<String> categories = review.getAiCategories() == null ? List.of()
                 : StreamSupport.stream(json.readTree(review.getAiCategories()).spliterator(), false)
                 .map(JsonNode::asString).collect(Collectors.toList());
-        return new StaffActivityReviewResponse(review.getId(), review.getActivity().getId(), review.getActivity().getTitle(),
+        return new StaffActivityReviewResponse(review.getId(), review.getActivity().getRef(), review.getActivity().getTitle(),
                 review.getBooking().getReference(), review.getRating(), toInteger(review.getValueRating()), toInteger(review.getServiceRating()),
                 toInteger(review.getOrganizationRating()), review.getAuthorName(), review.getCountry(), review.getLang(), review.getText(),
                 review.getStatus(), review.getAiVerdict(), review.getAiReason(), categories, ActivityContent.text(review.getAiCheckedAt()),

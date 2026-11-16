@@ -1,5 +1,6 @@
 package com.bookinpass.backend.dto.response;
 
+import com.bookinpass.backend.config.ids.PublicId;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.util.List;
@@ -9,8 +10,8 @@ import java.util.List;
  *
  * @param refundable montant encore remboursable (payé moins remboursé) ; « 0 » si rien n'a été payé
  */
-public record StaffActivityBookingDetailResponse(StaffActivityBookingResponse booking, @JsonProperty("slot_id") Integer slotId,
-                                                 @JsonProperty("option_id") Integer optionId, String lang,
+public record StaffActivityBookingDetailResponse(StaffActivityBookingResponse booking, @JsonProperty("slot_id") @PublicId Integer slotId,
+                                                 @JsonProperty("option_id") @PublicId Integer optionId, String lang,
                                                  @JsonProperty("adult_price") String adultPrice,
                                                  @JsonProperty("child_price") String childPrice,
                                                  @JsonProperty("hold_expires_at") String holdExpiresAt,
@@ -31,6 +32,6 @@ public record StaffActivityBookingDetailResponse(StaffActivityBookingResponse bo
                           String reference) {
     }
 
-    public record Review(Integer id, String status, int rating) {
+    public record Review(@PublicId Integer id, String status, int rating) {
     }
 }

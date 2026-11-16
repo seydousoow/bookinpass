@@ -1,5 +1,6 @@
 package com.bookinpass.backend.controller;
 
+import com.bookinpass.backend.config.ids.PublicId;
 import com.bookinpass.backend.config.OpenApiConfig;
 import com.bookinpass.backend.dto.request.StaffLuggageRequest;
 import com.bookinpass.backend.dto.response.StaffLuggageResponse;
@@ -42,14 +43,14 @@ public class StaffLuggageController {
 
     @PostMapping(path = "departures/{id}/luggage", consumes = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Enregistrer un bagage", description = "À la gare de départ, avant le départ ; prix encaissé sur place. Le code est à écrire sur l'étiquette.")
-    public StaffLuggageResponse register(StaffPrincipal staff, @PathVariable Integer id, @Valid @RequestBody StaffLuggageRequest request) {
+    public StaffLuggageResponse register(StaffPrincipal staff, @PathVariable @PublicId Integer id, @Valid @RequestBody StaffLuggageRequest request) {
         return operations.registerLuggage(staff, id, request);
     }
 
     @GetMapping("luggage")
     @Operation(summary = "Bagages d'un jour", description = "Partant de la gare ou y arrivant.")
     public List<StaffLuggageResponse> list(StaffPrincipal staff, @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
-                                           @RequestParam(name = "station_id", required = false) Integer stationId) {
+                                           @RequestParam(name = "station_id", required = false) @PublicId Integer stationId) {
         return operations.luggage(staff, date, stationId);
     }
 

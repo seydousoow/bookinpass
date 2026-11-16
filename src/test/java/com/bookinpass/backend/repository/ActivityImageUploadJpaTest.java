@@ -39,8 +39,8 @@ class ActivityImageUploadJpaTest {
         String orphan = "https://cdn.example.com/activities/2026/11/orphan.jpg";
         String recent = "https://cdn.example.com/activities/2026/11/recent.jpg";
         jdbc.update("""
-                INSERT INTO activity (slug, title, city_id, category, provider_name, summary, description, meeting_point, duration_min_minutes, images)
-                VALUES ('goree', 'Gorée', (SELECT min(id) FROM city), 'tour', 'Gorée Tours', 'Résumé', 'Description', 'Embarcadère', 120, ?::jsonb)""",
+                INSERT INTO activity (ref, slug, latitude, longitude, title, city_id, category, provider_name, summary, description, meeting_point, duration_min_minutes, images)
+                VALUES ('GKRE2345', 'goree', 14.67, -17.42, 'Gorée', (SELECT min(id) FROM city), 'tour', 'Gorée Tours', 'Résumé', 'Description', 'Embarcadère', 120, ?::jsonb)""",
                 "[{\"url\":\"" + used + "\",\"alt\":null}]");
         uploads.save(new ActivityImageUpload("activities/2026/11/used.jpg", used, "awa", NOW.minusSeconds(3 * 86400)));
         uploads.save(new ActivityImageUpload("activities/2026/11/orphan.jpg", orphan, "awa", NOW.minusSeconds(2 * 86400)));

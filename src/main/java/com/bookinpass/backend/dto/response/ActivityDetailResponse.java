@@ -1,5 +1,6 @@
 package com.bookinpass.backend.dto.response;
 
+import com.bookinpass.backend.config.ids.PublicId;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.util.List;
@@ -12,7 +13,7 @@ import java.util.List;
  * @param reviewSummary         « Ce qu'en disent les voyageurs » ; nul tant qu'il n'a pas été écrit
  * @param reviewSummaryCount    nombre d'avis lus pour l'écrire
  */
-public record ActivityDetailResponse(Integer id, String slug, String title, ActivityCityResponse city, String category,
+public record ActivityDetailResponse(String ref, String slug, String title, ActivityCityResponse city, String category,
                                      @JsonProperty("provider_name") String providerName, String summary, String description,
                                      List<String> highlights, List<String> includes, List<String> excludes,
                                      @JsonProperty("not_allowed") List<String> notAllowed,
@@ -34,7 +35,7 @@ public record ActivityDetailResponse(Integer id, String slug, String title, Acti
     /**
      * @param childPrice prix par enfant ; nul = pas de tarif enfant (les enfants paient le prix adulte)
      */
-    public record Option(Integer id, String title, String description, String price,
+    public record Option(@PublicId Integer id, String title, String description, String price,
                          @JsonProperty("original_price") String originalPrice, @JsonProperty("child_price") String childPrice) {
     }
 }
